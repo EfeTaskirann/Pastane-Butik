@@ -1,0 +1,17 @@
+# Uploads (kullanıcı yüklemeleri)
+uploads/products/*
+!uploads/products/.gitkeep
+
+# Config dosyası (hassas bilgiler)
+includes/config.php
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
