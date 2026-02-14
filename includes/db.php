@@ -9,6 +9,26 @@ class Database {
     private static $instance = null;
     private $pdo;
 
+    /**
+     * İzin verilen tablo adları - SQL Injection koruması
+     */
+    private const ALLOWED_TABLES = [
+        'urunler',
+        'kategoriler',
+        'siparisler',
+        'mesajlar',
+        'kullanicilar',
+        'ayarlar',
+        'login_attempts',
+        'rate_limits',
+        'cache'
+    ];
+
+    /**
+     * İzin verilen kolon adları - SQL Injection koruması
+     */
+    private const ALLOWED_COLUMNS_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
+
     private function __construct() {
         try {
             $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
@@ -38,6 +58,14 @@ class Database {
         return $this->pdo;
     }
 
+    /**
+     * PDO bağlantısını döndür (alias)
+     * @return PDO
+     */
+    public function getPdo(): PDO {
+        return $this->pdo;
+    }
+
     public function query($sql, $params = []) {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
@@ -52,7 +80,30 @@ class Database {
         return $this->query($sql, $params)->fetchAll();
     }
 
+    /**
+     * Tablo adını doğrula - SQL Injection koruması
+     */
+    private function validateTable(string $table): void {
+        if (!in_array($table, self::ALLOWED_TABLES, true)) {
+            throw new InvalidArgumentException("Geçersiz tablo adı: {$table}");
+        }
+    }
+
+    /**
+     * Kolon adlarını doğrula - SQL Injection koruması
+     */
+    private function validateColumns(array $columns): void {
+        foreach ($columns as $column) {
+            if (!preg_match(self::ALLOWED_COLUMNS_PATTERN, $column)) {
+                throw new InvalidArgumentException("Geçersiz kolon adı: {$column}");
+            }
+        }
+    }
+
     public function insert($table, $data) {
+        $this->validateTable($table);
+        $this->validateColumns(array_keys($data));
+
         $columns = implode(', ', array_keys($data));
         $placeholders = ':' . implode(', :', array_keys($data));
         $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
@@ -61,6 +112,9 @@ class Database {
     }
 
     public function update($table, $data, $where, $whereParams = []) {
+        $this->validateTable($table);
+        $this->validateColumns(array_keys($data));
+
         $set = [];
         foreach (array_keys($data) as $column) {
             $set[] = "{$column} = :{$column}";
@@ -70,6 +124,8 @@ class Database {
     }
 
     public function delete($table, $where, $params = []) {
+        $this->validateTable($table);
+
         $sql = "DELETE FROM {$table} WHERE {$where}";
         $this->query($sql, $params);
     }

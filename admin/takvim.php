@@ -3,55 +3,50 @@
  * Admin - Takvim ve Sipariş Yönetimi
  */
 
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
+// SiparisService kullan
+$siparisService = siparis_service();
+
 // Puan ayarlarını al
-$puanAyarlari = [];
-try {
-    $ayarlar = db()->fetchAll("SELECT kategori, puan FROM siparis_puan_ayarlari");
-    foreach ($ayarlar as $a) {
-        $puanAyarlari[$a['kategori']] = $a['puan'];
-    }
-} catch (Exception $e) {
-    // Tablo yoksa varsayılan değerler
-    $puanAyarlari = ['pasta' => 15, 'cupcake' => 8, 'cheesecake' => 12, 'kurabiye' => 6, 'ozel' => 20];
-}
+$puanAyarlari = $siparisService->getPuanAyarlari();
+
+// Kategori varsayılan fiyatları
+$kategoriFiyatlari = $siparisService->getKategoriFiyatlari();
 
 // Sipariş ekleme/silme (header'dan önce)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // CSRF Token kontrolü - GÜVENLİK
+    if (!verifyCSRF()) {
+        setFlash('error', 'Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin.');
+        header('Location: takvim.php');
+        exit;
+    }
+
     if ($_POST['action'] === 'ekle') {
         $tarih = $_POST['tarih'] ?? '';
         $kategori = $_POST['kategori'] ?? '';
-        $adet = (int)($_POST['adet'] ?? 1);
-        $musteriAdi = $_POST['musteri_adi'] ?? '';
-        $telefon = trim($_POST['telefon'] ?? '');
-        $adres = $_POST['adres'] ?? '';
-        $notlar = $_POST['notlar'] ?? '';
-
-        // Özel sipariş için puan manuel girilir
-        if ($kategori === 'ozel') {
-            $puan = (int)($_POST['ozel_puan'] ?? $puanAyarlari['ozel']);
-        } else {
-            $puan = $puanAyarlari[$kategori] ?? 10;
-        }
 
         if ($tarih && $kategori) {
             try {
-                db()->insert('siparisler', [
+                $siparisService->create([
                     'tarih' => $tarih,
                     'kategori' => $kategori,
-                    'adet' => $adet,
-                    'puan' => $puan,
-                    'musteri_adi' => $musteriAdi,
-                    'telefon' => $telefon,
-                    'adres' => $adres,
-                    'notlar' => $notlar
+                    'adet' => (int)($_POST['adet'] ?? 1),
+                    'musteri_adi' => $_POST['musteri_adi'] ?? '',
+                    'telefon' => trim($_POST['telefon'] ?? ''),
+                    'adres' => $_POST['adres'] ?? '',
+                    'notlar' => $_POST['notlar'] ?? '',
+                    'birim_fiyat' => (float)($_POST['birim_fiyat'] ?? 0),
+                    'odeme_tipi' => $_POST['odeme_tipi'] ?? 'online',
+                    'kanal' => $_POST['kanal'] ?? 'site',
+                    'ozel_puan' => (int)($_POST['ozel_puan'] ?? 0)
                 ]);
                 setFlash('success', 'Sipariş başarıyla eklendi.');
             } catch (Exception $e) {
-                setFlash('error', 'Sipariş eklenirken hata oluştu.');
+                setFlash('error', 'Sipariş eklenirken hata oluştu: ' . $e->getMessage());
             }
         }
         header('Location: takvim.php');
@@ -60,66 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'sil' && isset($_POST['id'])) {
         try {
-            db()->delete('siparisler', 'id = :id', ['id' => $_POST['id']]);
-            setFlash('success', 'Sipariş silindi.');
+            $result = $siparisService->deleteOrArchive((int)$_POST['id']);
+            setFlash('success', $result['mesaj']);
         } catch (Exception $e) {
-            setFlash('error', 'Sipariş silinirken hata oluştu.');
+            setFlash('error', 'Sipariş silinirken hata oluştu: ' . $e->getMessage());
         }
         header('Location: takvim.php');
         exit;
     }
 
-    // Tamamlandı durumunu değiştir
-    if ($_POST['action'] === 'tamamla' && isset($_POST['id'])) {
-        $yeniDurum = (int)($_POST['tamamlandi'] ?? 0);
+    // Durum değiştir
+    if ($_POST['action'] === 'durum_degistir' && isset($_POST['id'])) {
+        $yeniDurum = $_POST['durum'] ?? 'beklemede';
         $siparisId = (int)$_POST['id'];
 
         try {
-            // Siparişi al
-            $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$siparisId]);
-
-            if ($siparis) {
-                // Tamamlandı olarak işaretleniyorsa ve daha önce müşteri kaydedilmediyse
-                if ($yeniDurum == 1 && empty($siparis['musteri_kaydedildi']) && !empty($siparis['telefon'])) {
-                    // Müşteriyi kaydet veya güncelle
-                    $mevcutMusteri = db()->fetch("SELECT * FROM musteriler WHERE telefon = ?", [$siparis['telefon']]);
-
-                    if ($mevcutMusteri) {
-                        // Mevcut müşteriyi güncelle
-                        $yeniSiparisSayisi = $mevcutMusteri['siparis_sayisi'] + 1;
-                        $yeniHediyeHakki = floor($yeniSiparisSayisi / 5); // Her 5 siparişte 1 hediye
-
-                        db()->update('musteriler', [
-                            'isim' => $siparis['musteri_adi'] ?: $mevcutMusteri['isim'],
-                            'adres' => $siparis['adres'] ?: $mevcutMusteri['adres'],
-                            'siparis_sayisi' => $yeniSiparisSayisi,
-                            'son_siparis_tarihi' => $siparis['tarih'],
-                            'hediye_hak_edildi' => $yeniHediyeHakki
-                        ], 'id = :id', ['id' => $mevcutMusteri['id']]);
-                    } else {
-                        // Yeni müşteri oluştur
-                        db()->insert('musteriler', [
-                            'telefon' => $siparis['telefon'],
-                            'isim' => $siparis['musteri_adi'],
-                            'adres' => $siparis['adres'],
-                            'siparis_sayisi' => 1,
-                            'son_siparis_tarihi' => $siparis['tarih'],
-                            'hediye_hak_edildi' => 0
-                        ]);
-                    }
-
-                    // Siparişi müşteri kaydedildi olarak işaretle (geri alınsa bile sayılmayacak)
-                    db()->update('siparisler', [
-                        'tamamlandi' => $yeniDurum,
-                        'musteri_kaydedildi' => 1
-                    ], 'id = :id', ['id' => $siparisId]);
-                } else {
-                    // Sadece tamamlandı durumunu güncelle (müşteri kaydı yapma)
-                    db()->update('siparisler', ['tamamlandi' => $yeniDurum], 'id = :id', ['id' => $siparisId]);
-                }
-
-                setFlash('success', $yeniDurum ? 'Sipariş tamamlandı olarak işaretlendi.' : 'Sipariş devam ediyor olarak işaretlendi.');
-            }
+            $result = $siparisService->updateStatus($siparisId, $yeniDurum);
+            setFlash('success', $result['mesaj']);
         } catch (Exception $e) {
             setFlash('error', 'Durum güncellenirken hata oluştu: ' . $e->getMessage());
         }
@@ -133,46 +85,72 @@ require_once __DIR__ . '/includes/header.php';
 // Seçili tarih
 $seciliTarih = $_GET['tarih'] ?? date('Y-m-d');
 
-// O güne ait siparişler
-$gunSiparisleri = db()->fetchAll(
-    "SELECT * FROM siparisler WHERE tarih = ? ORDER BY created_at DESC",
-    [$seciliTarih]
-);
+// Görüntülenen ay/yıl (URL'den veya seçili tarihten)
+$gorunenAy = isset($_GET['ay']) ? (int)$_GET['ay'] : (int)date('n', strtotime($seciliTarih));
+$gorunenYil = isset($_GET['yil']) ? (int)$_GET['yil'] : (int)date('Y', strtotime($seciliTarih));
 
-// Toplam puan hesapla (sadece tamamlanmamış siparişler)
-$gunToplamPuan = 0;
-foreach ($gunSiparisleri as $s) {
-    // Tamamlanmış siparişlerin puanı sayılmaz
-    if (empty($s['tamamlandi'])) {
-        $gunToplamPuan += $s['puan'] * $s['adet'];
+// Ay sınırları kontrolü
+if ($gorunenAy < 1) {
+    $gorunenAy = 12;
+    $gorunenYil--;
+} elseif ($gorunenAy > 12) {
+    $gorunenAy = 1;
+    $gorunenYil++;
+}
+
+// Önceki ve sonraki ay
+$oncekiAy = $gorunenAy - 1;
+$oncekiYil = $gorunenYil;
+if ($oncekiAy < 1) {
+    $oncekiAy = 12;
+    $oncekiYil--;
+}
+
+$sonrakiAy = $gorunenAy + 1;
+$sonrakiYil = $gorunenYil;
+if ($sonrakiAy > 12) {
+    $sonrakiAy = 1;
+    $sonrakiYil++;
+}
+
+// Türkçe ay isimleri
+$ayIsimleri = [
+    1 => 'Ocak', 2 => 'Şubat', 3 => 'Mart', 4 => 'Nisan',
+    5 => 'Mayıs', 6 => 'Haziran', 7 => 'Temmuz', 8 => 'Ağustos',
+    9 => 'Eylül', 10 => 'Ekim', 11 => 'Kasım', 12 => 'Aralık'
+];
+
+// Ayın ilk ve son günü
+$ayinIlkGunu = sprintf('%04d-%02d-01', $gorunenYil, $gorunenAy);
+$ayinSonGunu = date('Y-m-t', strtotime($ayinIlkGunu));
+$ayinGunSayisi = (int)date('t', strtotime($ayinIlkGunu));
+
+// Ayın ilk gününün haftanın hangi günü olduğu (1=Pazartesi, 7=Pazar)
+$ilkGunHaftaGunu = (int)date('N', strtotime($ayinIlkGunu));
+
+// O güne ait siparişler (service kullanarak)
+$gunSiparisleri = $siparisService->getByDate($seciliTarih);
+
+// Günün toplam iş yükü (sadece bekleyen siparişler)
+$gunToplamPuan = $siparisService->getDayWorkload($seciliTarih, true);
+
+// Yoğunluk durumu (service'den)
+$yogunlukKategori = $siparisService->getWorkloadCategory($gunToplamPuan);
+$yogunluk = [
+    'durum' => $yogunlukKategori['label'],
+    'renk' => $yogunlukKategori['renk'],
+    'class' => $yogunlukKategori['durum']
+];
+
+// Ay için takvim verisi (service kullanarak)
+$takvimVerisi = $siparisService->getCalendarData($ayinIlkGunu, $ayinSonGunu);
+
+// Boş günler için 0 değeri ata
+for ($gun = 1; $gun <= $ayinGunSayisi; $gun++) {
+    $tarih = sprintf('%04d-%02d-%02d', $gorunenYil, $gorunenAy, $gun);
+    if (!isset($takvimVerisi[$tarih])) {
+        $takvimVerisi[$tarih] = 0;
     }
-}
-
-// Yoğunluk durumu (Yumuşak Pastel Tonlar)
-function getYogunlukDurumu($puan) {
-    if ($puan <= 10) return ['durum' => 'Boş', 'renk' => '#B8D4B8', 'class' => 'bos'];
-    if ($puan <= 40) return ['durum' => 'Uygun', 'renk' => '#B8D4E8', 'class' => 'uygun'];
-    if ($puan <= 80) return ['durum' => 'Yoğun', 'renk' => '#F5D4B0', 'class' => 'yogun'];
-    return ['durum' => 'Dolu', 'renk' => '#E8C4C4', 'class' => 'dolu'];
-}
-
-$yogunluk = getYogunlukDurumu($gunToplamPuan);
-
-// 30 günlük takvim verisi
-$takvimVerisi = [];
-for ($i = 0; $i < 30; $i++) {
-    $tarih = date('Y-m-d', strtotime("+$i days"));
-    $takvimVerisi[$tarih] = 0;
-}
-
-$siparisToplamlar = db()->fetchAll(
-    "SELECT tarih, SUM(puan * adet) as toplam FROM siparisler
-     WHERE tarih >= ? AND tarih <= ? AND (tamamlandi = 0 OR tamamlandi IS NULL) GROUP BY tarih",
-    [date('Y-m-d'), date('Y-m-d', strtotime('+30 days'))]
-);
-
-foreach ($siparisToplamlar as $st) {
-    $takvimVerisi[$st['tarih']] = (int)$st['toplam'];
 }
 
 $kategoriLabels = [
@@ -247,6 +225,14 @@ $kategoriLabels = [
 .takvim-gun .gun-ay {
     font-size: 0.7rem;
     opacity: 0.7;
+}
+
+.takvim-gun .gun-adi {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
 .takvim-gun.bos { background: #D8ECD8; color: #4A7A4A; }
@@ -695,6 +681,94 @@ $kategoriLabels = [
 .btn-tamamla.geri-al:hover {
     background: #f57c00;
 }
+
+/* Ay navigasyonu */
+.takvim-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid #eee;
+}
+
+.takvim-nav h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.takvim-nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.takvim-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: #666;
+}
+
+.takvim-nav-btn:hover {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: white;
+}
+
+.takvim-nav-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-bugun {
+    width: auto;
+    padding: 0 1rem;
+    font-size: 0.85rem;
+}
+
+.takvim-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.takvim-grid {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.takvim-gun .gun-ay {
+    display: none; /* Ay içinde ay göstermeye gerek yok */
+}
+
+.takvim-gun.gecmis {
+    opacity: 0.5;
+}
+
+.takvim-gun.bugun {
+    border: 2px solid var(--admin-primary) !important;
+    font-weight: 600;
+}
+
+.takvim-gun.bos-gun {
+    background: transparent;
+    cursor: default;
+}
+
+.takvim-gun.bos-gun:hover {
+    transform: none;
+    box-shadow: none;
+}
 </style>
 
 <h2 style="margin-bottom: 1.5rem;">Takvim & Sipariş Yönetimi</h2>
@@ -702,33 +776,68 @@ $kategoriLabels = [
 <div class="takvim-container">
     <!-- Takvim -->
     <div>
-        <div class="takvim-grid">
-            <div class="takvim-header">Pzt</div>
-            <div class="takvim-header">Sal</div>
-            <div class="takvim-header">Çar</div>
-            <div class="takvim-header">Per</div>
-            <div class="takvim-header">Cum</div>
-            <div class="takvim-header">Cmt</div>
-            <div class="takvim-header">Paz</div>
+        <div class="takvim-wrapper">
+            <!-- Ay Navigasyonu -->
+            <div class="takvim-nav">
+                <div class="takvim-nav-buttons">
+                    <a href="?ay=<?= $oncekiAy ?>&yil=<?= $oncekiYil ?>&tarih=<?= $seciliTarih ?>" class="takvim-nav-btn" title="Önceki Ay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </a>
+                </div>
 
-            <?php
-            // İlk günün haftanın kaçıncı günü olduğunu bul
-            $ilkGun = date('N', strtotime(date('Y-m-d')));
+                <h3><?= $ayIsimleri[$gorunenAy] ?> <?= $gorunenYil ?></h3>
 
-            // Boşlukları doldur
-            for ($i = 1; $i < $ilkGun; $i++) {
-                echo '<div></div>';
-            }
+                <div class="takvim-nav-buttons">
+                    <a href="?ay=<?= date('n') ?>&yil=<?= date('Y') ?>&tarih=<?= date('Y-m-d') ?>" class="takvim-nav-btn btn-bugun" title="Bugün">
+                        Bugün
+                    </a>
+                    <a href="?ay=<?= $sonrakiAy ?>&yil=<?= $sonrakiYil ?>&tarih=<?= $seciliTarih ?>" class="takvim-nav-btn" title="Sonraki Ay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
 
-            foreach ($takvimVerisi as $tarih => $puan):
-                $yd = getYogunlukDurumu($puan);
-                $secili = $tarih === $seciliTarih ? 'secili' : '';
-            ?>
-                <a href="?tarih=<?= $tarih ?>" class="takvim-gun <?= $yd['class'] ?> <?= $secili ?>">
-                    <span class="gun-sayi"><?= date('d', strtotime($tarih)) ?></span>
-                    <span class="gun-ay"><?= ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'][date('n', strtotime($tarih))] ?></span>
-                </a>
-            <?php endforeach; ?>
+            <!-- Takvim Grid -->
+            <div class="takvim-grid">
+                <div class="takvim-header">Pzt</div>
+                <div class="takvim-header">Sal</div>
+                <div class="takvim-header">Çar</div>
+                <div class="takvim-header">Per</div>
+                <div class="takvim-header">Cum</div>
+                <div class="takvim-header">Cmt</div>
+                <div class="takvim-header">Paz</div>
+
+                <?php
+                // Ayın başındaki boşluklar (Pazartesi'den önceki günler)
+                for ($i = 1; $i < $ilkGunHaftaGunu; $i++) {
+                    echo '<div class="takvim-gun bos-gun"></div>';
+                }
+
+                // Bugünün tarihi
+                $bugun = date('Y-m-d');
+
+                // Hafta günü isimleri
+                $haftaGunleri = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+
+                // Ayın günlerini göster
+                foreach ($takvimVerisi as $tarih => $puan):
+                    $yd = getYogunlukDurumu($puan);
+                    $secili = $tarih === $seciliTarih ? 'secili' : '';
+                    $gecmis = $tarih < $bugun ? 'gecmis' : '';
+                    $bugunMu = $tarih === $bugun ? 'bugun' : '';
+                    $haftaGunuIdx = (int)date('w', strtotime($tarih));
+                    $haftaGunuAdi = $haftaGunleri[$haftaGunuIdx];
+                ?>
+                    <a href="?ay=<?= $gorunenAy ?>&yil=<?= $gorunenYil ?>&tarih=<?= $tarih ?>" class="takvim-gun <?= $yd['class'] ?> <?= $secili ?> <?= $gecmis ?> <?= $bugunMu ?>" title="<?= (int)date('d', strtotime($tarih)) ?> <?= $ayIsimleri[$gorunenAy] ?> - <?= $haftaGunuAdi ?>">
+                        <span class="gun-sayi"><?= (int)date('d', strtotime($tarih)) ?></span>
+                        <span class="gun-adi"><?= $haftaGunuAdi ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <div class="legend">
@@ -744,7 +853,7 @@ $kategoriLabels = [
         <!-- Seçili Gün Bilgisi -->
         <div class="sidebar-panel" style="margin-bottom: 1rem;">
             <div class="panel-header">
-                <h3><?= date('d F Y', strtotime($seciliTarih)) ?></h3>
+                <h3><?= date('d', strtotime($seciliTarih)) ?> <?= $ayIsimleri[(int)date('n', strtotime($seciliTarih))] ?> <?= date('Y', strtotime($seciliTarih)) ?></h3>
                 <span class="yogunluk-badge <?= $yogunluk['class'] ?>"><?= $yogunluk['durum'] ?></span>
             </div>
             <div class="panel-body">
@@ -765,6 +874,7 @@ $kategoriLabels = [
             </div>
             <div class="panel-body">
                 <form method="POST" class="siparis-form">
+                    <?= csrfTokenField() ?>
                     <input type="hidden" name="action" value="ekle">
                     <input type="hidden" name="tarih" value="<?= $seciliTarih ?>">
 
@@ -788,6 +898,30 @@ $kategoriLabels = [
                     <div class="form-group ozel-puan-group" id="ozelPuanGroup">
                         <label>Özel Puan</label>
                         <input type="number" name="ozel_puan" value="20" min="1" max="100">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Birim Fiyat (₺)</label>
+                            <input type="number" name="birim_fiyat" id="birimFiyat" step="0.01" min="0" placeholder="0.00">
+                            <small style="color: var(--admin-text-light);">Özel sipariş için manuel girin</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Ödeme Tipi</label>
+                            <select name="odeme_tipi">
+                                <option value="online">Online (Site)</option>
+                                <option value="fiziksel">Fiziksel (Mağaza)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sipariş Kanalı</label>
+                        <select name="kanal">
+                            <option value="site">Web Sitesi</option>
+                            <option value="telefon">Telefon</option>
+                            <option value="cafe">Cafe/Mağaza</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -827,28 +961,37 @@ $kategoriLabels = [
                 <?php else: ?>
                     <div class="siparis-listesi">
                         <?php foreach ($gunSiparisleri as $index => $siparis):
-                            $tamamlandi = !empty($siparis['tamamlandi']);
+                            $teslimEdildi = ($siparis['durum'] ?? '') === 'teslim_edildi';
+                            $durumClass = $teslimEdildi ? 'tamamlandi' : '';
+                            $durumLabels = [
+                                'beklemede' => 'Beklemede',
+                                'onaylandi' => 'Onaylandı',
+                                'hazirlaniyor' => 'Hazırlanıyor',
+                                'teslim_edildi' => 'Teslim Edildi',
+                                'iptal' => 'İptal'
+                            ];
                         ?>
-                            <div class="siparis-item <?= $tamamlandi ? 'tamamlandi' : '' ?>" onclick="openSiparisModal(<?= $index ?>)">
+                            <div class="siparis-item <?= $durumClass ?>" onclick="openSiparisModal(<?= $index ?>)">
                                 <div class="siparis-info">
                                     <strong>
-                                        <?= $kategoriLabels[$siparis['kategori']] ?> x<?= $siparis['adet'] ?>
-                                        <?php if ($tamamlandi): ?>
-                                            <span class="siparis-durum-badge tamamlandi">Tamamlandı</span>
+                                        <?= $kategoriLabels[$siparis['kategori']] ?? $siparis['kategori'] ?> x<?= $siparis['kisi_sayisi'] ?? 1 ?>
+                                        <?php if ($siparis['durum'] && $siparis['durum'] !== 'beklemede'): ?>
+                                            <span class="siparis-durum-badge <?= $teslimEdildi ? 'tamamlandi' : 'devam' ?>"><?= $durumLabels[$siparis['durum']] ?? $siparis['durum'] ?></span>
                                         <?php endif; ?>
                                     </strong>
-                                    <?php if ($siparis['musteri_adi']): ?>
-                                        <small><?= e($siparis['musteri_adi']) ?></small>
+                                    <?php if ($siparis['ad_soyad']): ?>
+                                        <small><?= e($siparis['ad_soyad']) ?></small>
                                     <?php endif; ?>
-                                    <?php if ($siparis['notlar'] || ($siparis['adres'] ?? '')): ?>
+                                    <?php if ($siparis['notlar'] || ($siparis['ozel_istekler'] ?? '')): ?>
                                         <div class="siparis-ozet">
                                             <?= $siparis['notlar'] ? mb_substr(e($siparis['notlar']), 0, 30) . (mb_strlen($siparis['notlar']) > 30 ? '...' : '') : '' ?>
-                                            <?= ($siparis['adres'] ?? '') ? '📍' : '' ?>
+                                            <?= ($siparis['ozel_istekler'] ?? '') ? '📍' : '' ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <span class="siparis-puan"><?= $siparis['puan'] * $siparis['adet'] ?> p</span>
+                                <span class="siparis-puan"><?= ($siparis['puan'] ?? 0) * ($siparis['kisi_sayisi'] ?? 1) ?> p</span>
                                 <form method="POST" style="display: inline;" onclick="event.stopPropagation();">
+                                    <?= csrfTokenField() ?>
                                     <input type="hidden" name="action" value="sil">
                                     <input type="hidden" name="id" value="<?= $siparis['id'] ?>">
                                     <button type="submit" class="btn-sil" onclick="return confirm('Siparişi silmek istediğinize emin misiniz?')">
@@ -914,6 +1057,21 @@ $kategoriLabels = [
                     <small id="modalPuanNot" style="display: none; margin-left: 0.5rem; color: #4caf50;">(Sayılmıyor)</small>
                 </div>
             </div>
+            <div class="modal-detail-row" id="modalFiyatRow">
+                <div class="modal-detail-label">Tutar</div>
+                <div class="modal-detail-value">
+                    <span id="modalBirimFiyat" style="color: #666;"></span>
+                    <strong id="modalToplamTutar" style="font-size: 1.1rem; color: var(--admin-primary); margin-left: 0.5rem;"></strong>
+                </div>
+            </div>
+            <div class="modal-detail-row" id="modalOdemeRow">
+                <div class="modal-detail-label">Ödeme</div>
+                <div class="modal-detail-value" id="modalOdemeTipi"></div>
+            </div>
+            <div class="modal-detail-row" id="modalKanalRow">
+                <div class="modal-detail-label">Kanal</div>
+                <div class="modal-detail-value" id="modalKanal"></div>
+            </div>
             <div class="modal-detail-row" id="modalMusteriRow" style="display: none;">
                 <div class="modal-detail-label">Müşteri</div>
                 <div class="modal-detail-value" id="modalMusteri"></div>
@@ -932,23 +1090,21 @@ $kategoriLabels = [
             </div>
         </div>
         <div class="modal-footer">
-            <form method="POST" id="modalTamamlaForm" style="display: inline;">
-                <input type="hidden" name="action" value="tamamla">
+            <form method="POST" id="modalDurumForm" style="display: inline;">
+                <?= csrfTokenField() ?>
+                <input type="hidden" name="action" value="durum_degistir">
                 <input type="hidden" name="id" id="modalSiparisId">
-                <input type="hidden" name="tamamlandi" id="modalTamamlandiValue">
+                <input type="hidden" name="durum" id="modalDurumValue">
                 <input type="hidden" name="tarih" value="<?= $seciliTarih ?>">
-                <button type="submit" class="btn-tamamla devam-et" id="btnTamamla">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    Tamamlandı İşaretle
-                </button>
-                <button type="submit" class="btn-tamamla geri-al" id="btnGeriAl" style="display: none;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="1 4 1 10 7 10"/>
-                        <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
-                    </svg>
-                    Devam Ediyor Yap
+                <select id="modalDurumSelect" onchange="document.getElementById('modalDurumValue').value = this.value;" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-right: 0.5rem;">
+                    <option value="beklemede">Beklemede</option>
+                    <option value="onaylandi">Onaylandı</option>
+                    <option value="hazirlaniyor">Hazırlanıyor</option>
+                    <option value="teslim_edildi">Teslim Edildi</option>
+                    <option value="iptal">İptal</option>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    Durumu Güncelle
                 </button>
             </form>
             <button class="btn btn-secondary" onclick="closeSiparisModal()">Kapat</button>
@@ -965,27 +1121,43 @@ function openSiparisModal(index) {
     const siparis = siparisler[index];
     if (!siparis) return;
 
-    const tamamlandi = siparis.tamamlandi == 1;
+    const durum = siparis.durum || 'beklemede';
+    const teslimEdildi = durum === 'teslim_edildi';
+    const kisiSayisi = parseInt(siparis.kisi_sayisi) || 1;
+    const puan = parseFloat(siparis.puan) || 0;
 
     document.getElementById('modalKategori').textContent = kategoriLabels[siparis.kategori] || siparis.kategori;
-    document.getElementById('modalAdet').textContent = siparis.adet;
-    document.getElementById('modalPuan').textContent = (siparis.puan * siparis.adet) + ' puan';
+    document.getElementById('modalAdet').textContent = kisiSayisi;
+    document.getElementById('modalPuan').textContent = (puan * kisiSayisi) + ' puan';
+
+    // Fiyat bilgileri
+    const birimFiyat = parseFloat(siparis.birim_fiyat) || 0;
+    const toplamTutar = parseFloat(siparis.toplam_tutar) || 0;
+    document.getElementById('modalBirimFiyat').textContent = kisiSayisi > 1 ? `${birimFiyat.toFixed(2)} ₺ x ${kisiSayisi} =` : '';
+    document.getElementById('modalToplamTutar').textContent = `${toplamTutar.toFixed(2)} ₺`;
+
+    // Ödeme tipi
+    const odemeTipleri = {'online': 'Online (Site)', 'fiziksel': 'Fiziksel (Mağaza)'};
+    document.getElementById('modalOdemeTipi').textContent = odemeTipleri[siparis.odeme_tipi] || siparis.odeme_tipi || 'Online';
+
+    // Kanal
+    const kanallar = {'site': 'Web Sitesi', 'telefon': 'Telefon', 'cafe': 'Cafe/Mağaza'};
+    document.getElementById('modalKanal').textContent = kanallar[siparis.kanal] || siparis.kanal || 'Web Sitesi';
 
     // Durum gösterimi
-    document.getElementById('modalDurumDevam').style.display = tamamlandi ? 'none' : 'inline-flex';
-    document.getElementById('modalDurumTamamlandi').style.display = tamamlandi ? 'inline-flex' : 'none';
-    document.getElementById('modalPuanNot').style.display = tamamlandi ? 'inline' : 'none';
+    document.getElementById('modalDurumDevam').style.display = teslimEdildi ? 'none' : 'inline-flex';
+    document.getElementById('modalDurumTamamlandi').style.display = teslimEdildi ? 'inline-flex' : 'none';
+    document.getElementById('modalPuanNot').style.display = teslimEdildi ? 'inline' : 'none';
 
-    // Form ve butonlar
+    // Form - mevcut durumu seç
     document.getElementById('modalSiparisId').value = siparis.id;
-    document.getElementById('modalTamamlandiValue').value = tamamlandi ? '0' : '1';
-    document.getElementById('btnTamamla').style.display = tamamlandi ? 'none' : 'flex';
-    document.getElementById('btnGeriAl').style.display = tamamlandi ? 'flex' : 'none';
+    document.getElementById('modalDurumSelect').value = durum;
+    document.getElementById('modalDurumValue').value = durum;
 
     // Müşteri
     const musteriRow = document.getElementById('modalMusteriRow');
-    if (siparis.musteri_adi) {
-        document.getElementById('modalMusteri').textContent = siparis.musteri_adi;
+    if (siparis.ad_soyad) {
+        document.getElementById('modalMusteri').textContent = siparis.ad_soyad;
         musteriRow.style.display = 'flex';
     } else {
         musteriRow.style.display = 'none';
@@ -1000,10 +1172,10 @@ function openSiparisModal(index) {
         telefonRow.style.display = 'none';
     }
 
-    // Adres
+    // Adres (ozel_istekler alanında)
     const adresRow = document.getElementById('modalAdresRow');
-    if (siparis.adres) {
-        document.getElementById('modalAdres').textContent = siparis.adres;
+    if (siparis.ozel_istekler) {
+        document.getElementById('modalAdres').textContent = siparis.ozel_istekler;
         adresRow.style.display = 'flex';
     } else {
         adresRow.style.display = 'none';
@@ -1041,13 +1213,37 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Özel sipariş puan göster/gizle
+// Kategori fiyatları
+const kategoriFiyatlari = <?= json_encode($kategoriFiyatlari, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+// Özel sipariş puan göster/gizle ve fiyat otomatik doldur
 document.getElementById('kategoriSelect').addEventListener('change', function() {
     const ozelGroup = document.getElementById('ozelPuanGroup');
-    if (this.value === 'ozel') {
+    const birimFiyatInput = document.getElementById('birimFiyat');
+    const kategori = this.value;
+
+    if (kategori === 'ozel') {
         ozelGroup.classList.add('show');
+        birimFiyatInput.value = '';
+        birimFiyatInput.placeholder = 'Manuel girin';
+        birimFiyatInput.required = true;
     } else {
         ozelGroup.classList.remove('show');
+        birimFiyatInput.value = kategoriFiyatlari[kategori] || '';
+        birimFiyatInput.placeholder = '0.00';
+        birimFiyatInput.required = false;
+    }
+});
+
+// Sayfa yüklendiğinde ilk kategori için fiyat ayarla
+document.addEventListener('DOMContentLoaded', function() {
+    const kategoriSelect = document.getElementById('kategoriSelect');
+    const birimFiyatInput = document.getElementById('birimFiyat');
+    if (kategoriSelect && birimFiyatInput) {
+        const kategori = kategoriSelect.value;
+        if (kategori !== 'ozel') {
+            birimFiyatInput.value = kategoriFiyatlari[kategori] || '';
+        }
     }
 });
 </script>

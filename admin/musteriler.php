@@ -3,43 +3,37 @@
  * Kayıtlı Müşteriler - Sadakat Programı Takibi
  */
 
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
+// MusteriService kullan
+$musteriService = musteri_service();
+
 // Arama ve filtreleme
 $arama = trim($_GET['arama'] ?? '');
-$siralama = $_GET['siralama'] ?? 'siparis_sayisi';
-$yonSirala = $_GET['yon'] ?? 'DESC';
 
-// Geçerli sıralama alanları
-$gecerliSiralama = ['siparis_sayisi', 'son_siparis_tarihi', 'isim', 'telefon', 'hediye_hak_edildi'];
-if (!in_array($siralama, $gecerliSiralama)) {
-    $siralama = 'siparis_sayisi';
-}
-$yonSirala = strtoupper($yonSirala) === 'ASC' ? 'ASC' : 'DESC';
+// ORDER BY SQL Injection koruması - Whitelist kullan
+$allowedSortColumns = ['siparis_sayisi', 'isim', 'son_siparis_tarihi', 'toplam_tutar'];
+$siralama = in_array($_GET['siralama'] ?? '', $allowedSortColumns, true)
+    ? $_GET['siralama']
+    : 'siparis_sayisi';
+
+$allowedDirections = ['ASC', 'DESC'];
+$yonSirala = in_array(strtoupper($_GET['yon'] ?? ''), $allowedDirections, true)
+    ? strtoupper($_GET['yon'])
+    : 'DESC';
 
 // Müşterileri getir
 try {
-    $sql = "SELECT * FROM musteriler";
-    $params = [];
-
-    if ($arama) {
-        $sql .= " WHERE (telefon LIKE :arama OR isim LIKE :arama2 OR adres LIKE :arama3)";
-        $params['arama'] = "%$arama%";
-        $params['arama2'] = "%$arama%";
-        $params['arama3'] = "%$arama%";
-    }
-
-    $sql .= " ORDER BY $siralama $yonSirala";
-    $musteriler = db()->fetchAll($sql, $params);
+    $musteriler = $musteriService->getAllWithSearch($arama ?: null, $siralama, $yonSirala);
 } catch (Exception $e) {
     $musteriler = [];
 }
 
 // Toplam istatistikler
 try {
-    $stats = db()->fetch("SELECT COUNT(*) as toplam_musteri, SUM(siparis_sayisi) as toplam_siparis, SUM(hediye_hak_edildi) as toplam_hediye FROM musteriler");
+    $stats = $musteriService->getStats();
 } catch (Exception $e) {
     $stats = ['toplam_musteri' => 0, 'toplam_siparis' => 0, 'toplam_hediye' => 0];
 }
@@ -384,8 +378,8 @@ require_once __DIR__ . '/includes/header.php';
             </thead>
             <tbody>
                 <?php foreach ($musteriler as $musteri):
-                    $siparisKalan = $musteri['siparis_sayisi'] % 5;
-                    $sonrakiHediyeIcin = 5 - $siparisKalan;
+                    $sonrakiHediyeIcin = $musteriService->getOrdersUntilNextGift($musteri);
+                    $hedijeProgress = $musteriService->getGiftProgress($musteri);
                     $ilkHarf = mb_strtoupper(mb_substr($musteri['isim'] ?: $musteri['telefon'], 0, 1));
                 ?>
                     <tr>
@@ -423,7 +417,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="sonraki-hediye">
                                 <?= $sonrakiHediyeIcin ?> sipariş sonra hediye
                                 <span class="progress">
-                                    <span class="progress-fill" style="width: <?= ($siparisKalan / 5) * 100 ?>%"></span>
+                                    <span class="progress-fill" style="width: <?= $hedijeProgress ?>%"></span>
                                 </span>
                             </div>
                         </td>
