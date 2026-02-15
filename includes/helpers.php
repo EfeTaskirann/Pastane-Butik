@@ -590,15 +590,36 @@ if (!function_exists('validate_email')) {
 
 if (!function_exists('validate_phone')) {
     /**
-     * Validate Turkish phone number
+     * Validate Turkish phone number (sıkılaştırılmış)
+     * Desteklenen formatlar:
+     * - 05XX XXX XX XX (11 haneli, 05 ile başlar)
+     * - 5XX XXX XX XX (10 haneli, 5 ile başlar)
+     * - 905XXXXXXXXX (12 haneli, 905 ile başlar)
      *
      * @param string $phone
      * @return bool
      */
     function validate_phone(string $phone): bool
     {
+        // Sadece rakamları al
         $phone = preg_replace('/\D/', '', $phone);
-        return strlen($phone) === 10 || strlen($phone) === 11;
+
+        // 10 haneli: 5XX ile başlamalı (GSM operatörleri: 50-59)
+        if (strlen($phone) === 10) {
+            return preg_match('/^5[0-9]{9}$/', $phone) === 1;
+        }
+
+        // 11 haneli: 05XX ile başlamalı
+        if (strlen($phone) === 11) {
+            return preg_match('/^05[0-9]{9}$/', $phone) === 1;
+        }
+
+        // 12 haneli: 905XX ile başlamalı (ülke kodu ile)
+        if (strlen($phone) === 12) {
+            return preg_match('/^905[0-9]{9}$/', $phone) === 1;
+        }
+
+        return false;
     }
 }
 
