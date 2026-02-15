@@ -27,23 +27,25 @@ require_once __DIR__ . '/../includes/JWT.php';
 // Admin session kontrolü VEYA JWT token kontrolü
 $authenticated = false;
 
-// 1. Admin session kontrolü
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+// 1. Admin session kontrolü - admin_id ve admin_user kontrol et (auth.php ile tutarlı)
+if (isset($_SESSION['admin_id']) && isset($_SESSION['admin_user'])) {
     $authenticated = true;
 }
-// 2. JWT token kontrolü (API erişimi için - Session yoksa)
-else {
+
+// 2. JWT token kontrolü (API erişimi için)
+if (!$authenticated) {
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (!empty($authHeader) && preg_match('/Bearer\s+(.+)$/i', $authHeader, $matches)) {
+    if (preg_match('/Bearer\s+(.+)$/i', $authHeader, $matches)) {
         $token = $matches[1];
-        if (class_exists('JWT')) {
-            try {
-                $payload = JWT::verify($token);
-                if ($payload && isset($payload['role']) && $payload['role'] === 'admin') {
-                    $authenticated = true;
-                }
-            } catch (Exception $e) {
-                // Token geçersiz, sessizce devam et
+        try {
+            $payload = JWT::verify($token);
+            if ($payload && isset($payload['role']) && $payload['role'] === 'admin') {
+                $authenticated = true;
+            }
+        } catch (Exception $e) {
+            // Token geçersiz - log yap
+            if (function_exists('error_log')) {
+                error_log("API raporlar.php JWT hatası: " . $e->getMessage());
             }
         }
     }

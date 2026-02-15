@@ -31,8 +31,7 @@ if (!function_exists('getYogunlukDurumu')) {
         } elseif ($puan <= 80) {
             return ['class' => 'yogun', 'label' => 'Yoğun'];
         } else {
-            // CSS ile uyumlu: .dolu class'ı
-            return ['class' => 'dolu', 'label' => 'Çok Yoğun'];
+            return ['class' => 'cok-yogun', 'label' => 'Çok Yoğun'];
         }
     }
 }
@@ -323,4 +322,5 @@ if (!function_exists('getHaftalikKarsilastirma')) {
     function getHaftalikKarsilastirma() {
         return rapor_service()->getHaftalikKarsilastirma();
     }
+}
 }
