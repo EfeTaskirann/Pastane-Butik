@@ -11,6 +11,7 @@ class Database {
 
     /**
      * İzin verilen tablo adları - SQL Injection koruması
+     * Codex + Antigravity analizi ile eksik tablolar eklendi
      */
     private const ALLOWED_TABLES = [
         'urunler',
@@ -21,13 +22,23 @@ class Database {
         'ayarlar',
         'login_attempts',
         'rate_limits',
-        'cache'
+        'cache',
+        // Codex + Antigravity tarafından tespit edilen eksik tablolar
+        'iletisim_mesajlari',
+        'admin_kullanicilar',
+        'siparis_arsiv',
+        'odemeler'
     ];
 
     /**
      * İzin verilen kolon adları - SQL Injection koruması
      */
     private const ALLOWED_COLUMNS_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
+
+    /**
+     * WHERE clause için izin verilen operatörler
+     */
+    private const ALLOWED_WHERE_OPERATORS = ['=', '!=', '<', '>', '<=', '>=', 'LIKE', 'IN', 'IS NULL', 'IS NOT NULL'];
 
     private function __construct() {
         try {
@@ -111,9 +122,44 @@ class Database {
         return $this->pdo->lastInsertId();
     }
 
+    /**
+     * WHERE clause'u doğrula - SQL Injection koruması
+     * Sadece basit kolon karşılaştırmaları ve parametreli sorgular kabul edilir
+     */
+    private function validateWhereClause(string $where): void {
+        // Boş where clause kabul edilmez
+        if (empty(trim($where))) {
+            throw new InvalidArgumentException("WHERE clause boş olamaz");
+        }
+
+        // Tehlikeli SQL keyword'leri kontrol et
+        $dangerousKeywords = [
+            'DROP', 'TRUNCATE', 'DELETE FROM', 'INSERT INTO', 'UPDATE SET',
+            'ALTER', 'CREATE', 'GRANT', 'REVOKE', '--', '/*', '*/', 'UNION',
+            'EXEC', 'EXECUTE', 'xp_', 'sp_', 'INFORMATION_SCHEMA'
+        ];
+
+        $upperWhere = strtoupper($where);
+        foreach ($dangerousKeywords as $keyword) {
+            if (strpos($upperWhere, $keyword) !== false) {
+                throw new InvalidArgumentException("WHERE clause'da izin verilmeyen keyword: {$keyword}");
+            }
+        }
+
+        // WHERE clause'daki kolon adlarını doğrula (basit pattern matching)
+        // Örnek: "id = :id" veya "id = ?" formatında olmalı
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*\s*(=|!=|<|>|<=|>=|LIKE|IS NULL|IS NOT NULL)\s*(:?[a-zA-Z0-9_]*|\?)(\s+(AND|OR)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*(=|!=|<|>|<=|>=|LIKE|IS NULL|IS NOT NULL)\s*(:?[a-zA-Z0-9_]*|\?))*$/i', $where)) {
+            // Daha esnek pattern - en azından parametre kullanıldığından emin ol
+            if (strpos($where, ':') === false && strpos($where, '?') === false) {
+                throw new InvalidArgumentException("WHERE clause parametresiz değer içeremez. Prepared statement kullanın.");
+            }
+        }
+    }
+
     public function update($table, $data, $where, $whereParams = []) {
         $this->validateTable($table);
         $this->validateColumns(array_keys($data));
+        $this->validateWhereClause($where);
 
         $set = [];
         foreach (array_keys($data) as $column) {
@@ -123,11 +169,61 @@ class Database {
         $this->query($sql, array_merge($data, $whereParams));
     }
 
+    /**
+     * Güvenli update - array based where clause
+     * Örnek: updateSafe('users', ['name' => 'John'], ['id' => 5])
+     */
+    public function updateSafe(string $table, array $data, array $conditions): void {
+        $this->validateTable($table);
+        $this->validateColumns(array_keys($data));
+        $this->validateColumns(array_keys($conditions));
+
+        $set = [];
+        foreach (array_keys($data) as $column) {
+            $set[] = "{$column} = :set_{$column}";
+        }
+
+        $where = [];
+        foreach (array_keys($conditions) as $column) {
+            $where[] = "{$column} = :where_{$column}";
+        }
+
+        $sql = "UPDATE {$table} SET " . implode(', ', $set) . " WHERE " . implode(' AND ', $where);
+
+        $params = [];
+        foreach ($data as $key => $value) {
+            $params["set_{$key}"] = $value;
+        }
+        foreach ($conditions as $key => $value) {
+            $params["where_{$key}"] = $value;
+        }
+
+        $this->query($sql, $params);
+    }
+
     public function delete($table, $where, $params = []) {
         $this->validateTable($table);
+        $this->validateWhereClause($where);
 
         $sql = "DELETE FROM {$table} WHERE {$where}";
         $this->query($sql, $params);
+    }
+
+    /**
+     * Güvenli delete - array based where clause
+     * Örnek: deleteSafe('users', ['id' => 5])
+     */
+    public function deleteSafe(string $table, array $conditions): void {
+        $this->validateTable($table);
+        $this->validateColumns(array_keys($conditions));
+
+        $where = [];
+        foreach (array_keys($conditions) as $column) {
+            $where[] = "{$column} = :{$column}";
+        }
+
+        $sql = "DELETE FROM {$table} WHERE " . implode(' AND ', $where);
+        $this->query($sql, $conditions);
     }
 }
 

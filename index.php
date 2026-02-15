@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/security.php';
+
+// Güvenli session başlat (CSRF token için gerekli)
+secureSessionStart();
 
 // Kategorileri ve ürünleri veritabanından çek
 $categories = getCategories();
@@ -20,7 +24,7 @@ $products = getProducts();
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link rel="stylesheet" href="assets/css/animations.css">
 </head>
 <body>
@@ -349,37 +353,28 @@ $products = getProducts();
             <div class="category-filters reveal reveal-up reveal-delay-1">
                 <button class="filter-btn active" data-category="all">Tümü</button>
                 <?php foreach ($categories as $cat): ?>
-                    <button class="filter-btn" data-category="<?= e($cat['slug']) ?>"><?= e($cat['isim']) ?></button>
+                    <button class="filter-btn" data-category="<?= e($cat['slug']) ?>"><?= e($cat['ad']) ?></button>
                 <?php endforeach; ?>
             </div>
 
             <!-- Ürün Grid -->
             <div class="products-grid" id="productsGrid">
                 <?php
-                // Kategori bilgilerini ID bazlı bir diziye al
-                $categoryMap = [];
-                foreach ($categories as $cat) {
-                    $categoryMap[$cat['id']] = $cat;
-                }
-
                 // Sadece aktif ürünleri göster
+                // NOT: getProducts() zaten JOIN ile kategori bilgilerini (kategori_ad, kategori_slug) döndürüyor
                 foreach ($products as $product):
                     if (!$product['aktif']) continue;
 
-                    // Kategori bilgisini al
-                    $categorySlug = '';
-                    $categoryName = '';
-                    if ($product['kategori_id'] && isset($categoryMap[$product['kategori_id']])) {
-                        $categorySlug = $categoryMap[$product['kategori_id']]['slug'];
-                        $categoryName = $categoryMap[$product['kategori_id']]['isim'];
-                    }
+                    // Kategori bilgisini doğrudan JOIN'den al (N+1 optimizasyonu)
+                    $categorySlug = $product['kategori_slug'] ?? '';
+                    $categoryName = $product['kategori_ad'] ?? '';
 
                     // WhatsApp mesajı için URL encode
-                    $waMessage = urlencode("Merhaba, " . $product['isim'] . " hakkında bilgi almak istiyorum.");
+                    $waMessage = urlencode("Merhaba, " . $product['ad'] . " hakkında bilgi almak istiyorum.");
 
                     // Modal için JSON data
                     $productData = [
-                        'isim' => $product['isim'],
+                        'isim' => $product['ad'],
                         'aciklama' => $product['aciklama'] ?? '',
                         'gorsel' => $product['gorsel'] ?? '',
                         'fiyat' => $product['fiyat'],
@@ -394,7 +389,7 @@ $products = getProducts();
                 <div class="product-card" data-category="<?= e($categorySlug) ?>" data-product='<?= htmlspecialchars(json_encode($productData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>'>
                     <div class="product-image">
                         <?php if ($product['gorsel']): ?>
-                            <img src="uploads/products/<?= e($product['gorsel']) ?>" alt="<?= e($product['isim']) ?>">
+                            <img src="uploads/products/<?= e($product['gorsel']) ?>" alt="<?= e($product['ad']) ?>">
                         <?php else: ?>
                             <!-- Varsayılan SVG İllüstrasyon -->
                             <svg viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -414,7 +409,7 @@ $products = getProducts();
                         <?php if ($categoryName): ?>
                             <span class="product-category"><?= e($categoryName) ?></span>
                         <?php endif; ?>
-                        <h3 class="product-name"><?= e($product['isim']) ?></h3>
+                        <h3 class="product-name"><?= e($product['ad']) ?></h3>
                         <?php if ($product['aciklama']): ?>
                             <p class="product-description"><?= e($product['aciklama']) ?></p>
                         <?php endif; ?>
@@ -634,6 +629,9 @@ $products = getProducts();
                 </div>
 
                 <form class="contact-form reveal reveal-right" action="iletisim.php" method="POST">
+                    <?= csrfTokenField() ?>
+                    <!-- Honeypot - spam koruması -->
+                    <input type="text" name="website" style="display:none;" tabindex="-1" autocomplete="off">
                     <div class="form-group">
                         <label for="name">Adınız</label>
                         <input type="text" id="name" name="name" required placeholder="Adınız Soyadınız">
@@ -844,6 +842,6 @@ $products = getProducts();
     </div>
 
     <!-- JavaScript -->
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js?v=2"></script>
 </body>
 </html>

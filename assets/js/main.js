@@ -16,6 +16,26 @@ function closePromoBanner() {
     }
 }
 
+/**
+ * HTML özel karakterlerini escape et - XSS koruması
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Güvenli attribute değeri oluştur
+ */
+function sanitizeAttribute(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/[&<>"']/g, function(m) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
+    });
+}
+
 // Global: Ürün Modal Fonksiyonları
 function openProductModal(productData) {
     const modal = document.getElementById('productModal');
@@ -26,11 +46,23 @@ function openProductModal(productData) {
     const modalPricing = document.getElementById('modalPricing');
     const modalOrderBtn = document.getElementById('modalOrderBtn');
 
-    if (!modal) return;
+    // Null check - tüm elementler için
+    if (!modal || !modalImage || !modalCategory || !modalTitle || !modalDescription || !modalPricing || !modalOrderBtn) {
+        console.warn('Modal elementleri bulunamadı');
+        return;
+    }
 
-    // Görsel
+    // Görsel - XSS korumalı
     if (productData.gorsel) {
-        modalImage.innerHTML = `<img src="uploads/products/${productData.gorsel}" alt="${productData.isim}">`;
+        // innerHTML yerine DOM API kullan
+        modalImage.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = 'uploads/products/' + sanitizeAttribute(productData.gorsel);
+        img.alt = escapeHtml(productData.isim);
+        img.onerror = function() {
+            this.style.display = 'none';
+        };
+        modalImage.appendChild(img);
     } else {
         // Varsayılan SVG
         modalImage.innerHTML = `
@@ -67,29 +99,53 @@ function openProductModal(productData) {
         modalDescription.style.display = 'none';
     }
 
-    // Fiyatlandırma
+    // Fiyatlandırma - XSS korumalı DOM API ile
     const hasPorsiyonFiyat = productData.fiyat_4kisi || productData.fiyat_6kisi || productData.fiyat_8kisi || productData.fiyat_10kisi;
 
+    // Önce temizle
+    modalPricing.innerHTML = '';
+
     if (hasPorsiyonFiyat) {
-        let priceItems = '';
-        if (productData.fiyat_4kisi) {
-            priceItems += `<div class="price-item"><span class="portion">4 Kişilik</span><span class="amount">${formatPrice(productData.fiyat_4kisi)} ₺</span></div>`;
-        }
-        if (productData.fiyat_6kisi) {
-            priceItems += `<div class="price-item"><span class="portion">6 Kişilik</span><span class="amount">${formatPrice(productData.fiyat_6kisi)} ₺</span></div>`;
-        }
-        if (productData.fiyat_8kisi) {
-            priceItems += `<div class="price-item"><span class="portion">8 Kişilik</span><span class="amount">${formatPrice(productData.fiyat_8kisi)} ₺</span></div>`;
-        }
-        if (productData.fiyat_10kisi) {
-            priceItems += `<div class="price-item"><span class="portion">10+ Kişilik</span><span class="amount">${formatPrice(productData.fiyat_10kisi)} ₺</span></div>`;
-        }
-        modalPricing.innerHTML = `
-            <div class="price-title">Porsiyon Seçenekleri</div>
-            <div class="price-grid">${priceItems}</div>
-        `;
+        const priceTitle = document.createElement('div');
+        priceTitle.className = 'price-title';
+        priceTitle.textContent = 'Porsiyon Seçenekleri';
+
+        const priceGrid = document.createElement('div');
+        priceGrid.className = 'price-grid';
+
+        const portions = [
+            { key: 'fiyat_4kisi', label: '4 Kişilik' },
+            { key: 'fiyat_6kisi', label: '6 Kişilik' },
+            { key: 'fiyat_8kisi', label: '8 Kişilik' },
+            { key: 'fiyat_10kisi', label: '10+ Kişilik' }
+        ];
+
+        portions.forEach(function(p) {
+            if (productData[p.key]) {
+                const priceItem = document.createElement('div');
+                priceItem.className = 'price-item';
+
+                const portionSpan = document.createElement('span');
+                portionSpan.className = 'portion';
+                portionSpan.textContent = p.label;
+
+                const amountSpan = document.createElement('span');
+                amountSpan.className = 'amount';
+                amountSpan.textContent = formatPrice(productData[p.key]) + ' ₺';
+
+                priceItem.appendChild(portionSpan);
+                priceItem.appendChild(amountSpan);
+                priceGrid.appendChild(priceItem);
+            }
+        });
+
+        modalPricing.appendChild(priceTitle);
+        modalPricing.appendChild(priceGrid);
     } else {
-        modalPricing.innerHTML = `<div class="single-price">${formatPrice(productData.fiyat)} ₺</div>`;
+        const singlePrice = document.createElement('div');
+        singlePrice.className = 'single-price';
+        singlePrice.textContent = formatPrice(productData.fiyat) + ' ₺';
+        modalPricing.appendChild(singlePrice);
     }
 
     // WhatsApp Sipariş Butonu
@@ -458,13 +514,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========== NOTIFICATION SYSTEM ==========
+    // XSS korumalı notification sistemi
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <span>${message}</span>
-            <button onclick="this.parentElement.remove()">&times;</button>
-        `;
+
+        // innerHTML yerine güvenli DOM API kullan
+        const messageSpan = document.createElement('span');
+        messageSpan.textContent = message; // XSS korumalı - textContent kullan
+
+        const closeButton = document.createElement('button');
+        closeButton.textContent = '×';
+        closeButton.addEventListener('click', function() {
+            notification.remove();
+        });
+
+        notification.appendChild(messageSpan);
+        notification.appendChild(closeButton);
 
         notification.style.cssText = `
             position: fixed;
@@ -573,12 +639,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ========== SPARKLE GENERATOR ==========
+    // ========== SPARKLE GENERATOR (Optimized) ==========
     const sparkleContainer = document.getElementById('sparkleContainer');
 
     if (sparkleContainer && window.innerWidth > 768) {
         let isScrolling = false;
         let scrollTimeout;
+        let isPaused = false;
+        let sparkleCount = 0;
+        let dustCount = 0;
+        const MAX_SPARKLES = 30;
+        const MAX_DUST = 15;
+        let lastSparkleTime = 0;
+        let lastDustTime = 0;
+        const SPARKLE_INTERVAL = 600;
+        const DUST_INTERVAL = 1000;
+        let animationFrameId = null;
+
+        // Tab görünürlüğü kontrolü - arka planda animasyonu durdur
+        document.addEventListener('visibilitychange', function() {
+            isPaused = document.hidden;
+            if (!document.hidden && animationFrameId === null) {
+                animationLoop();
+            }
+        });
 
         // Scroll sırasında parıltıları gizle
         window.addEventListener('scroll', function() {
@@ -589,91 +673,198 @@ document.addEventListener('DOMContentLoaded', function() {
                 isScrolling = false;
                 sparkleContainer.style.opacity = '1';
             }, 150);
-        });
+        }, { passive: true });
 
         sparkleContainer.style.transition = 'opacity 0.3s ease';
 
         function createSparkle() {
-            if (isScrolling) return;
+            if (isScrolling || sparkleCount >= MAX_SPARKLES) return;
+            sparkleCount++;
             const sparkle = document.createElement('div');
             const types = ['sparkle', 'sparkle sparkle-pink', 'sparkle sparkle-gold'];
             sparkle.className = types[Math.floor(Math.random() * types.length)];
             sparkle.style.left = Math.random() * 100 + '%';
             sparkle.style.top = Math.random() * 100 + '%';
-            const size = Math.random() * 3 + 5; // 5-8px arası
+            const size = Math.random() * 3 + 5;
             sparkle.style.width = size + 'px';
             sparkle.style.height = size + 'px';
             sparkle.style.animationDelay = Math.random() * 4 + 's';
             sparkle.style.animationDuration = (Math.random() * 4 + 6) + 's';
             sparkleContainer.appendChild(sparkle);
-            setTimeout(() => sparkle.remove(), 12000);
+            setTimeout(() => {
+                sparkle.remove();
+                sparkleCount--;
+            }, 12000);
         }
-
-        // Başlangıçta 20 parıltı oluştur
-        for (let i = 0; i < 20; i++) {
-            setTimeout(() => createSparkle(), i * 150);
-        }
-        // Her 600ms'de yeni parıltı ekle
-        setInterval(createSparkle, 600);
 
         function createSugarDust() {
-            if (isScrolling) return;
+            if (isScrolling || dustCount >= MAX_DUST) return;
+            dustCount++;
             const dust = document.createElement('div');
             dust.className = 'sugar-dust';
             dust.style.left = Math.random() * 100 + '%';
             dust.style.animationDelay = Math.random() * 4 + 's';
             dust.style.animationDuration = (Math.random() * 5 + 8) + 's';
-            const dustSize = Math.random() * 2 + 3; // 3-5px
+            const dustSize = Math.random() * 2 + 3;
             dust.style.width = dustSize + 'px';
             dust.style.height = dustSize + 'px';
             sparkleContainer.appendChild(dust);
-            setTimeout(() => dust.remove(), 14000);
+            setTimeout(() => {
+                dust.remove();
+                dustCount--;
+            }, 14000);
         }
 
-        // Başlangıçta 10 pudra şekeri
+        // requestAnimationFrame ile optimize edilmiş animasyon döngüsü
+        function animationLoop(timestamp) {
+            if (isPaused) {
+                animationFrameId = null;
+                return;
+            }
+
+            // Sparkle oluşturma kontrolü
+            if (timestamp - lastSparkleTime >= SPARKLE_INTERVAL) {
+                createSparkle();
+                lastSparkleTime = timestamp;
+            }
+
+            // Dust oluşturma kontrolü
+            if (timestamp - lastDustTime >= DUST_INTERVAL) {
+                createSugarDust();
+                lastDustTime = timestamp;
+            }
+
+            animationFrameId = requestAnimationFrame(animationLoop);
+        }
+
+        // Başlangıçta birkaç sparkle ve dust oluştur (azaltılmış)
         for (let i = 0; i < 10; i++) {
-            setTimeout(() => createSugarDust(), i * 300);
+            setTimeout(() => createSparkle(), i * 200);
         }
-        // Her 1000ms'de yeni pudra ekle
-        setInterval(createSugarDust, 1000);
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => createSugarDust(), i * 400);
+        }
+
+        // Animasyon döngüsünü başlat
+        animationFrameId = requestAnimationFrame(animationLoop);
     }
 
-    // ========== CALENDAR LOADER ==========
-    const calendarGrid = document.getElementById('calendarGrid');
+    // ========== CALENDAR LOADER (1 Yıllık Görünüm) ==========
+    const calendarContainer = document.getElementById('calendarGrid');
+    let calendarData = null;
+    let currentMonthIndex = 0;
 
-    if (calendarGrid) {
-        loadCalendar();
+    if (calendarContainer) {
+        loadYearCalendar();
     }
 
-    async function loadCalendar() {
+    async function loadYearCalendar() {
         try {
-            const response = await fetch('api/takvim.php');
+            const response = await fetch('api/takvim.php?gorunum=yil');
             const data = await response.json();
 
-            if (data.success && data.takvim) {
-                renderCalendar(data.takvim);
+            if (data.success && data.aylar) {
+                calendarData = data.aylar;
+                renderMonthCalendar(0);
             } else {
-                calendarGrid.innerHTML = '<div class="calendar-loading"><span>Takvim yüklenemedi.</span></div>';
+                calendarContainer.innerHTML = '<div class="calendar-loading"><span>Takvim yüklenemedi.</span></div>';
             }
         } catch (error) {
             console.error('Takvim yükleme hatası:', error);
-            calendarGrid.innerHTML = '<div class="calendar-loading"><span>Takvim yüklenemedi.</span></div>';
+            calendarContainer.innerHTML = '<div class="calendar-loading"><span>Takvim yüklenemedi.</span></div>';
         }
     }
 
-    function renderCalendar(takvim) {
-        calendarGrid.innerHTML = '';
+    function renderMonthCalendar(monthIndex) {
+        if (!calendarData || monthIndex < 0 || monthIndex >= calendarData.length) return;
 
-        takvim.forEach((gun, index) => {
-            const dayElement = document.createElement('div');
-            dayElement.className = `calendar-day ${gun.durum}`;
-            dayElement.style.animationDelay = `${index * 30}ms`;
-            dayElement.innerHTML = `
-                <span class="day-number">${gun.gun}</span>
-                <span class="day-name">${gun.gunAdi}</span>
-                <span class="day-status">${gun.label}</span>
+        currentMonthIndex = monthIndex;
+        const ayVerisi = calendarData[monthIndex];
+
+        // Ana container'ı temizle ve yeniden oluştur
+        calendarContainer.innerHTML = '';
+        calendarContainer.className = 'calendar-month-view';
+
+        // Ay navigasyonu
+        const navHTML = `
+            <div class="calendar-nav">
+                <button class="cal-nav-btn" id="calPrevBtn" ${monthIndex === 0 ? 'disabled' : ''}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <div class="cal-month-selector">
+                    <select id="calMonthSelect" class="cal-month-dropdown">
+                        ${calendarData.map((ay, idx) => `
+                            <option value="${idx}" ${idx === monthIndex ? 'selected' : ''}>
+                                ${ay.ayIsmi} ${ay.yil}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <button class="cal-nav-btn" id="calNextBtn" ${monthIndex >= calendarData.length - 1 ? 'disabled' : ''}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        // Hafta günleri başlıkları
+        const headerHTML = `
+            <div class="calendar-weekdays">
+                <span>Pzt</span>
+                <span>Sal</span>
+                <span>Çar</span>
+                <span>Per</span>
+                <span>Cum</span>
+                <span>Cmt</span>
+                <span>Paz</span>
+            </div>
+        `;
+
+        // Takvim grid'i
+        let gridHTML = '<div class="calendar-days-grid">';
+
+        // Ayın başındaki boş günler (Pazartesi = 1, Pazar = 7)
+        const bosGunSayisi = ayVerisi.ilkGunHaftaGunu - 1;
+        for (let i = 0; i < bosGunSayisi; i++) {
+            gridHTML += '<div class="calendar-day empty"></div>';
+        }
+
+        // Günleri ekle
+        ayVerisi.takvim.forEach((gun, index) => {
+            const gecmisClass = gun.gecmis ? 'gecmis' : '';
+            const bugunClass = gun.bugun ? 'bugun' : '';
+
+            gridHTML += `
+                <div class="calendar-day ${gun.durum} ${gecmisClass} ${bugunClass}" style="animation-delay: ${index * 20}ms">
+                    <span class="day-number">${gun.gun}</span>
+                    <span class="day-status">${gun.label}</span>
+                </div>
             `;
-            calendarGrid.appendChild(dayElement);
+        });
+
+        gridHTML += '</div>';
+
+        // Tüm HTML'i birleştir
+        calendarContainer.innerHTML = navHTML + headerHTML + gridHTML;
+
+        // Event listener'ları ekle
+        document.getElementById('calPrevBtn').addEventListener('click', () => {
+            if (currentMonthIndex > 0) {
+                renderMonthCalendar(currentMonthIndex - 1);
+            }
+        });
+
+        document.getElementById('calNextBtn').addEventListener('click', () => {
+            if (currentMonthIndex < calendarData.length - 1) {
+                renderMonthCalendar(currentMonthIndex + 1);
+            }
+        });
+
+        document.getElementById('calMonthSelect').addEventListener('change', (e) => {
+            renderMonthCalendar(parseInt(e.target.value));
         });
     }
 
@@ -721,17 +912,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ========== PRODUCT CARD SPARKLE ON HOVER ==========
+    // ========== PRODUCT CARD SPARKLE ON HOVER (Optimized) ==========
+    // Throttle ile aşırı sparkle oluşumunu engelle
+    const cardSparkleTimers = new WeakMap();
+
     document.querySelectorAll('.product-card').forEach(card => {
         card.addEventListener('mouseenter', function() {
-            for (let i = 0; i < 5; i++) {
+            // Throttle: 500ms içinde tekrar tetiklenmesini engelle
+            const lastTime = cardSparkleTimers.get(this) || 0;
+            const now = Date.now();
+            if (now - lastTime < 500) return;
+            cardSparkleTimers.set(this, now);
+
+            // Azaltılmış sparkle sayısı (5 → 3)
+            for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
                     const sparkle = document.createElement('div');
                     sparkle.className = 'star-sparkle';
-                    sparkle.style.position = 'absolute';
-                    sparkle.style.left = Math.random() * 100 + '%';
-                    sparkle.style.top = Math.random() * 100 + '%';
-                    sparkle.style.zIndex = '10';
+                    sparkle.style.cssText = `position:absolute;left:${Math.random()*100}%;top:${Math.random()*100}%;z-index:10;`;
                     this.appendChild(sparkle);
                     setTimeout(() => sparkle.remove(), 3000);
                 }, i * 100);

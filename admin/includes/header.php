@@ -1,10 +1,19 @@
 <?php
-require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../../includes/bootstrap.php';
 require_once __DIR__ . '/auth.php';
 
-// Çıkış işlemi
-if (isset($_GET['logout'])) {
-    logout();
+// Çıkış işlemi - POST + CSRF ile güvenli
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    // CSRF token doğrula
+    $token = $_POST['csrf_token'] ?? '';
+    if (function_exists('verifyCSRF') && verifyCSRF($token)) {
+        logout();
+    } elseif (function_exists('validateSecureCSRFToken') && validateSecureCSRFToken($token)) {
+        logout();
+    } else {
+        // CSRF doğrulama başarısız - sessiz şekilde reddet
+        setFlash('error', 'Güvenlik doğrulama hatası.');
+    }
 }
 
 requireLogin();
@@ -20,7 +29,7 @@ $unreadMessages = getUnreadMessageCount();
     <title>Admin Panel - <?= e(SITE_NAME) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=3.1">
 </head>
 <body>
     <div class="admin-wrapper">
@@ -69,6 +78,15 @@ $unreadMessages = getUnreadMessageCount();
                     Takvim / Siparişler
                 </a>
 
+                <a href="raporlar.php" class="nav-item <?= $currentPage === 'raporlar' ? 'active' : '' ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 20V10"/>
+                        <path d="M12 20V4"/>
+                        <path d="M6 20v-6"/>
+                    </svg>
+                    Satış Raporları
+                </a>
+
                 <a href="musteriler.php" class="nav-item <?= $currentPage === 'musteriler' ? 'active' : '' ?>">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -99,14 +117,18 @@ $unreadMessages = getUnreadMessageCount();
                     </svg>
                     Siteyi Görüntüle
                 </a>
-                <a href="?logout=1" class="nav-item logout">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    Çıkış Yap
-                </a>
+                <form method="POST" action="" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="<?= function_exists('generateSecureCSRFToken') ? generateSecureCSRFToken() : (function_exists('generateCSRF') ? generateCSRF() : '') ?>">
+                    <input type="hidden" name="logout" value="1">
+                    <button type="submit" class="nav-item logout" style="width: 100%; border: none; background: none; cursor: pointer; text-align: left;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Çıkış Yap
+                    </button>
+                </form>
             </div>
         </aside>
 
