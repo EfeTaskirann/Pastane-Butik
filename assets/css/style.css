@@ -276,7 +276,7 @@ section {
 /* Ürün Grid */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
     gap: 2rem;
     position: relative;
     overflow: hidden;
@@ -748,7 +748,7 @@ section {
 .legend-dot.bos { background: #B8D4B8; }
 .legend-dot.uygun { background: #B8D4E8; }
 .legend-dot.yogun { background: #F5D4B0; }
-.legend-dot.dolu { background: #E8C4C4; }
+.legend-dot.dolu, .legend-dot.cok-yogun { background: #E8C4C4; }
 
 .calendar-grid {
     display: grid;
@@ -777,7 +777,7 @@ section {
 .calendar-day.bos { background: #B8D4B8; }
 .calendar-day.uygun { background: #B8D4E8; }
 .calendar-day.yogun { background: #F5D4B0; }
-.calendar-day.dolu { background: #E8C4C4; }
+.calendar-day.dolu, .calendar-day.cok-yogun { background: #E8C4C4; }
 
 .calendar-day .day-number {
     font-family: var(--font-primary);
@@ -977,7 +977,7 @@ section {
 .calendar-days-grid .calendar-day.bos { background: #B8D4B8; }
 .calendar-days-grid .calendar-day.uygun { background: #B8D4E8; }
 .calendar-days-grid .calendar-day.yogun { background: #F5D4B0; }
-.calendar-days-grid .calendar-day.dolu { background: #E8C4C4; }
+.calendar-days-grid .calendar-day.dolu, .calendar-days-grid .calendar-day.cok-yogun { background: #E8C4C4; }
 
 .calendar-days-grid .calendar-day.gecmis {
     opacity: 0.5;

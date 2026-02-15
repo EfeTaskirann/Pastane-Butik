@@ -14,7 +14,8 @@ $musteriService = musteri_service();
 $arama = trim($_GET['arama'] ?? '');
 
 // ORDER BY SQL Injection koruması - Whitelist kullan
-$allowedSortColumns = ['siparis_sayisi', 'isim', 'son_siparis_tarihi', 'toplam_tutar'];
+// UI dropdown seçenekleri ile senkronize tutulmalı
+$allowedSortColumns = ['siparis_sayisi', 'isim', 'son_siparis_tarihi', 'toplam_tutar', 'hediye_hak_edildi', 'toplam_harcama'];
 $siralama = in_array($_GET['siralama'] ?? '', $allowedSortColumns, true)
     ? $_GET['siralama']
     : 'siparis_sayisi';

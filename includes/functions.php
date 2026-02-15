@@ -31,7 +31,8 @@ if (!function_exists('getYogunlukDurumu')) {
         } elseif ($puan <= 80) {
             return ['class' => 'yogun', 'label' => 'Yoğun'];
         } else {
-            return ['class' => 'cok-yogun', 'label' => 'Çok Yoğun'];
+            // CSS ile uyumlu: .dolu class'ı
+            return ['class' => 'dolu', 'label' => 'Çok Yoğun'];
         }
     }
 }

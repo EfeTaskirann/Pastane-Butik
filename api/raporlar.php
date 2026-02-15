@@ -21,6 +21,9 @@ require_once __DIR__ . '/../includes/functions.php';
 // Kimlik doğrulama kontrolü
 session_start();
 
+// JWT sınıfını yükle (API erişimi için)
+require_once __DIR__ . '/../includes/JWT.php';
+
 // Admin session kontrolü VEYA JWT token kontrolü
 $authenticated = false;
 
@@ -28,13 +31,11 @@ $authenticated = false;
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     $authenticated = true;
 }
-
-// 2. JWT token kontrolü (API erişimi için)
-if (!$authenticated) {
+// 2. JWT token kontrolü (API erişimi için - Session yoksa)
+else {
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (preg_match('/Bearer\s+(.+)$/i', $authHeader, $matches)) {
+    if (!empty($authHeader) && preg_match('/Bearer\s+(.+)$/i', $authHeader, $matches)) {
         $token = $matches[1];
-        // JWT doğrulama - JWT sınıfı varsa kullan
         if (class_exists('JWT')) {
             try {
                 $payload = JWT::verify($token);
@@ -42,7 +43,7 @@ if (!$authenticated) {
                     $authenticated = true;
                 }
             } catch (Exception $e) {
-                // Token geçersiz
+                // Token geçersiz, sessizce devam et
             }
         }
     }
