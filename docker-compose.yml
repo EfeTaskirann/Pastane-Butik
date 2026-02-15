@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PHP Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pastane-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - DB_HOST=db
+      - DB_DATABASE=${DB_DATABASE:-pastane}
+      - DB_USERNAME=${DB_USERNAME:-pastane}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    volumes:
+      - uploads:/var/www/html/uploads
+      - storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pastane-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: pastane-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE:-pastane}
+      - MYSQL_USER=${DB_USERNAME:-pastane}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-secret}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    networks:
+      - pastane-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: pastane-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pastane-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Nginx Reverse Proxy (optional, for SSL)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: pastane-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./docker/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - pastane-network
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  uploads:
+    driver: local
+  storage:
+    driver: local
+
+networks:
+  pastane-network:
+    driver: bridge

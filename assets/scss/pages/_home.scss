@@ -1,0 +1,287 @@
+// ============================================
+// HOME PAGE
+// Homepage specific styles
+// ============================================
+
+// Hero slider
+.hero-slider {
+  position: relative;
+  overflow: hidden;
+
+  .slide {
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+
+    @include sm-down {
+      min-height: 60vh;
+    }
+  }
+
+  .slide-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba($primary-900, 0.8) 0%,
+        rgba($primary-600, 0.4) 100%
+      );
+    }
+  }
+
+  .slide-content {
+    position: relative;
+    z-index: 1;
+    color: white;
+    max-width: 600px;
+  }
+}
+
+// Featured products section
+.featured-products {
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $spacing-6;
+  }
+}
+
+// Categories showcase
+.categories-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-4;
+}
+
+.category-card {
+  position: relative;
+  height: 250px;
+  border-radius: $radius-xl;
+  overflow: hidden;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $transition-base;
+  }
+
+  &:hover img {
+    transform: scale(1.1);
+  }
+
+  .category-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0) 50%
+    );
+    display: flex;
+    align-items: flex-end;
+    padding: $spacing-4;
+  }
+
+  .category-name {
+    color: white;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// About preview section
+.about-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-12;
+  align-items: center;
+
+  @include md-down {
+    grid-template-columns: 1fr;
+  }
+
+  .about-image {
+    position: relative;
+    border-radius: $radius-2xl;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    .experience-badge {
+      position: absolute;
+      bottom: $spacing-6;
+      right: $spacing-6;
+      background-color: $primary-500;
+      color: white;
+      padding: $spacing-4 $spacing-6;
+      border-radius: $radius-xl;
+      text-align: center;
+
+      .years {
+        font-size: $font-size-4xl;
+        font-weight: $font-weight-bold;
+        line-height: 1;
+      }
+
+      .label {
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  .about-content {
+    h2 {
+      margin-bottom: $spacing-4;
+    }
+
+    p {
+      margin-bottom: $spacing-6;
+    }
+  }
+}
+
+// Features/Why us
+.features-section {
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: $spacing-6;
+  }
+}
+
+// Testimonials section
+.testimonials-section {
+  background-color: $gray-50;
+
+  .testimonials-slider {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: $spacing-6;
+  }
+}
+
+// CTA section
+.cta-section {
+  background: linear-gradient(135deg, $primary-600 0%, $primary-800 100%);
+  color: white;
+  text-align: center;
+
+  h2 {
+    color: white;
+    margin-bottom: $spacing-4;
+  }
+
+  p {
+    color: rgba(white, 0.9);
+    margin-bottom: $spacing-6;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cta-actions {
+    display: flex;
+    gap: $spacing-3;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+// Instagram feed
+.instagram-feed {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-1;
+
+  @include md-down {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .instagram-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform $transition-base;
+    }
+
+    &:hover img {
+      transform: scale(1.1);
+    }
+
+    .instagram-overlay {
+      position: absolute;
+      inset: 0;
+      background-color: rgba($primary-500, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity $transition-base;
+      color: white;
+
+      svg {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    &:hover .instagram-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+// Stats counter
+.stats-section {
+  background-color: $gray-900;
+  color: white;
+  padding: $spacing-12 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: $spacing-8;
+  text-align: center;
+}
+
+.stat-item {
+  .stat-number {
+    font-size: $font-size-4xl;
+    font-weight: $font-weight-bold;
+    color: $primary-400;
+    margin-bottom: $spacing-2;
+  }
+
+  .stat-label {
+    color: $gray-400;
+    font-size: $font-size-sm;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+}

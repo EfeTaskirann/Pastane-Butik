@@ -1,0 +1,713 @@
+openapi: 3.0.3
+info:
+  title: Tatlı Düşler API
+  description: |
+    Tatlı Düşler Butik Pastane sipariş sistemi API'si.
+
+    ## Authentication
+    API'nin korunan endpoint'leri JWT (JSON Web Token) ile yetkilendirme gerektirir.
+    Token'ı `Authorization` header'ında Bearer formatında gönderiniz:
+
+    ```
+    Authorization: Bearer <your-token>
+    ```
+
+    ## Rate Limiting
+    API istekleri rate limit'e tabidir. Her response'da şu header'lar döner:
+    - `X-RateLimit-Limit`: Maksimum istek sayısı
+    - `X-RateLimit-Remaining`: Kalan istek sayısı
+    - `X-RateLimit-Reset`: Reset zamanı (Unix timestamp)
+
+    ## Error Handling
+    Tüm hatalar aşağıdaki formatta döner:
+    ```json
+    {
+      "success": false,
+      "error": "Hata mesajı",
+      "errors": {}  // Validation hataları için
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: destek@tatlidusler.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: Auth
+    description: Kimlik doğrulama işlemleri
+  - name: Ürünler
+    description: Ürün yönetimi
+  - name: Kategoriler
+    description: Kategori yönetimi
+  - name: Siparişler
+    description: Sipariş yönetimi
+  - name: Raporlar
+    description: Satış raporları
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Bir hata oluştu"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+
+    Urun:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        ad:
+          type: string
+          example: "Çilekli Pasta"
+        slug:
+          type: string
+          example: "cilekli-pasta"
+        aciklama:
+          type: string
+          example: "Taze çileklerle hazırlanmış..."
+        fiyat:
+          type: number
+          format: float
+          example: 450.00
+        kategori_id:
+          type: integer
+          example: 1
+        kategori_adi:
+          type: string
+          example: "Pasta"
+        resim:
+          type: string
+          example: "cilekli-pasta.jpg"
+        aktif:
+          type: boolean
+          example: true
+        sira:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UrunInput:
+      type: object
+      required:
+        - ad
+        - fiyat
+        - kategori_id
+      properties:
+        ad:
+          type: string
+          minLength: 2
+          maxLength: 255
+        slug:
+          type: string
+        aciklama:
+          type: string
+        fiyat:
+          type: number
+          minimum: 0
+        kategori_id:
+          type: integer
+        resim:
+          type: string
+        aktif:
+          type: boolean
+          default: true
+        sira:
+          type: integer
+          default: 0
+
+    Kategori:
+      type: object
+      properties:
+        id:
+          type: integer
+        ad:
+          type: string
+        slug:
+          type: string
+        aciklama:
+          type: string
+        resim:
+          type: string
+        aktif:
+          type: boolean
+        sira:
+          type: integer
+        urun_sayisi:
+          type: integer
+
+    Siparis:
+      type: object
+      properties:
+        id:
+          type: integer
+        ad_soyad:
+          type: string
+        telefon:
+          type: string
+        email:
+          type: string
+        tarih:
+          type: string
+          format: date
+        saat:
+          type: string
+        kategori:
+          type: string
+        kisi_sayisi:
+          type: integer
+        tasarim:
+          type: string
+        mesaj:
+          type: string
+        ozel_istekler:
+          type: string
+        durum:
+          type: string
+          enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+        birim_fiyat:
+          type: number
+        toplam_tutar:
+          type: number
+        odeme_tipi:
+          type: string
+          enum: [online, fiziksel]
+        kanal:
+          type: string
+          enum: [site, cafe, telefon]
+        created_at:
+          type: string
+          format: date-time
+
+    SiparisInput:
+      type: object
+      required:
+        - ad_soyad
+        - telefon
+        - tarih
+        - kategori
+      properties:
+        ad_soyad:
+          type: string
+        telefon:
+          type: string
+        email:
+          type: string
+          format: email
+        tarih:
+          type: string
+          format: date
+        saat:
+          type: string
+        kategori:
+          type: string
+        kisi_sayisi:
+          type: integer
+        tasarim:
+          type: string
+        mesaj:
+          type: string
+        ozel_istekler:
+          type: string
+
+    LoginInput:
+      type: object
+      required:
+        - kullanici_adi
+        - sifre
+      properties:
+        kullanici_adi:
+          type: string
+        sifre:
+          type: string
+          format: password
+        two_factor_code:
+          type: string
+          description: 2FA kodu (etkinse)
+
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+            expires_in:
+              type: integer
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                kullanici_adi:
+                  type: string
+                email:
+                  type: string
+                rol:
+                  type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        toplam:
+          type: integer
+        sayfa:
+          type: integer
+        limit:
+          type: integer
+        toplam_sayfa:
+          type: integer
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Admin girişi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: Başarılı giriş
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Geçersiz kimlik bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Mevcut kullanıcı bilgileri
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Kullanıcı bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Token yenile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Yeni token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Şifre değiştir
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mevcut_sifre
+                - yeni_sifre
+              properties:
+                mevcut_sifre:
+                  type: string
+                yeni_sifre:
+                  type: string
+      responses:
+        '200':
+          description: Şifre değiştirildi
+
+  /urunler:
+    get:
+      tags: [Ürünler]
+      summary: Ürünleri listele
+      parameters:
+        - name: kategori_id
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: q
+          in: query
+          description: Arama sorgusu
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ürün listesi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      urunler:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Urun'
+                      toplam:
+                        type: integer
+    post:
+      tags: [Ürünler]
+      summary: Yeni ürün ekle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UrunInput'
+      responses:
+        '201':
+          description: Ürün oluşturuldu
+        '422':
+          description: Validation hatası
+
+  /urunler/{id}:
+    get:
+      tags: [Ürünler]
+      summary: Ürün detayı
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ürün detayı
+        '404':
+          description: Ürün bulunamadı
+    put:
+      tags: [Ürünler]
+      summary: Ürün güncelle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UrunInput'
+      responses:
+        '200':
+          description: Ürün güncellendi
+    delete:
+      tags: [Ürünler]
+      summary: Ürün sil
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ürün silindi
+
+  /urunler/one-cikan:
+    get:
+      tags: [Ürünler]
+      summary: Öne çıkan ürünler
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 6
+      responses:
+        '200':
+          description: Öne çıkan ürünler
+
+  /kategoriler:
+    get:
+      tags: [Kategoriler]
+      summary: Kategorileri listele
+      responses:
+        '200':
+          description: Kategori listesi
+    post:
+      tags: [Kategoriler]
+      summary: Yeni kategori ekle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ad
+              properties:
+                ad:
+                  type: string
+                slug:
+                  type: string
+                aciklama:
+                  type: string
+      responses:
+        '201':
+          description: Kategori oluşturuldu
+
+  /kategoriler/{id}:
+    get:
+      tags: [Kategoriler]
+      summary: Kategori detayı ve ürünleri
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Kategori detayı
+    put:
+      tags: [Kategoriler]
+      summary: Kategori güncelle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Kategori güncellendi
+    delete:
+      tags: [Kategoriler]
+      summary: Kategori sil
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Kategori silindi
+
+  /siparisler:
+    get:
+      tags: [Siparişler]
+      summary: Siparişleri listele
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: durum
+          in: query
+          schema:
+            type: string
+            enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+        - name: baslangic
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: bitis
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Sipariş listesi
+    post:
+      tags: [Siparişler]
+      summary: Yeni sipariş oluştur
+      description: Müşteriler tarafından kullanılan public endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiparisInput'
+      responses:
+        '201':
+          description: Sipariş oluşturuldu
+
+  /siparisler/{id}:
+    get:
+      tags: [Siparişler]
+      summary: Sipariş detayı
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sipariş detayı
+    delete:
+      tags: [Siparişler]
+      summary: Sipariş sil
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sipariş silindi
+
+  /siparisler/{id}/durum:
+    patch:
+      tags: [Siparişler]
+      summary: Sipariş durumunu güncelle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - durum
+              properties:
+                durum:
+                  type: string
+                  enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+      responses:
+        '200':
+          description: Durum güncellendi
+
+  /siparisler/istatistikler:
+    get:
+      tags: [Siparişler]
+      summary: Sipariş istatistikleri
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: İstatistikler
+
+  /raporlar:
+    get:
+      tags: [Raporlar]
+      summary: Satış raporları
+      parameters:
+        - name: baslangic
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: bitis
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: tip
+          in: query
+          description: Rapor tipi
+          schema:
+            type: string
+            enum: [ozet, gunluk, kategori, musteri, tum]
+            default: tum
+      responses:
+        '200':
+          description: Rapor verileri

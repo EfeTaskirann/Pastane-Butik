@@ -1,0 +1,289 @@
+// ============================================
+// ALERTS
+// Alert and notification styles
+// ============================================
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-4;
+
+  .alert-icon {
+    flex-shrink: 0;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .alert-content {
+    flex: 1;
+  }
+
+  .alert-title {
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-1;
+  }
+
+  .alert-message {
+    font-size: $font-size-sm;
+  }
+
+  .alert-close {
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity $transition-base;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Alert variants
+.alert-success {
+  background-color: $success-light;
+  color: darken($success, 15%);
+
+  .alert-icon {
+    color: $success;
+  }
+}
+
+.alert-danger,
+.alert-error {
+  background-color: $danger-light;
+  color: darken($danger, 15%);
+
+  .alert-icon {
+    color: $danger;
+  }
+}
+
+.alert-warning {
+  background-color: $warning-light;
+  color: darken($warning, 25%);
+
+  .alert-icon {
+    color: $warning;
+  }
+}
+
+.alert-info {
+  background-color: $info-light;
+  color: darken($info, 15%);
+
+  .alert-icon {
+    color: $info;
+  }
+}
+
+// Toast notifications
+.toast-container {
+  position: fixed;
+  z-index: $z-tooltip;
+  pointer-events: none;
+
+  &--top-right {
+    top: $spacing-4;
+    right: $spacing-4;
+  }
+
+  &--top-left {
+    top: $spacing-4;
+    left: $spacing-4;
+  }
+
+  &--bottom-right {
+    bottom: $spacing-4;
+    right: $spacing-4;
+  }
+
+  &--bottom-left {
+    bottom: $spacing-4;
+    left: $spacing-4;
+  }
+
+  &--top-center {
+    top: $spacing-4;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &--bottom-center {
+    bottom: $spacing-4;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  background-color: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  margin-bottom: $spacing-2;
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 400px;
+  animation: toast-in 0.3s ease;
+
+  &.toast-out {
+    animation: toast-out 0.3s ease forwards;
+  }
+
+  .toast-icon {
+    flex-shrink: 0;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .toast-content {
+    flex: 1;
+  }
+
+  .toast-title {
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-1;
+    color: $text-primary;
+  }
+
+  .toast-message {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  .toast-close {
+    flex-shrink: 0;
+    color: $text-muted;
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  // Variants
+  &--success .toast-icon {
+    color: $success;
+  }
+
+  &--error .toast-icon {
+    color: $danger;
+  }
+
+  &--warning .toast-icon {
+    color: $warning;
+  }
+
+  &--info .toast-icon {
+    color: $info;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+// Badge/Tag
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-1 $spacing-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-full;
+
+  &-primary {
+    background-color: rgba($primary-500, 0.1);
+    color: $primary-600;
+  }
+
+  &-success {
+    background-color: $success-light;
+    color: $success;
+  }
+
+  &-danger {
+    background-color: $danger-light;
+    color: $danger;
+  }
+
+  &-warning {
+    background-color: $warning-light;
+    color: darken($warning, 15%);
+  }
+
+  &-info {
+    background-color: $info-light;
+    color: $info;
+  }
+
+  &-gray {
+    background-color: $gray-100;
+    color: $gray-600;
+  }
+}
+
+// Status indicator
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $font-size-sm;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  &--online::before {
+    background-color: $success;
+  }
+
+  &--offline::before {
+    background-color: $gray-400;
+  }
+
+  &--busy::before {
+    background-color: $danger;
+  }
+
+  &--away::before {
+    background-color: $warning;
+  }
+}

@@ -1,0 +1,212 @@
+// ============================================
+// FORMS
+// Form elements and inputs
+// ============================================
+
+// Form group
+.form-group {
+  margin-bottom: $spacing-4;
+}
+
+// Labels
+.form-label {
+  display: block;
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-2;
+  color: $text-primary;
+
+  .required {
+    color: $danger;
+    margin-left: $spacing-1;
+  }
+}
+
+// Input base
+.form-input,
+.form-textarea,
+.form-select {
+  @include input-base;
+}
+
+// Textarea
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+// Select
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $spacing-3 center;
+  padding-right: $spacing-10;
+}
+
+// Checkbox and Radio
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-2;
+  margin-bottom: $spacing-2;
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: $primary-500;
+  }
+
+  label {
+    cursor: pointer;
+    color: $text-secondary;
+  }
+}
+
+// Form hint/help text
+.form-hint {
+  font-size: $font-size-sm;
+  color: $text-muted;
+  margin-top: $spacing-1;
+}
+
+// Form error
+.form-error {
+  font-size: $font-size-sm;
+  color: $danger;
+  margin-top: $spacing-1;
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+
+  &::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background-color: $danger;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+  }
+}
+
+// Input with error state
+.form-input--error,
+.form-textarea--error,
+.form-select--error {
+  border-color: $danger;
+
+  &:focus {
+    border-color: $danger;
+    box-shadow: 0 0 0 3px rgba($danger, 0.15);
+  }
+}
+
+// Input with success state
+.form-input--success {
+  border-color: $success;
+
+  &:focus {
+    border-color: $success;
+    box-shadow: 0 0 0 3px rgba($success, 0.15);
+  }
+}
+
+// Input group (input with addon)
+.input-group {
+  display: flex;
+
+  .form-input {
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: $radius-lg 0 0 $radius-lg;
+    }
+
+    &:last-child {
+      border-radius: 0 $radius-lg $radius-lg 0;
+    }
+  }
+
+  .input-group-addon {
+    display: flex;
+    align-items: center;
+    padding: 0 $spacing-4;
+    background-color: $gray-100;
+    border: 1px solid $gray-300;
+    color: $text-secondary;
+
+    &:first-child {
+      border-right: 0;
+      border-radius: $radius-lg 0 0 $radius-lg;
+    }
+
+    &:last-child {
+      border-left: 0;
+      border-radius: 0 $radius-lg $radius-lg 0;
+    }
+  }
+}
+
+// File input
+.form-file {
+  position: relative;
+
+  input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .form-file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-2;
+    padding: $spacing-6;
+    border: 2px dashed $gray-300;
+    border-radius: $radius-lg;
+    background-color: $gray-50;
+    color: $text-secondary;
+    transition: all $transition-base;
+
+    &:hover {
+      border-color: $primary-500;
+      background-color: rgba($primary-500, 0.05);
+    }
+  }
+}
+
+// Inline form
+.form-inline {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-3;
+  flex-wrap: wrap;
+
+  .form-group {
+    margin-bottom: 0;
+  }
+}
+
+// Search form
+.search-form {
+  display: flex;
+
+  .form-input {
+    border-radius: $radius-lg 0 0 $radius-lg;
+    border-right: 0;
+  }
+
+  .btn {
+    border-radius: 0 $radius-lg $radius-lg 0;
+  }
+}

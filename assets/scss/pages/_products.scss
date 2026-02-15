@@ -1,0 +1,339 @@
+// ============================================
+// PRODUCTS PAGE
+// Product listing and detail pages
+// ============================================
+
+// Product listing page
+.products-page {
+  .products-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-6;
+    flex-wrap: wrap;
+    gap: $spacing-4;
+
+    @include sm-down {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .products-count {
+    color: $text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+// Product filters
+.product-filters {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: $spacing-2 $spacing-4;
+  border: 1px solid $gray-300;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  transition: all $transition-base;
+
+  &:hover,
+  &.active {
+    background-color: $primary-500;
+    border-color: $primary-500;
+    color: white;
+  }
+}
+
+// Sort dropdown
+.sort-dropdown {
+  position: relative;
+
+  .sort-btn {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    padding: $spacing-2 $spacing-4;
+    border: 1px solid $gray-300;
+    border-radius: $radius-lg;
+    font-size: $font-size-sm;
+    color: $text-primary;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .sort-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: $spacing-1;
+    background-color: $bg-white;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    min-width: 180px;
+    z-index: $z-dropdown;
+    display: none;
+
+    &.is-open {
+      display: block;
+    }
+
+    a {
+      display: block;
+      padding: $spacing-2 $spacing-4;
+      font-size: $font-size-sm;
+      color: $text-primary;
+
+      &:hover,
+      &.active {
+        background-color: $gray-100;
+        color: $primary-500;
+      }
+    }
+  }
+}
+
+// Products grid
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $spacing-6;
+}
+
+// Products list view
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+
+  .product-card {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: $spacing-4;
+
+    @include sm-down {
+      grid-template-columns: 1fr;
+    }
+
+    .product-img {
+      height: 150px;
+    }
+  }
+}
+
+// View toggle
+.view-toggle {
+  display: flex;
+  border: 1px solid $gray-300;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  button {
+    padding: $spacing-2 $spacing-3;
+    color: $text-secondary;
+
+    &.active {
+      background-color: $primary-500;
+      color: white;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Product detail page
+.product-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-8;
+
+  @include md-down {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Product gallery
+.product-gallery {
+  .main-image {
+    position: relative;
+    border-radius: $radius-xl;
+    overflow: hidden;
+    margin-bottom: $spacing-4;
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    .zoom-btn {
+      position: absolute;
+      top: $spacing-4;
+      right: $spacing-4;
+      padding: $spacing-2;
+      background-color: $bg-white;
+      border-radius: $radius-lg;
+      box-shadow: $shadow-md;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .thumbnail-list {
+    display: flex;
+    gap: $spacing-2;
+    overflow-x: auto;
+
+    .thumbnail {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: $radius-lg;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+
+      &.active,
+      &:hover {
+        border-color: $primary-500;
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+}
+
+// Product info
+.product-info {
+  .product-category {
+    display: inline-block;
+    padding: $spacing-1 $spacing-3;
+    background-color: rgba($primary-500, 0.1);
+    color: $primary-600;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    border-radius: $radius-full;
+    margin-bottom: $spacing-3;
+  }
+
+  .product-title {
+    font-size: $font-size-3xl;
+    margin-bottom: $spacing-4;
+  }
+
+  .product-rating {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    margin-bottom: $spacing-4;
+
+    .stars {
+      color: $warning;
+    }
+
+    .rating-count {
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+  }
+
+  .product-price {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $primary-600;
+    margin-bottom: $spacing-4;
+
+    .old-price {
+      font-size: $font-size-lg;
+      color: $text-muted;
+      text-decoration: line-through;
+      margin-left: $spacing-2;
+    }
+  }
+
+  .product-description {
+    color: $text-secondary;
+    margin-bottom: $spacing-6;
+    line-height: $line-height-relaxed;
+  }
+
+  .product-features {
+    margin-bottom: $spacing-6;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: $spacing-2;
+      padding: $spacing-2 0;
+
+      svg {
+        color: $success;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+// Quantity selector
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  margin-bottom: $spacing-6;
+
+  label {
+    font-weight: $font-weight-medium;
+  }
+
+  .quantity-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid $gray-300;
+    border-radius: $radius-lg;
+
+    button {
+      padding: $spacing-2 $spacing-3;
+      color: $text-secondary;
+
+      &:hover {
+        color: $primary-500;
+      }
+    }
+
+    input {
+      width: 50px;
+      text-align: center;
+      border: none;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+// Product actions
+.product-actions {
+  display: flex;
+  gap: $spacing-3;
+  flex-wrap: wrap;
+}
+
+// Related products
+.related-products {
+  margin-top: $spacing-16;
+}

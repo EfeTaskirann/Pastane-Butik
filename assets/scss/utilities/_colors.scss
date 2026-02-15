@@ -1,0 +1,144 @@
+// ============================================
+// COLOR UTILITIES
+// Text, background, and border colors
+// ============================================
+
+// Text colors
+.text-primary { color: $primary-500 !important; }
+.text-primary-dark { color: $primary-700 !important; }
+.text-secondary { color: $text-secondary !important; }
+.text-muted { color: $text-muted !important; }
+.text-white { color: white !important; }
+.text-black { color: black !important; }
+
+.text-success { color: $success !important; }
+.text-danger { color: $danger !important; }
+.text-warning { color: $warning !important; }
+.text-info { color: $info !important; }
+
+// Gray text colors
+.text-gray-50 { color: $gray-50 !important; }
+.text-gray-100 { color: $gray-100 !important; }
+.text-gray-200 { color: $gray-200 !important; }
+.text-gray-300 { color: $gray-300 !important; }
+.text-gray-400 { color: $gray-400 !important; }
+.text-gray-500 { color: $gray-500 !important; }
+.text-gray-600 { color: $gray-600 !important; }
+.text-gray-700 { color: $gray-700 !important; }
+.text-gray-800 { color: $gray-800 !important; }
+.text-gray-900 { color: $gray-900 !important; }
+
+// Primary color shades
+.text-primary-50 { color: $primary-50 !important; }
+.text-primary-100 { color: $primary-100 !important; }
+.text-primary-200 { color: $primary-200 !important; }
+.text-primary-300 { color: $primary-300 !important; }
+.text-primary-400 { color: $primary-400 !important; }
+.text-primary-500 { color: $primary-500 !important; }
+.text-primary-600 { color: $primary-600 !important; }
+.text-primary-700 { color: $primary-700 !important; }
+.text-primary-800 { color: $primary-800 !important; }
+.text-primary-900 { color: $primary-900 !important; }
+
+// Background colors
+.bg-transparent { background-color: transparent !important; }
+.bg-white { background-color: white !important; }
+.bg-black { background-color: black !important; }
+
+.bg-primary { background-color: $primary-500 !important; }
+.bg-primary-light { background-color: $primary-100 !important; }
+.bg-primary-dark { background-color: $primary-700 !important; }
+
+.bg-success { background-color: $success !important; }
+.bg-success-light { background-color: $success-light !important; }
+.bg-danger { background-color: $danger !important; }
+.bg-danger-light { background-color: $danger-light !important; }
+.bg-warning { background-color: $warning !important; }
+.bg-warning-light { background-color: $warning-light !important; }
+.bg-info { background-color: $info !important; }
+.bg-info-light { background-color: $info-light !important; }
+
+// Gray backgrounds
+.bg-gray-50 { background-color: $gray-50 !important; }
+.bg-gray-100 { background-color: $gray-100 !important; }
+.bg-gray-200 { background-color: $gray-200 !important; }
+.bg-gray-300 { background-color: $gray-300 !important; }
+.bg-gray-400 { background-color: $gray-400 !important; }
+.bg-gray-500 { background-color: $gray-500 !important; }
+.bg-gray-600 { background-color: $gray-600 !important; }
+.bg-gray-700 { background-color: $gray-700 !important; }
+.bg-gray-800 { background-color: $gray-800 !important; }
+.bg-gray-900 { background-color: $gray-900 !important; }
+
+// Primary background shades
+.bg-primary-50 { background-color: $primary-50 !important; }
+.bg-primary-100 { background-color: $primary-100 !important; }
+.bg-primary-200 { background-color: $primary-200 !important; }
+.bg-primary-300 { background-color: $primary-300 !important; }
+.bg-primary-400 { background-color: $primary-400 !important; }
+.bg-primary-500 { background-color: $primary-500 !important; }
+.bg-primary-600 { background-color: $primary-600 !important; }
+.bg-primary-700 { background-color: $primary-700 !important; }
+.bg-primary-800 { background-color: $primary-800 !important; }
+.bg-primary-900 { background-color: $primary-900 !important; }
+
+// Border colors
+.border-transparent { border-color: transparent !important; }
+.border-white { border-color: white !important; }
+.border-black { border-color: black !important; }
+
+.border-primary { border-color: $primary-500 !important; }
+.border-success { border-color: $success !important; }
+.border-danger { border-color: $danger !important; }
+.border-warning { border-color: $warning !important; }
+.border-info { border-color: $info !important; }
+
+.border-gray-100 { border-color: $gray-100 !important; }
+.border-gray-200 { border-color: $gray-200 !important; }
+.border-gray-300 { border-color: $gray-300 !important; }
+.border-gray-400 { border-color: $gray-400 !important; }
+.border-gray-500 { border-color: $gray-500 !important; }
+
+// Border utilities
+.border { border: 1px solid $gray-200 !important; }
+.border-0 { border: 0 !important; }
+.border-t { border-top: 1px solid $gray-200 !important; }
+.border-r { border-right: 1px solid $gray-200 !important; }
+.border-b { border-bottom: 1px solid $gray-200 !important; }
+.border-l { border-left: 1px solid $gray-200 !important; }
+
+.border-2 { border-width: 2px !important; }
+.border-4 { border-width: 4px !important; }
+
+// Border radius
+.rounded-none { border-radius: 0 !important; }
+.rounded-sm { border-radius: $radius-sm !important; }
+.rounded { border-radius: $radius-md !important; }
+.rounded-md { border-radius: $radius-md !important; }
+.rounded-lg { border-radius: $radius-lg !important; }
+.rounded-xl { border-radius: $radius-xl !important; }
+.rounded-2xl { border-radius: $radius-2xl !important; }
+.rounded-full { border-radius: $radius-full !important; }
+
+// Box shadow
+.shadow-none { box-shadow: none !important; }
+.shadow-sm { box-shadow: $shadow-sm !important; }
+.shadow { box-shadow: $shadow-md !important; }
+.shadow-md { box-shadow: $shadow-md !important; }
+.shadow-lg { box-shadow: $shadow-lg !important; }
+.shadow-xl { box-shadow: $shadow-xl !important; }
+
+// Hover states
+.hover\:bg-primary:hover { background-color: $primary-500 !important; }
+.hover\:bg-gray-100:hover { background-color: $gray-100 !important; }
+.hover\:text-primary:hover { color: $primary-500 !important; }
+.hover\:text-white:hover { color: white !important; }
+.hover\:shadow-lg:hover { box-shadow: $shadow-lg !important; }
+.hover\:opacity-75:hover { opacity: 0.75 !important; }
+
+// Transition
+.transition { transition: all $transition-base !important; }
+.transition-colors { transition: color $transition-base, background-color $transition-base, border-color $transition-base !important; }
+.transition-opacity { transition: opacity $transition-base !important; }
+.transition-transform { transition: transform $transition-base !important; }
+.transition-shadow { transition: box-shadow $transition-base !important; }

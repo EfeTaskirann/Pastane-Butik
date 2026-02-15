@@ -81,20 +81,30 @@ INSERT IGNORE INTO urunler (kategori_id, isim, aciklama, fiyat, aktif, sira) VAL
 INSERT IGNORE INTO admin_kullanicilar (kullanici_adi, sifre_hash) VALUES
 ('admin', '$2y$10$8K1p/a5bGx8FUQ0v5uTh0OeJwNsQ7LJKaGdO4X5mRNHqLZQHWvCPG');
 
--- Siparişler Tablosu (Takvim Yoğunluk Sistemi)
+-- Siparişler Tablosu (Takvim Yoğunluk Sistemi + Satış Takibi)
 CREATE TABLE IF NOT EXISTS siparisler (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tarih DATE NOT NULL,
     kategori ENUM('pasta', 'cupcake', 'cheesecake', 'kurabiye', 'ozel') NOT NULL,
     adet INT DEFAULT 1,
     puan INT NOT NULL,
+    birim_fiyat DECIMAL(10,2) DEFAULT 0.00,
+    toplam_tutar DECIMAL(10,2) DEFAULT 0.00,
+    odeme_tipi ENUM('online', 'fiziksel') DEFAULT 'online',
+    kanal ENUM('site', 'cafe', 'telefon') DEFAULT 'site',
     musteri_adi VARCHAR(100),
     telefon VARCHAR(20),
     adres TEXT,
     notlar TEXT,
     tamamlandi TINYINT(1) DEFAULT 0,
     musteri_kaydedildi TINYINT(1) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    arsivlendi TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tarih (tarih),
+    INDEX idx_tarih_kanal (tarih, kanal),
+    INDEX idx_kategori (kategori),
+    INDEX idx_tamamlandi (tamamlandi),
+    INDEX idx_arsivlendi (arsivlendi)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Mevcut tabloya sütunlar ekle (eğer yoksa)
@@ -116,6 +126,22 @@ INSERT IGNORE INTO siparis_puan_ayarlari (kategori, puan) VALUES
 ('kurabiye', 6),
 ('ozel', 20);
 
+-- Kategori Varsayılan Fiyatları Tablosu
+CREATE TABLE IF NOT EXISTS kategori_fiyatlari (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kategori VARCHAR(50) NOT NULL UNIQUE,
+    varsayilan_fiyat DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Varsayılan Kategori Fiyatları
+INSERT IGNORE INTO kategori_fiyatlari (kategori, varsayilan_fiyat) VALUES
+('pasta', 450.00),
+('cupcake', 45.00),
+('cheesecake', 380.00),
+('kurabiye', 180.00),
+('ozel', 0.00);
+
 -- Kayıtlı Müşteriler Tablosu (Sadakat Programı)
 CREATE TABLE IF NOT EXISTS musteriler (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -133,3 +159,44 @@ CREATE TABLE IF NOT EXISTS musteriler (
 -- Siparişler tablosuna telefon ve müşteri kaydedildi alanları ekle (eğer yoksa)
 -- ALTER TABLE siparisler ADD COLUMN telefon VARCHAR(20) AFTER musteri_adi;
 -- ALTER TABLE siparisler ADD COLUMN musteri_kaydedildi TINYINT(1) DEFAULT 0 AFTER tamamlandi;
+
+-- =============================================
+-- GÜVENLİK TABLOLARI
+-- =============================================
+
+-- Giriş Denemeleri Tablosu (Brute-force koruması)
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_adresi VARCHAR(45) NOT NULL,
+    kullanici_adi VARCHAR(50),
+    deneme_zamani TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip (ip_adresi),
+    INDEX idx_kullanici (kullanici_adi),
+    INDEX idx_zaman (deneme_zamani)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Giriş Log Tablosu (Güvenlik denetimi için)
+CREATE TABLE IF NOT EXISTS login_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kullanici_adi VARCHAR(50) NOT NULL,
+    ip_adresi VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    basarili TINYINT(1) DEFAULT 0,
+    tarih TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_kullanici (kullanici_adi),
+    INDEX idx_tarih (tarih),
+    INDEX idx_basarili (basarili)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Mesajlar Tablosu (İletişim formundan gelen mesajlar)
+CREATE TABLE IF NOT EXISTS mesajlar (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ad VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    telefon VARCHAR(20),
+    mesaj TEXT NOT NULL,
+    okundu TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_okundu (okundu),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,194 @@
+// ============================================
+// HEADER
+// Site header styles
+// ============================================
+
+.header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-sticky;
+  background-color: $bg-white;
+  box-shadow: $shadow-sm;
+  transition: all $transition-base;
+
+  &.is-scrolled {
+    box-shadow: $shadow-md;
+  }
+}
+
+.header-container {
+  @include container;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $header-height;
+  gap: $spacing-6;
+}
+
+// Logo
+.header-logo {
+  display: flex;
+  align-items: center;
+
+  img {
+    height: 48px;
+    width: auto;
+
+    @include sm-down {
+      height: 40px;
+    }
+  }
+
+  .logo-text {
+    font-family: $font-family-heading;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $primary-600;
+    margin-left: $spacing-2;
+
+    @include sm-down {
+      display: none;
+    }
+  }
+}
+
+// Header actions (right side)
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+}
+
+// Header CTA button
+.header-cta {
+  @include lg-down {
+    display: none;
+  }
+}
+
+// Top bar (above main header)
+.top-bar {
+  background-color: $primary-600;
+  color: white;
+  font-size: $font-size-sm;
+  padding: $spacing-2 0;
+
+  @include sm-down {
+    display: none;
+  }
+}
+
+.top-bar-container {
+  @include container;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-bar-contact {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: $spacing-1;
+    color: rgba(white, 0.9);
+
+    &:hover {
+      color: white;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.top-bar-social {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+
+  a {
+    color: rgba(white, 0.9);
+
+    &:hover {
+      color: white;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Transparent header (for hero sections)
+.header-transparent {
+  position: absolute;
+  background-color: transparent;
+  box-shadow: none;
+
+  &.is-scrolled {
+    position: sticky;
+    background-color: $bg-white;
+  }
+
+  &:not(.is-scrolled) {
+    .nav-link,
+    .mobile-menu-btn {
+      color: white;
+
+      &:hover {
+        background-color: rgba(white, 0.1);
+      }
+    }
+
+    .header-logo .logo-text {
+      color: white;
+    }
+  }
+}
+
+// Search in header
+.header-search {
+  position: relative;
+
+  @include lg-down {
+    display: none;
+  }
+
+  input {
+    width: 200px;
+    padding: $spacing-2 $spacing-4;
+    padding-left: $spacing-10;
+    border: 1px solid $gray-200;
+    border-radius: $radius-full;
+    font-size: $font-size-sm;
+    transition: all $transition-base;
+
+    &:focus {
+      width: 280px;
+      border-color: $primary-500;
+      outline: none;
+    }
+  }
+
+  .search-icon {
+    position: absolute;
+    left: $spacing-3;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray-400;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}

@@ -1,0 +1,237 @@
+// ============================================
+// NAVIGATION
+// Navigation components
+// ============================================
+
+// Main navigation
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+
+  @include lg-down {
+    display: none;
+  }
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-2 $spacing-4;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-lg;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $primary-500;
+    background-color: rgba($primary-500, 0.1);
+  }
+
+  &.active {
+    color: $primary-500;
+    background-color: rgba($primary-500, 0.1);
+  }
+}
+
+// Mobile navigation
+.mobile-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: $bg-white;
+  z-index: $z-modal;
+  transform: translateX(-100%);
+  transition: transform $transition-base;
+  overflow-y: auto;
+
+  &.is-open {
+    transform: translateX(0);
+  }
+}
+
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-4 $spacing-6;
+  border-bottom: 1px solid $gray-200;
+}
+
+.mobile-nav-body {
+  padding: $spacing-4;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: $spacing-3 $spacing-4;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-lg;
+
+  &:hover,
+  &.active {
+    color: $primary-500;
+    background-color: rgba($primary-500, 0.1);
+  }
+}
+
+// Mobile menu button
+.mobile-menu-btn {
+  display: none;
+  padding: $spacing-2;
+  color: $text-primary;
+
+  @include lg-down {
+    display: flex;
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Hamburger icon
+.hamburger {
+  width: 24px;
+  height: 18px;
+  position: relative;
+
+  span {
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: currentColor;
+    border-radius: 2px;
+    transition: all $transition-base;
+
+    &:nth-child(1) { top: 0; }
+    &:nth-child(2) { top: 8px; }
+    &:nth-child(3) { top: 16px; }
+  }
+
+  &.is-active {
+    span:nth-child(1) {
+      transform: rotate(45deg);
+      top: 8px;
+    }
+    span:nth-child(2) {
+      opacity: 0;
+    }
+    span:nth-child(3) {
+      transform: rotate(-45deg);
+      top: 8px;
+    }
+  }
+}
+
+// Breadcrumb
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-4 0;
+  font-size: $font-size-sm;
+
+  li {
+    display: flex;
+    align-items: center;
+
+    &::after {
+      content: '/';
+      margin-left: $spacing-2;
+      color: $gray-400;
+    }
+
+    &:last-child::after {
+      display: none;
+    }
+  }
+
+  a {
+    color: $text-secondary;
+
+    &:hover {
+      color: $primary-500;
+    }
+  }
+
+  .current {
+    color: $text-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// Pagination
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-1;
+  margin-top: $spacing-8;
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 $spacing-3;
+  border-radius: $radius-lg;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:hover {
+    background-color: $gray-100;
+  }
+
+  &.active {
+    background-color: $primary-500;
+    color: white;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// Tabs
+.tabs {
+  display: flex;
+  gap: $spacing-1;
+  border-bottom: 2px solid $gray-200;
+  margin-bottom: $spacing-6;
+}
+
+.tab-link {
+  padding: $spacing-3 $spacing-4;
+  color: $text-secondary;
+  font-weight: $font-weight-medium;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $primary-500;
+  }
+
+  &.active {
+    color: $primary-500;
+    border-bottom-color: $primary-500;
+  }
+}
+
+.tab-content {
+  display: none;
+
+  &.active {
+    display: block;
+  }
+}

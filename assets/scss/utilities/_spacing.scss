@@ -1,0 +1,151 @@
+// ============================================
+// SPACING UTILITIES
+// Margin and padding utilities
+// ============================================
+
+// Spacing values map
+$spacings: (
+  0: 0,
+  1: $spacing-1,
+  2: $spacing-2,
+  3: $spacing-3,
+  4: $spacing-4,
+  5: $spacing-5,
+  6: $spacing-6,
+  8: $spacing-8,
+  10: $spacing-10,
+  12: $spacing-12,
+  16: $spacing-16,
+  auto: auto
+);
+
+// Margin utilities
+@each $name, $value in $spacings {
+  // All sides
+  .m-#{$name} { margin: $value !important; }
+
+  // Individual sides
+  .mt-#{$name} { margin-top: $value !important; }
+  .mr-#{$name} { margin-right: $value !important; }
+  .mb-#{$name} { margin-bottom: $value !important; }
+  .ml-#{$name} { margin-left: $value !important; }
+
+  // X axis (left and right)
+  .mx-#{$name} {
+    margin-left: $value !important;
+    margin-right: $value !important;
+  }
+
+  // Y axis (top and bottom)
+  .my-#{$name} {
+    margin-top: $value !important;
+    margin-bottom: $value !important;
+  }
+}
+
+// Padding utilities
+@each $name, $value in $spacings {
+  @if $name != auto {
+    // All sides
+    .p-#{$name} { padding: $value !important; }
+
+    // Individual sides
+    .pt-#{$name} { padding-top: $value !important; }
+    .pr-#{$name} { padding-right: $value !important; }
+    .pb-#{$name} { padding-bottom: $value !important; }
+    .pl-#{$name} { padding-left: $value !important; }
+
+    // X axis (left and right)
+    .px-#{$name} {
+      padding-left: $value !important;
+      padding-right: $value !important;
+    }
+
+    // Y axis (top and bottom)
+    .py-#{$name} {
+      padding-top: $value !important;
+      padding-bottom: $value !important;
+    }
+  }
+}
+
+// Negative margins
+@each $name, $value in $spacings {
+  @if $name != 0 and $name != auto {
+    .-mt-#{$name} { margin-top: -$value !important; }
+    .-mr-#{$name} { margin-right: -$value !important; }
+    .-mb-#{$name} { margin-bottom: -$value !important; }
+    .-ml-#{$name} { margin-left: -$value !important; }
+  }
+}
+
+// Gap utilities
+@each $name, $value in $spacings {
+  @if $name != auto {
+    .gap-#{$name} { gap: $value !important; }
+    .gap-x-#{$name} { column-gap: $value !important; }
+    .gap-y-#{$name} { row-gap: $value !important; }
+  }
+}
+
+// Responsive spacing (medium screens and up)
+@include md-up {
+  @each $name, $value in $spacings {
+    .md\:m-#{$name} { margin: $value !important; }
+    .md\:mt-#{$name} { margin-top: $value !important; }
+    .md\:mb-#{$name} { margin-bottom: $value !important; }
+    .md\:mx-#{$name} {
+      margin-left: $value !important;
+      margin-right: $value !important;
+    }
+    .md\:my-#{$name} {
+      margin-top: $value !important;
+      margin-bottom: $value !important;
+    }
+
+    @if $name != auto {
+      .md\:p-#{$name} { padding: $value !important; }
+      .md\:pt-#{$name} { padding-top: $value !important; }
+      .md\:pb-#{$name} { padding-bottom: $value !important; }
+      .md\:px-#{$name} {
+        padding-left: $value !important;
+        padding-right: $value !important;
+      }
+      .md\:py-#{$name} {
+        padding-top: $value !important;
+        padding-bottom: $value !important;
+      }
+    }
+  }
+}
+
+// Responsive spacing (large screens and up)
+@include lg-up {
+  @each $name, $value in $spacings {
+    .lg\:m-#{$name} { margin: $value !important; }
+    .lg\:mt-#{$name} { margin-top: $value !important; }
+    .lg\:mb-#{$name} { margin-bottom: $value !important; }
+    .lg\:mx-#{$name} {
+      margin-left: $value !important;
+      margin-right: $value !important;
+    }
+    .lg\:my-#{$name} {
+      margin-top: $value !important;
+      margin-bottom: $value !important;
+    }
+
+    @if $name != auto {
+      .lg\:p-#{$name} { padding: $value !important; }
+      .lg\:pt-#{$name} { padding-top: $value !important; }
+      .lg\:pb-#{$name} { padding-bottom: $value !important; }
+      .lg\:px-#{$name} {
+        padding-left: $value !important;
+        padding-right: $value !important;
+      }
+      .lg\:py-#{$name} {
+        padding-top: $value !important;
+        padding-bottom: $value !important;
+      }
+    }
+  }
+}

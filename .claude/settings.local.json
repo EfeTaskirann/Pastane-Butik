@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(dir /s /b \"c:\\\\xampp\\\\htdocs\\\\pastane\")",
+      "Bash(includes \")",
+      "Bash(grep:*)",
+      "Bash(php -r \"require ''includes/db.php''; $cols = db\\(\\)->fetchAll\\(\"\"DESCRIBE kategoriler\"\"\\); foreach\\($cols as $c\\) echo $c[''Field''] . \"\"\\\\n\"\";\")",
+      "Bash(php -r \"require ''includes/db.php''; print_r\\(db\\(\\)->fetchAll\\(''DESCRIBE kategoriler''\\)\\);\")",
+      "Bash(php -r \"require ''includes/db.php''; echo ''URUNLER:''; print_r\\(array_column\\(db\\(\\)->fetchAll\\(''DESCRIBE urunler''\\), ''Field''\\)\\);\")",
+      "Bash(php -r \"require ''includes/db.php''; echo ''MESAJLAR:''; print_r\\(array_column\\(db\\(\\)->fetchAll\\(''DESCRIBE mesajlar''\\), ''Field''\\)\\);\")",
+      "Bash(php -r \"require ''includes/db.php''; echo ''SIPARISLER:''; print_r\\(array_column\\(db\\(\\)->fetchAll\\(''DESCRIBE siparisler''\\), ''Field''\\)\\);\")",
+      "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe -u root -e \"ALTER TABLE kategoriler CHANGE isim ad VARCHAR\\(100\\) NOT NULL;\" pastane)",
+      "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe -u root -e \"ALTER TABLE urunler CHANGE isim ad VARCHAR\\(255\\) NOT NULL;\" pastane)",
+      "Bash(/c/xampp/php/php.exe:*)",
+      "Bash(python scripts/search.py:*)",
+      "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe:*)",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"USE pastane_db; CREATE TABLE IF NOT EXISTS login_attempts \\(id INT AUTO_INCREMENT PRIMARY KEY, ip_adresi VARCHAR\\(45\\) NOT NULL, kullanici_adi VARCHAR\\(50\\), deneme_zamani TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_ip \\(ip_adresi\\), INDEX idx_kullanici \\(kullanici_adi\\), INDEX idx_zaman \\(deneme_zamani\\)\\) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\":*)",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"USE pastane_db; CREATE TABLE IF NOT EXISTS mesajlar \\(id INT AUTO_INCREMENT PRIMARY KEY, ad VARCHAR\\(100\\) NOT NULL, email VARCHAR\\(100\\), telefon VARCHAR\\(20\\), mesaj TEXT NOT NULL, okundu TINYINT\\(1\\) DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_okundu \\(okundu\\), INDEX idx_created \\(created_at\\)\\) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\")",
+      "Bash(npx skills:*)",
+      "Bash(php vendor/phpunit/phpunit/phpunit:*)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root pastane_db -e:*)",
+      "Bash(wc:*)",
+      "Bash(php -l:*)",
+      "Bash(php -r:*)",
+      "Bash(findstr:*)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nGüvenlik ve performans iyileştirmeleri \\(Faz 2\\)\n\n- db.php: $where SQL injection koruması eklendi\n  - validateWhereClause\\(\\) metodu ile tehlikeli keyword kontrolü\n  - updateSafe\\(\\) ve deleteSafe\\(\\) metotları eklendi\n  - Eksik tablolar ALLOWED_TABLES''a eklendi\n\n- RateLimiter.php: Fail-closed güvenlik modeli\n  - DB hatalarında istekler varsayılan olarak reddedilir\n  - Hata loglama eklendi\n\n- main.js: XSS ve performans düzeltmeleri\n  - innerHTML yerine textContent/DOM API kullanıldı\n  - escapeHtml\\(\\) ve sanitizeAttribute\\(\\) helper''ları eklendi\n  - Sparkle animasyonu requestAnimationFrame ile optimize edildi\n  - Tab visibility kontrolü eklendi \\(arka planda duraklatma\\)\n  - DOM null check''leri eklendi\n\n- iletisim.php: CSRF token zorunlu yapıldı\n\n- admin/header.php: Logout GET''ten POST+CSRF''ye taşındı\n\n- index.php: N+1 query kaldırıldı \\(JOIN verisi kullanılıyor\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
+    ]
+  }
+}

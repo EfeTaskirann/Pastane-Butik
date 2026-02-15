@@ -1,17 +1,80 @@
-# Uploads (kullanıcı yüklemeleri)
-uploads/products/*
-!uploads/products/.gitkeep
+# ===========================================
+# Environment Files (KRITIK - asla commit etme!)
+# ===========================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
 
-# Config dosyası (hassas bilgiler)
-includes/config.php
+# ===========================================
+# Dependencies
+# ===========================================
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
 
-# IDE
+# ===========================================
+# Storage Directories
+# ===========================================
+/storage/logs/*
+/storage/cache/*
+/storage/sessions/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/sessions/.gitkeep
+
+# ===========================================
+# Uploads
+# ===========================================
+/uploads/products/*
+!/uploads/products/.gitkeep
+
+# ===========================================
+# Build & Distribution
+# ===========================================
+/dist/
+/build/
+/public/assets/dist/
+
+# ===========================================
+# IDE & Editors
+# ===========================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
 
-# OS
+# ===========================================
+# Testing
+# ===========================================
+/coverage/
+.phpunit.result.cache
+.phpunit.cache/
+/tests/coverage/
+
+# ===========================================
+# Operating System
+# ===========================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Logs
+# ===========================================
+# Temporary & Misc
+# ===========================================
 *.log
+*.bak
+*.tmp
+*.temp
+*.cache
+nul

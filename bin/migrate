@@ -1,0 +1,121 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Migration CLI Tool
+ *
+ * Kullanım:
+ *   php bin/migrate              - Bekleyen migration'ları çalıştır
+ *   php bin/migrate status       - Migration durumunu göster
+ *   php bin/migrate rollback     - Son batch'i geri al
+ *   php bin/migrate reset        - Tüm migration'ları geri al
+ *   php bin/migrate refresh      - Reset + Migrate
+ *   php bin/migrate create name  - Yeni migration oluştur
+ *
+ * @package Pastane
+ */
+
+// Bootstrap
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/Migration.php';
+
+// Parse arguments
+$command = $argv[1] ?? 'migrate';
+$argument = $argv[2] ?? null;
+
+// Initialize migration manager
+$migration = new Migration();
+
+// Output helper
+function output(string $message, string $type = 'info'): void
+{
+    $colors = [
+        'info' => "\033[0;36m",    // Cyan
+        'success' => "\033[0;32m", // Green
+        'error' => "\033[0;31m",   // Red
+        'warning' => "\033[0;33m", // Yellow
+        'reset' => "\033[0m",
+    ];
+
+    $color = $colors[$type] ?? $colors['info'];
+    echo $color . $message . $colors['reset'] . PHP_EOL;
+}
+
+function outputLog(array $log): void
+{
+    foreach ($log as $entry) {
+        $type = match ($entry['status']) {
+            'success' => 'success',
+            'error' => 'error',
+            default => 'info',
+        };
+        output($entry['message'], $type);
+    }
+}
+
+// Execute command
+try {
+    switch ($command) {
+        case 'migrate':
+            output('Migration\'lar çalıştırılıyor...', 'info');
+            $log = $migration->migrate();
+            outputLog($log);
+            break;
+
+        case 'status':
+            output('Migration Durumu:', 'info');
+            output(str_repeat('-', 60), 'info');
+            $status = $migration->status();
+            foreach ($status as $item) {
+                $statusText = $item['status'] === 'Executed' ? '✓ Executed' : '○ Pending';
+                $type = $item['status'] === 'Executed' ? 'success' : 'warning';
+                output(sprintf("%-50s %s", $item['migration'], $statusText), $type);
+            }
+            break;
+
+        case 'rollback':
+            $steps = (int)($argument ?? 1);
+            output("Son {$steps} batch geri alınıyor...", 'warning');
+            $log = $migration->rollback($steps);
+            outputLog($log);
+            break;
+
+        case 'reset':
+            output('Tüm migration\'lar geri alınıyor...', 'warning');
+            $log = $migration->reset();
+            outputLog($log);
+            break;
+
+        case 'refresh':
+            output('Migration\'lar yenileniyor (reset + migrate)...', 'warning');
+            $log = $migration->refresh();
+            outputLog($log);
+            break;
+
+        case 'create':
+            if (!$argument) {
+                output('Migration adı gerekli: php bin/migrate create migration_name', 'error');
+                exit(1);
+            }
+            $filepath = $migration->create($argument);
+            output("Migration oluşturuldu: {$filepath}", 'success');
+            break;
+
+        default:
+            output("Bilinmeyen komut: {$command}", 'error');
+            output('Kullanım:', 'info');
+            output('  php bin/migrate              - Migration\'ları çalıştır', 'info');
+            output('  php bin/migrate status       - Durumu göster', 'info');
+            output('  php bin/migrate rollback [n] - Son n batch\'i geri al', 'info');
+            output('  php bin/migrate reset        - Tümünü geri al', 'info');
+            output('  php bin/migrate refresh      - Reset + Migrate', 'info');
+            output('  php bin/migrate create name  - Yeni migration oluştur', 'info');
+            exit(1);
+    }
+
+    output('', 'info');
+    output('İşlem tamamlandı.', 'success');
+
+} catch (Exception $e) {
+    output('Hata: ' . $e->getMessage(), 'error');
+    exit(1);
+}

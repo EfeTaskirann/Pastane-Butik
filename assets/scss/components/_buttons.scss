@@ -1,0 +1,161 @@
+// ============================================
+// BUTTONS
+// Button styles and variants
+// ============================================
+
+.btn {
+  @include button-base;
+
+  // Sizes
+  &--sm {
+    padding: $spacing-2 $spacing-4;
+    font-size: $font-size-sm;
+  }
+
+  &--lg {
+    padding: $spacing-4 $spacing-8;
+    font-size: $font-size-lg;
+  }
+
+  // Full width
+  &--block {
+    display: block;
+    width: 100%;
+  }
+
+  // Icon button
+  &--icon {
+    padding: $spacing-3;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Primary button
+.btn-primary {
+  @include button-solid($primary-500);
+}
+
+// Secondary button
+.btn-secondary {
+  @include button-solid($gray-600);
+}
+
+// Success button
+.btn-success {
+  @include button-solid($success);
+}
+
+// Danger button
+.btn-danger {
+  @include button-solid($danger);
+}
+
+// Warning button
+.btn-warning {
+  @include button-solid($warning);
+  color: $gray-800;
+
+  &:hover {
+    color: $gray-800;
+  }
+}
+
+// Outline variants
+.btn-outline-primary {
+  @include button-outline($primary-500);
+}
+
+.btn-outline-secondary {
+  @include button-outline($gray-600);
+}
+
+.btn-outline-success {
+  @include button-outline($success);
+}
+
+.btn-outline-danger {
+  @include button-outline($danger);
+}
+
+// Ghost button (text only)
+.btn-ghost {
+  background: transparent;
+  color: $primary-500;
+
+  &:hover {
+    background: rgba($primary-500, 0.1);
+  }
+}
+
+// Link button
+.btn-link {
+  background: transparent;
+  color: $primary-500;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Button group
+.btn-group {
+  display: inline-flex;
+
+  .btn {
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: $radius-lg 0 0 $radius-lg;
+    }
+
+    &:last-child {
+      border-radius: 0 $radius-lg $radius-lg 0;
+    }
+  }
+}
+
+// WhatsApp button (special)
+.btn-whatsapp {
+  background-color: #25D366;
+  color: white;
+
+  &:hover {
+    background-color: darken(#25D366, 10%);
+  }
+
+  svg {
+    margin-right: $spacing-2;
+  }
+}
+
+// Loading state
+.btn--loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

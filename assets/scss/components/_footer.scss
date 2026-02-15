@@ -1,0 +1,193 @@
+// ============================================
+// FOOTER
+// Footer styles
+// ============================================
+
+.footer {
+  background-color: $gray-900;
+  color: $gray-300;
+  padding-top: $spacing-16;
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-8;
+  padding-bottom: $spacing-12;
+
+  @include lg-down {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include sm-down {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-brand {
+  @include lg-down {
+    grid-column: span 2;
+  }
+
+  @include sm-down {
+    grid-column: span 1;
+  }
+
+  .footer-logo {
+    margin-bottom: $spacing-4;
+
+    img {
+      max-width: 150px;
+      height: auto;
+    }
+  }
+
+  p {
+    color: $gray-400;
+    margin-bottom: $spacing-4;
+    font-size: $font-size-sm;
+  }
+}
+
+.footer-social {
+  display: flex;
+  gap: $spacing-3;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(white, 0.1);
+    color: white;
+    border-radius: $radius-lg;
+    transition: all $transition-base;
+
+    &:hover {
+      background-color: $primary-500;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.footer-column {
+  h4 {
+    color: white;
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-4;
+  }
+}
+
+.footer-links {
+  li {
+    margin-bottom: $spacing-2;
+  }
+
+  a {
+    color: $gray-400;
+    font-size: $font-size-sm;
+    transition: color $transition-base;
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
+.footer-contact {
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-3;
+    margin-bottom: $spacing-3;
+    color: $gray-400;
+    font-size: $font-size-sm;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: $primary-400;
+    }
+  }
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(white, 0.1);
+  padding: $spacing-6 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+
+  @include sm-down {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.footer-copyright {
+  color: $gray-500;
+  font-size: $font-size-sm;
+}
+
+.footer-legal {
+  display: flex;
+  gap: $spacing-4;
+
+  a {
+    color: $gray-500;
+    font-size: $font-size-sm;
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
+// Newsletter in footer
+.footer-newsletter {
+  margin-top: $spacing-4;
+
+  .newsletter-form {
+    display: flex;
+    gap: $spacing-2;
+
+    input {
+      flex: 1;
+      padding: $spacing-3;
+      background-color: rgba(white, 0.1);
+      border: 1px solid rgba(white, 0.2);
+      border-radius: $radius-lg;
+      color: white;
+
+      &::placeholder {
+        color: $gray-500;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $primary-500;
+      }
+    }
+
+    button {
+      padding: $spacing-3 $spacing-4;
+      background-color: $primary-500;
+      color: white;
+      border-radius: $radius-lg;
+      font-weight: $font-weight-medium;
+      transition: background-color $transition-base;
+
+      &:hover {
+        background-color: $primary-600;
+      }
+    }
+  }
+}

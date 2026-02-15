@@ -1,0 +1,219 @@
+// ============================================
+// CARDS
+// Card components
+// ============================================
+
+.card {
+  @include card;
+  overflow: hidden;
+}
+
+// Card with image
+.card-img {
+  position: relative;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $transition-base;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+// Card body
+.card-body {
+  padding: $card-padding;
+}
+
+// Card title
+.card-title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-2;
+  color: $text-primary;
+}
+
+// Card text
+.card-text {
+  color: $text-secondary;
+  margin-bottom: $spacing-4;
+}
+
+// Card footer
+.card-footer {
+  padding: $spacing-4 $card-padding;
+  border-top: 1px solid $gray-200;
+  background-color: $gray-50;
+}
+
+// Product card
+.product-card {
+  @include card;
+  overflow: hidden;
+  transition: transform $transition-base, box-shadow $transition-base;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+
+  .product-img {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform $transition-base;
+    }
+
+    &:hover img {
+      transform: scale(1.1);
+    }
+
+    .product-badge {
+      position: absolute;
+      top: $spacing-3;
+      left: $spacing-3;
+      padding: $spacing-1 $spacing-3;
+      background-color: $primary-500;
+      color: white;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      border-radius: $radius-full;
+    }
+  }
+
+  .product-body {
+    padding: $spacing-4;
+  }
+
+  .product-category {
+    font-size: $font-size-sm;
+    color: $primary-500;
+    margin-bottom: $spacing-1;
+  }
+
+  .product-title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-2;
+
+    a {
+      color: $text-primary;
+
+      &:hover {
+        color: $primary-500;
+      }
+    }
+  }
+
+  .product-description {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    margin-bottom: $spacing-3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-price {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $primary-600;
+  }
+
+  .product-footer {
+    padding: $spacing-4;
+    border-top: 1px solid $gray-100;
+    display: flex;
+    gap: $spacing-2;
+  }
+}
+
+// Testimonial card
+.testimonial-card {
+  @include card;
+  padding: $spacing-6;
+  text-align: center;
+
+  .testimonial-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto $spacing-4;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .testimonial-text {
+    font-style: italic;
+    color: $text-secondary;
+    margin-bottom: $spacing-4;
+
+    &::before {
+      content: '"';
+      font-size: $font-size-3xl;
+      color: $primary-300;
+      line-height: 0;
+      vertical-align: -0.4em;
+    }
+  }
+
+  .testimonial-author {
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  .testimonial-rating {
+    color: $warning;
+    margin-top: $spacing-2;
+  }
+}
+
+// Feature card
+.feature-card {
+  text-align: center;
+  padding: $spacing-6;
+
+  .feature-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto $spacing-4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba($primary-500, 0.1);
+    color: $primary-500;
+    border-radius: $radius-xl;
+
+    svg {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .feature-title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-2;
+  }
+
+  .feature-text {
+    color: $text-secondary;
+    font-size: $font-size-sm;
+  }
+}

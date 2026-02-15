@@ -1,0 +1,373 @@
+// ============================================
+// ORDER PAGE
+// Order/Sipariş page styles
+// ============================================
+
+.order-page {
+  .order-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: $spacing-8;
+
+    @include lg-down {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Order form steps
+.order-steps {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $spacing-8;
+
+  @include sm-down {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.order-step {
+  display: flex;
+  align-items: center;
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $gray-200;
+    color: $text-secondary;
+    border-radius: 50%;
+    font-weight: $font-weight-semibold;
+    margin-right: $spacing-2;
+  }
+
+  .step-label {
+    font-weight: $font-weight-medium;
+    color: $text-secondary;
+
+    @include sm-down {
+      display: none;
+    }
+  }
+
+  &.active {
+    .step-number {
+      background-color: $primary-500;
+      color: white;
+    }
+
+    .step-label {
+      color: $primary-500;
+    }
+  }
+
+  &.completed {
+    .step-number {
+      background-color: $success;
+      color: white;
+    }
+
+    .step-label {
+      color: $success;
+    }
+  }
+
+  // Connector line
+  &:not(:last-child)::after {
+    content: '';
+    width: 60px;
+    height: 2px;
+    background-color: $gray-200;
+    margin: 0 $spacing-4;
+
+    @include sm-down {
+      width: 2px;
+      height: 30px;
+      margin: $spacing-2 0;
+    }
+  }
+
+  &.completed:not(:last-child)::after {
+    background-color: $success;
+  }
+}
+
+// Order form card
+.order-form-card {
+  @include card;
+  padding: $spacing-6;
+}
+
+.order-form-section {
+  margin-bottom: $spacing-6;
+  padding-bottom: $spacing-6;
+  border-bottom: 1px solid $gray-200;
+
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-4;
+  }
+}
+
+// Product selection
+.product-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: $spacing-4;
+}
+
+.product-option {
+  position: relative;
+
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+  }
+
+  label {
+    display: block;
+    padding: $spacing-4;
+    border: 2px solid $gray-200;
+    border-radius: $radius-lg;
+    cursor: pointer;
+    transition: all $transition-base;
+    text-align: center;
+
+    img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: $radius-md;
+      margin-bottom: $spacing-2;
+    }
+
+    .product-name {
+      font-weight: $font-weight-medium;
+      margin-bottom: $spacing-1;
+    }
+
+    .product-price {
+      color: $primary-600;
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  input:checked + label {
+    border-color: $primary-500;
+    background-color: rgba($primary-500, 0.05);
+  }
+
+  input:focus + label {
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.2);
+  }
+}
+
+// Date picker
+.date-picker-wrapper {
+  .flatpickr-input {
+    @include input-base;
+  }
+}
+
+// Time slots
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: $spacing-2;
+}
+
+.time-slot {
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+  }
+
+  label {
+    display: block;
+    padding: $spacing-2 $spacing-3;
+    border: 1px solid $gray-200;
+    border-radius: $radius-md;
+    text-align: center;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    transition: all $transition-base;
+
+    &:hover {
+      border-color: $primary-300;
+    }
+  }
+
+  input:checked + label {
+    background-color: $primary-500;
+    border-color: $primary-500;
+    color: white;
+  }
+
+  input:disabled + label {
+    background-color: $gray-100;
+    color: $text-muted;
+    cursor: not-allowed;
+  }
+}
+
+// Order summary sidebar
+.order-summary {
+  @include card;
+  padding: $spacing-6;
+  position: sticky;
+  top: calc(#{$header-height} + #{$spacing-4});
+
+  @include lg-down {
+    position: static;
+  }
+
+  h3 {
+    font-size: $font-size-xl;
+    margin-bottom: $spacing-4;
+    padding-bottom: $spacing-4;
+    border-bottom: 1px solid $gray-200;
+  }
+}
+
+.order-items {
+  margin-bottom: $spacing-4;
+
+  .order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: $spacing-3 0;
+    border-bottom: 1px solid $gray-100;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .item-name {
+      font-weight: $font-weight-medium;
+    }
+
+    .item-details {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+    }
+
+    .item-price {
+      font-weight: $font-weight-semibold;
+    }
+  }
+}
+
+.order-total {
+  padding-top: $spacing-4;
+  border-top: 2px solid $gray-200;
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: $spacing-2 0;
+
+    &.grand-total {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $primary-600;
+    }
+  }
+}
+
+// Order confirmation
+.order-confirmation {
+  text-align: center;
+  padding: $spacing-12;
+
+  .confirmation-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto $spacing-6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $success-light;
+    color: $success;
+    border-radius: 50%;
+
+    svg {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  h2 {
+    margin-bottom: $spacing-4;
+  }
+
+  .order-number {
+    font-size: $font-size-lg;
+    color: $text-secondary;
+    margin-bottom: $spacing-6;
+
+    strong {
+      color: $primary-600;
+    }
+  }
+}
+
+// Special requests
+.special-requests {
+  .character-count {
+    text-align: right;
+    font-size: $font-size-sm;
+    color: $text-muted;
+    margin-top: $spacing-1;
+  }
+}
+
+// Image upload for custom cake
+.cake-upload {
+  .upload-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: $spacing-2;
+    margin-top: $spacing-4;
+
+    .preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: $radius-lg;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove-btn {
+        position: absolute;
+        top: $spacing-1;
+        right: $spacing-1;
+        width: 24px;
+        height: 24px;
+        background-color: $danger;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+  }
+}

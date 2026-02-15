@@ -8,13 +8,13 @@ require_once __DIR__ . '/includes/header.php';
 // İstatistikleri al
 $totalProducts = db()->fetch("SELECT COUNT(*) as count FROM urunler")['count'];
 $totalCategories = db()->fetch("SELECT COUNT(*) as count FROM kategoriler")['count'];
-$unreadMessages = db()->fetch("SELECT COUNT(*) as count FROM iletisim_mesajlari WHERE okundu = 0")['count'];
+$unreadMessages = db()->fetch("SELECT COUNT(*) as count FROM mesajlar WHERE okundu = 0")['count'];
 
 // Son eklenen ürünler
 $recentProducts = db()->fetchAll("SELECT * FROM urunler ORDER BY created_at DESC LIMIT 5");
 
 // Son mesajlar
-$recentMessages = db()->fetchAll("SELECT * FROM iletisim_mesajlari ORDER BY created_at DESC LIMIT 5");
+$recentMessages = db()->fetchAll("SELECT * FROM mesajlar ORDER BY created_at DESC LIMIT 5");
 ?>
 
 <h2 style="margin-bottom: 1.5rem;">Dashboard</h2>
@@ -94,7 +94,7 @@ $recentMessages = db()->fetchAll("SELECT * FROM iletisim_mesajlari ORDER BY crea
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <strong><?= e($product['isim']) ?></strong><br>
+                                <strong><?= e($product['ad']) ?></strong><br>
                                 <small style="color: var(--admin-text-light);"><?= formatPrice($product['fiyat']) ?></small>
                             </td>
                             <td style="text-align: right;">
@@ -127,7 +127,7 @@ $recentMessages = db()->fetchAll("SELECT * FROM iletisim_mesajlari ORDER BY crea
                     <?php foreach ($recentMessages as $message): ?>
                         <tr>
                             <td>
-                                <strong><?= e($message['isim']) ?></strong><br>
+                                <strong><?= e($message['ad']) ?></strong><br>
                                 <small style="color: var(--admin-text-light);">
                                     <?= e(mb_substr($message['mesaj'], 0, 50)) ?>...
                                 </small>

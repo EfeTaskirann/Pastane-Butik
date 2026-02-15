@@ -1,202 +1,408 @@
 <?php
 /**
- * Kategori Yönetimi
+ * Kategori Yonetimi - Professional UI
+ * MVC: KategoriService kullanır
  */
 
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
-// Silme işlemi (header'dan önce)
-if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+use Pastane\Exceptions\HttpException;
 
-    // Kategoriye ait ürün var mı kontrol et
-    $productCount = db()->fetch("SELECT COUNT(*) as count FROM urunler WHERE kategori_id = :id", ['id' => $id])['count'];
+// KategoriService instance
+$kategoriService = kategori_service();
 
-    if ($productCount > 0) {
-        setFlash('error', 'Bu kategoriye ait ' . $productCount . ' ürün var. Önce ürünleri başka kategoriye taşıyın veya silin.');
+// Silme islemi (POST ile guvenli)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!verifyCSRF()) {
+        setFlash('error', 'Guvenlik dogrulamasi basarisiz.');
     } else {
-        db()->delete('kategoriler', 'id = :id', ['id' => $id]);
-        setFlash('success', 'Kategori başarıyla silindi.');
-    }
+        $id = (int)$_POST['delete_id'];
 
+        try {
+            $kategoriService->delete($id);
+            setFlash('success', 'Kategori basariyla silindi.');
+        } catch (HttpException $e) {
+            setFlash('error', $e->getMessage());
+        }
+    }
     header('Location: kategoriler.php');
     exit;
 }
 
-// Ekleme/Düzenleme POST işlemi (header'dan önce)
+// Ekleme/Duzenleme POST islemi (header'dan once)
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $isim = trim($_POST['isim'] ?? '');
-    $sira = (int)($_POST['sira'] ?? 0);
-    $edit_id = isset($_POST['edit_id']) ? (int)$_POST['edit_id'] : 0;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
+    // CSRF kontrolu
+    if (!verifyCSRF()) {
+        $errors[] = 'Guvenlik dogrulamasi basarisiz.';
+    } else {
+        $isim = trim($_POST['isim'] ?? '');
+        $sira = (int)($_POST['sira'] ?? 0);
+        $edit_id = isset($_POST['edit_id']) ? (int)$_POST['edit_id'] : 0;
 
-    if (empty($isim)) {
-        $errors[] = 'Kategori adı gereklidir.';
-    }
-
-    if (empty($errors)) {
-        $slug = slugify($isim);
-
-        // Slug benzersizliği kontrolü
-        $existing = db()->fetch(
-            "SELECT id FROM kategoriler WHERE slug = :slug AND id != :id",
-            ['slug' => $slug, 'id' => $edit_id]
-        );
-
-        if ($existing) {
-            $slug .= '-' . time();
+        if (empty($isim)) {
+            $errors[] = 'Kategori adi gereklidir.';
         }
 
-        try {
-            if ($edit_id) {
-                // Güncelle
-                db()->update('kategoriler', [
-                    'isim' => $isim,
-                    'slug' => $slug,
-                    'sira' => $sira
-                ], 'id = :id', ['id' => $edit_id]);
-                setFlash('success', 'Kategori güncellendi.');
-            } else {
-                // Ekle
-                db()->insert('kategoriler', [
-                    'isim' => $isim,
-                    'slug' => $slug,
-                    'sira' => $sira
-                ]);
-                setFlash('success', 'Kategori eklendi.');
+        if (empty($errors)) {
+            try {
+                if ($edit_id) {
+                    // Guncelle (service slug'ı otomatik oluşturur)
+                    $kategoriService->update($edit_id, [
+                        'ad' => $isim,
+                        'sira' => $sira
+                    ]);
+                    setFlash('success', 'Kategori guncellendi.');
+                } else {
+                    // Ekle (service slug'ı otomatik oluşturur)
+                    $kategoriService->create([
+                        'ad' => $isim,
+                        'sira' => $sira
+                    ]);
+                    setFlash('success', 'Kategori eklendi.');
+                }
+                header('Location: kategoriler.php');
+                exit;
+            } catch (Exception $e) {
+                $errors[] = 'Bir hata olustu: ' . $e->getMessage();
             }
-            header('Location: kategoriler.php');
-            exit;
-        } catch (Exception $e) {
-            $errors[] = 'Bir hata oluştu: ' . $e->getMessage();
         }
     }
 }
 
 require_once __DIR__ . '/includes/header.php';
 
-// Düzenleme için kategori al
+// Duzenleme icin kategori al
 $editCategory = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
-    $editCategory = db()->fetch("SELECT * FROM kategoriler WHERE id = :id", ['id' => (int)$_GET['edit']]);
+    $editCategory = $kategoriService->find((int)$_GET['edit']);
 }
 
-// Kategorileri listele
-$categories = db()->fetchAll(
-    "SELECT k.*, COUNT(u.id) as urun_sayisi
-     FROM kategoriler k
-     LEFT JOIN urunler u ON k.id = u.kategori_id
-     GROUP BY k.id
-     ORDER BY k.sira ASC, k.isim ASC"
-);
+// Kategorileri listele (service kullanarak)
+$categories = $kategoriService->getAllWithProductCount();
+$totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 ?>
 
-<h2 style="margin-bottom: 1.5rem;">Kategoriler</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Kategoriler
+    </h2>
+</div>
 
 <?php if (!empty($errors)): ?>
     <div class="alert alert-error">
-        <?= implode('<br>', array_map('e', $errors)) ?>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div><?= implode('<br>', array_map('e', $errors)) ?></div>
     </div>
 <?php endif; ?>
 
-<div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem;">
-    <!-- Kategori Listesi -->
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+    <div class="stat-card" style="--stat-color: var(--admin-primary);">
+        <div class="stat-icon primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h4><?= count($categories) ?></h4>
+            <span>Toplam Kategori</span>
+        </div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--admin-success);">
+        <div class="stat-icon success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h4><?= $totalProducts ?></h4>
+            <span>Toplam Urun</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: var(--space-6);">
+    <!-- Category List -->
     <div class="card">
         <div class="card-header">
-            <h3>Tüm Kategoriler</h3>
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Tum Kategoriler
+            </h3>
+            <span class="badge badge-neutral"><?= count($categories) ?> kategori</span>
         </div>
         <div class="card-body" style="padding: 0;">
             <?php if (empty($categories)): ?>
                 <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="8" y1="6" x2="21" y2="6"/>
-                        <line x1="8" y1="12" x2="21" y2="12"/>
-                        <line x1="8" y1="18" x2="21" y2="18"/>
-                        <line x1="3" y1="6" x2="3.01" y2="6"/>
-                        <line x1="3" y1="12" x2="3.01" y2="12"/>
-                        <line x1="3" y1="18" x2="3.01" y2="18"/>
-                    </svg>
-                    <p>Henüz kategori eklenmemiş.</p>
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <h3>Henuz kategori yok</h3>
+                    <p>Urunlerinizi duzenlemek icin ilk kategorinizi ekleyin.</p>
                 </div>
             <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Kategori Adı</th>
-                            <th>Slug</th>
-                            <th>Ürün Sayısı</th>
-                            <th>Sıra</th>
-                            <th style="width: 100px;">İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($categories as $cat): ?>
-                        <tr>
-                            <td><strong><?= e($cat['isim']) ?></strong></td>
-                            <td><code style="background: #F5E1E9; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;"><?= e($cat['slug']) ?></code></td>
-                            <td><?= $cat['urun_sayisi'] ?></td>
-                            <td><?= $cat['sira'] ?></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-secondary btn-icon" title="Düzenle">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                        </svg>
-                                    </a>
-                                    <a href="?delete=<?= $cat['id'] ?>" class="btn btn-sm btn-danger btn-icon" title="Sil" onclick="return confirm('Bu kategoriyi silmek istediğinize emin misiniz?')">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                            <polyline points="3 6 5 6 21 6"/>
-                                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Kategori Adi</th>
+                                <th>Slug</th>
+                                <th style="text-align: center;">Urun</th>
+                                <th style="text-align: center;">Sira</th>
+                                <th style="width: 120px;">Islemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($categories as $index => $cat): ?>
+                            <tr>
+                                <td class="cell-muted"><?= $index + 1 ?></td>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="avatar avatar-sm avatar-accent">
+                                            <?= mb_strtoupper(mb_substr($cat['ad'], 0, 1)) ?>
+                                        </div>
+                                        <span class="cell-primary"><?= e($cat['ad']) ?></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code><?= e($cat['slug']) ?></code>
+                                </td>
+                                <td style="text-align: center;">
+                                    <?php if ($cat['urun_sayisi'] > 0): ?>
+                                        <span class="badge badge-success"><?= $cat['urun_sayisi'] ?></span>
+                                    <?php else: ?>
+                                        <span class="badge badge-neutral">0</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="badge badge-primary"><?= $cat['sira'] ?></span>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-ghost btn-icon" data-tooltip="Duzenle">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-ghost btn-icon text-danger" data-tooltip="Sil" onclick="deleteCategory(<?= $cat['id'] ?>, '<?= e($cat['ad']) ?>')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3 6 5 6 21 6"/>
+                                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                                <line x1="14" y1="11" x2="14" y2="17"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Kategori Formu -->
-    <div class="card" style="height: fit-content;">
+    <!-- Category Form -->
+    <div class="card" style="height: fit-content; position: sticky; top: calc(var(--space-8) + 60px);">
         <div class="card-header">
-            <h3><?= $editCategory ? 'Kategori Düzenle' : 'Yeni Kategori' ?></h3>
+            <h3>
+                <?php if ($editCategory): ?>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Kategori Duzenle
+                <?php else: ?>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    Yeni Kategori
+                <?php endif; ?>
+            </h3>
         </div>
         <div class="card-body">
             <form method="POST">
+                <?= csrfTokenField() ?>
                 <?php if ($editCategory): ?>
                     <input type="hidden" name="edit_id" value="<?= $editCategory['id'] ?>">
                 <?php endif; ?>
 
                 <div class="form-group">
-                    <label for="isim">Kategori Adı *</label>
-                    <input type="text" id="isim" name="isim" class="form-control" required
-                           value="<?= e($_POST['isim'] ?? ($editCategory['isim'] ?? '')) ?>">
+                    <label for="isim">
+                        Kategori Adi <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="isim"
+                           name="isim"
+                           class="form-control"
+                           required
+                           placeholder="Ornek: Pastalar"
+                           value="<?= e($_POST['isim'] ?? ($editCategory['ad'] ?? '')) ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="sira">Sıra</label>
-                    <input type="number" id="sira" name="sira" class="form-control" min="0"
+                    <label for="sira">Gosterim Sirasi</label>
+                    <input type="number"
+                           id="sira"
+                           name="sira"
+                           class="form-control"
+                           min="0"
+                           placeholder="0"
                            value="<?= e($_POST['sira'] ?? ($editCategory['sira'] ?? '0')) ?>">
-                    <small style="color: var(--admin-text-light);">Küçük numara önce gösterilir</small>
+                    <span class="form-hint">Kucuk numara once gosterilir (0 = ilk sira)</span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <?= $editCategory ? 'Güncelle' : 'Ekle' ?>
-                </button>
+                <div class="flex flex-col gap-2">
+                    <button type="submit" class="btn btn-primary w-full">
+                        <?php if ($editCategory): ?>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Degisiklikleri Kaydet
+                        <?php else: ?>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Kategori Ekle
+                        <?php endif; ?>
+                    </button>
 
-                <?php if ($editCategory): ?>
-                    <a href="kategoriler.php" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">İptal</a>
-                <?php endif; ?>
+                    <?php if ($editCategory): ?>
+                        <a href="kategoriler.php" class="btn btn-secondary w-full">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            Iptal
+                        </a>
+                    <?php endif; ?>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Delete Form (Hidden) -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <?= csrfTokenField() ?>
+    <input type="hidden" name="delete_id" id="deleteId">
+</form>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Kategori Sil
+            </h3>
+            <button class="modal-close" onclick="closeDeleteModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
+                <strong id="deleteCategoryName" style="color: var(--admin-text);"></strong> kategorisini silmek istediginize emin misiniz?
+            </p>
+            <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
+                Bu islem geri alinamaz.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Iptal</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                Sil
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let deleteId = null;
+
+function deleteCategory(id, name) {
+    deleteId = id;
+    document.getElementById('deleteCategoryName').textContent = name;
+    document.getElementById('deleteModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.body.style.overflow = '';
+    deleteId = null;
+}
+
+function confirmDelete() {
+    if (deleteId) {
+        document.getElementById('deleteId').value = deleteId;
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+// Close modal on overlay click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteModal();
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

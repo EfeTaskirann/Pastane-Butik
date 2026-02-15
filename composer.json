@@ -1,0 +1,50 @@
+{
+    "name": "pastane/butik-pasta",
+    "description": "Tatlı Düşler - Butik Pasta & Tatlı Sipariş Sistemi",
+    "type": "project",
+    "license": "proprietary",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Pastane Team",
+            "email": "info@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "squizlabs/php_codesniffer": "^3.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pastane\\": "src/",
+            "Pastane\\Tests\\": "tests/"
+        },
+        "files": [
+            "includes/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pastane\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "phpstan": "phpstan analyse src -l 5",
+        "cs": "phpcs --standard=PSR12 src/",
+        "cs-fix": "phpcbf --standard=PSR12 src/"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}

@@ -1,0 +1,158 @@
+// ============================================
+// TYPOGRAPHY
+// Font styles and text formatting
+// ============================================
+
+// Headings
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  line-height: $line-height-tight;
+  color: $text-primary;
+  margin-bottom: $spacing-4;
+}
+
+h1 {
+  font-size: $font-size-4xl;
+
+  @include md-down {
+    font-size: $font-size-3xl;
+  }
+}
+
+h2 {
+  font-size: $font-size-3xl;
+
+  @include md-down {
+    font-size: $font-size-2xl;
+  }
+}
+
+h3 {
+  font-size: $font-size-2xl;
+
+  @include md-down {
+    font-size: $font-size-xl;
+  }
+}
+
+h4 {
+  font-size: $font-size-xl;
+}
+
+h5 {
+  font-size: $font-size-lg;
+}
+
+h6 {
+  font-size: $font-size-base;
+}
+
+// Paragraphs
+p {
+  margin-bottom: $spacing-4;
+  color: $text-secondary;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Links
+a {
+  color: $primary-500;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $primary-600;
+  }
+}
+
+// Strong and emphasis
+strong, b {
+  font-weight: $font-weight-semibold;
+}
+
+em, i {
+  font-style: italic;
+}
+
+// Small text
+small {
+  font-size: $font-size-sm;
+}
+
+// Blockquote
+blockquote {
+  padding-left: $spacing-4;
+  border-left: 4px solid $primary-300;
+  font-style: italic;
+  color: $text-secondary;
+  margin: $spacing-6 0;
+}
+
+// Code
+code {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  background-color: $gray-100;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-sm;
+}
+
+pre {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  background-color: $gray-100;
+  padding: $spacing-4;
+  border-radius: $radius-md;
+  overflow-x: auto;
+
+  code {
+    background: none;
+    padding: 0;
+  }
+}
+
+// Lists with styles
+.list-styled {
+  padding-left: $spacing-6;
+
+  li {
+    margin-bottom: $spacing-2;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -$spacing-4;
+      top: 0.6em;
+      width: 6px;
+      height: 6px;
+      background-color: $primary-500;
+      border-radius: 50%;
+    }
+  }
+}
+
+// Lead text
+.lead {
+  font-size: $font-size-lg;
+  color: $text-secondary;
+  line-height: $line-height-relaxed;
+}
+
+// Section title
+.section-title {
+  text-align: center;
+  margin-bottom: $spacing-12;
+
+  h2 {
+    margin-bottom: $spacing-4;
+  }
+
+  p {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}

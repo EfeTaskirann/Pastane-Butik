@@ -27,76 +27,81 @@ if (!$product) {
 $categories = getCategories();
 $errors = [];
 
-// POST işlemi (header'dan önce)
+// POST islemi (header'dan once)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $isim = trim($_POST['isim'] ?? '');
-    $aciklama = trim($_POST['aciklama'] ?? '');
-    $fiyat = floatval($_POST['fiyat'] ?? 0);
-    $kategori_id = !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null;
-    $aktif = isset($_POST['aktif']) ? 1 : 0;
-    $sira = (int)($_POST['sira'] ?? 0);
+    // CSRF kontrolu
+    if (!verifyCSRF()) {
+        $errors[] = 'Guvenlik dogrulamasi basarisiz. Lutfen tekrar deneyin.';
+    } else {
+        $isim = trim($_POST['isim'] ?? '');
+        $aciklama = trim($_POST['aciklama'] ?? '');
+        $fiyat = floatval($_POST['fiyat'] ?? 0);
+        $kategori_id = !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null;
+        $aktif = isset($_POST['aktif']) ? 1 : 0;
+        $sira = (int)($_POST['sira'] ?? 0);
 
-    // Porsiyon fiyatları
-    $fiyat_4kisi = !empty($_POST['fiyat_4kisi']) ? floatval($_POST['fiyat_4kisi']) : null;
-    $fiyat_6kisi = !empty($_POST['fiyat_6kisi']) ? floatval($_POST['fiyat_6kisi']) : null;
-    $fiyat_8kisi = !empty($_POST['fiyat_8kisi']) ? floatval($_POST['fiyat_8kisi']) : null;
-    $fiyat_10kisi = !empty($_POST['fiyat_10kisi']) ? floatval($_POST['fiyat_10kisi']) : null;
+        // Porsiyon fiyatlari
+        $fiyat_4kisi = !empty($_POST['fiyat_4kisi']) ? floatval($_POST['fiyat_4kisi']) : null;
+        $fiyat_6kisi = !empty($_POST['fiyat_6kisi']) ? floatval($_POST['fiyat_6kisi']) : null;
+        $fiyat_8kisi = !empty($_POST['fiyat_8kisi']) ? floatval($_POST['fiyat_8kisi']) : null;
+        $fiyat_10kisi = !empty($_POST['fiyat_10kisi']) ? floatval($_POST['fiyat_10kisi']) : null;
 
-    // Doğrulama
-    if (empty($isim)) {
-        $errors[] = 'Ürün adı gereklidir.';
-    }
+        // Dogrulama
+        if (empty($isim)) {
+            $errors[] = 'Urun adi gereklidir.';
+        }
 
-    if ($fiyat < 0) {
-        $errors[] = 'Fiyat 0 veya daha büyük olmalıdır.';
-    }
+        if ($fiyat < 0) {
+            $errors[] = 'Fiyat 0 veya daha buyuk olmalidir.';
+        }
 
-    // Görsel yükleme
-    $gorsel = $product['gorsel'];
+        // Gorsel yukleme
+        $gorsel = $product['gorsel'];
 
-    // Görsel silme
-    if (isset($_POST['delete_image']) && $product['gorsel']) {
-        deleteImage($product['gorsel']);
-        $gorsel = null;
-    }
+        // Gorsel silme
+        if (isset($_POST['delete_image']) && $product['gorsel']) {
+            deleteImage($product['gorsel']);
+            $gorsel = null;
+        }
 
-    // Yeni görsel yükleme
-    if (!empty($_FILES['gorsel']['name'])) {
-        $upload = uploadImage($_FILES['gorsel']);
-        if ($upload['success']) {
-            // Eski görseli sil
-            if ($product['gorsel']) {
-                deleteImage($product['gorsel']);
+        // Yeni gorsel yukleme (guvenli)
+        if (!empty($_FILES['gorsel']['name'])) {
+            $upload = secureUploadImage($_FILES['gorsel']);
+            if ($upload['success']) {
+                // Eski gorseli sil
+                if ($product['gorsel']) {
+                    deleteImage($product['gorsel']);
+                }
+                $gorsel = $upload['filename'];
+            } else {
+                $errors[] = $upload['error'];
             }
-            $gorsel = $upload['filename'];
-        } else {
-            $errors[] = $upload['error'];
         }
-    }
 
-    if (empty($errors)) {
-        try {
-            db()->update('urunler', [
-                'isim' => $isim,
-                'aciklama' => $aciklama,
-                'fiyat' => $fiyat,
-                'fiyat_4kisi' => $fiyat_4kisi,
-                'fiyat_6kisi' => $fiyat_6kisi,
-                'fiyat_8kisi' => $fiyat_8kisi,
-                'fiyat_10kisi' => $fiyat_10kisi,
-                'kategori_id' => $kategori_id,
-                'gorsel' => $gorsel,
-                'aktif' => $aktif,
-                'sira' => $sira
-            ], 'id = :id', ['id' => $id]);
+        if (empty($errors)) {
+            try {
+                db()->update('urunler', [
+                    'ad' => $isim,
+                    'aciklama' => $aciklama,
+                    'fiyat' => $fiyat,
+                    'fiyat_4kisi' => $fiyat_4kisi,
+                    'fiyat_6kisi' => $fiyat_6kisi,
+                    'fiyat_8kisi' => $fiyat_8kisi,
+                    'fiyat_10kisi' => $fiyat_10kisi,
+                    'kategori_id' => $kategori_id,
+                    'gorsel' => $gorsel,
+                    'aktif' => $aktif,
+                    'sira' => $sira
+                ], 'id = :id', ['id' => $id]);
 
-            setFlash('success', 'Ürün başarıyla güncellendi.');
-            header('Location: urunler.php');
-            exit;
-        } catch (Exception $e) {
-            $errors[] = 'Bir hata oluştu: ' . $e->getMessage();
+                setFlash('success', 'Urun basariyla guncellendi.');
+                header('Location: urunler.php');
+                exit;
+            } catch (Exception $e) {
+                $errors[] = 'Bir hata olustu: ' . $e->getMessage();
+            }
         }
-    }
+    } // CSRF else kapanisi
 }
 
 require_once __DIR__ . '/includes/header.php';
@@ -122,11 +127,12 @@ require_once __DIR__ . '/includes/header.php';
 <div class="card">
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
+            <?= csrfTokenField() ?>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="isim">Ürün Adı *</label>
+                    <label for="isim">Urun Adi *</label>
                     <input type="text" id="isim" name="isim" class="form-control" required
-                           value="<?= e($_POST['isim'] ?? $product['isim']) ?>">
+                           value="<?= e($_POST['isim'] ?? $product['ad']) ?>">
                 </div>
 
                 <div class="form-group">
@@ -135,7 +141,7 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="">Kategori Seçin</option>
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>" <?= ($_POST['kategori_id'] ?? $product['kategori_id']) == $cat['id'] ? 'selected' : '' ?>>
-                                <?= e($cat['isim']) ?>
+                                <?= e($cat['ad']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

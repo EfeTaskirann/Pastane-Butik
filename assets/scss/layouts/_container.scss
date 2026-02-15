@@ -1,0 +1,236 @@
+// ============================================
+// CONTAINER
+// Container and section layouts
+// ============================================
+
+.container {
+  @include container;
+}
+
+.container-sm {
+  @include container;
+  max-width: 640px;
+}
+
+.container-md {
+  @include container;
+  max-width: 768px;
+}
+
+.container-lg {
+  @include container;
+  max-width: 1024px;
+}
+
+.container-xl {
+  @include container;
+  max-width: 1280px;
+}
+
+.container-fluid {
+  width: 100%;
+  padding-left: $spacing-4;
+  padding-right: $spacing-4;
+
+  @include md-up {
+    padding-left: $spacing-6;
+    padding-right: $spacing-6;
+  }
+}
+
+// Sections
+.section {
+  padding: $spacing-16 0;
+
+  @include md-down {
+    padding: $spacing-12 0;
+  }
+
+  @include sm-down {
+    padding: $spacing-8 0;
+  }
+}
+
+.section-sm {
+  padding: $spacing-8 0;
+}
+
+.section-lg {
+  padding: $spacing-24 0;
+
+  @include md-down {
+    padding: $spacing-16 0;
+  }
+}
+
+// Section backgrounds
+.section-light {
+  background-color: $gray-50;
+}
+
+.section-dark {
+  background-color: $gray-900;
+  color: white;
+
+  h1, h2, h3, h4, h5, h6 {
+    color: white;
+  }
+
+  p {
+    color: $gray-300;
+  }
+}
+
+.section-primary {
+  background-color: $primary-500;
+  color: white;
+
+  h1, h2, h3, h4, h5, h6 {
+    color: white;
+  }
+
+  p {
+    color: rgba(white, 0.9);
+  }
+}
+
+// Hero section
+.hero {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  background-color: $gray-100;
+  overflow: hidden;
+
+  @include md-down {
+    min-height: 500px;
+  }
+
+  @include sm-down {
+    min-height: 400px;
+  }
+}
+
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  color: white;
+
+  h1 {
+    color: white;
+    font-size: $font-size-5xl;
+    margin-bottom: $spacing-4;
+
+    @include md-down {
+      font-size: $font-size-4xl;
+    }
+
+    @include sm-down {
+      font-size: $font-size-3xl;
+    }
+  }
+
+  p {
+    color: rgba(white, 0.9);
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-6;
+  }
+}
+
+.hero-actions {
+  display: flex;
+  gap: $spacing-3;
+  flex-wrap: wrap;
+}
+
+// Page header
+.page-header {
+  background-color: $gray-100;
+  padding: $spacing-12 0;
+  text-align: center;
+
+  h1 {
+    margin-bottom: $spacing-2;
+  }
+
+  .breadcrumb {
+    justify-content: center;
+  }
+}
+
+// Main content wrapper
+.main-content {
+  min-height: calc(100vh - #{$header-height} - 400px);
+}
+
+// Two column layout
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-8;
+
+  @include lg-up {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.two-column-reverse {
+  @include lg-up {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+// Sidebar
+.sidebar {
+  @include lg-down {
+    order: 2;
+  }
+}
+
+.sidebar-widget {
+  @include card;
+  padding: $spacing-6;
+  margin-bottom: $spacing-6;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sidebar-title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-4;
+  padding-bottom: $spacing-3;
+  border-bottom: 2px solid $primary-500;
+}
