@@ -35,11 +35,6 @@ class Database {
      */
     private const ALLOWED_COLUMNS_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
 
-    /**
-     * WHERE clause için izin verilen operatörler
-     */
-    private const ALLOWED_WHERE_OPERATORS = ['=', '!=', '<', '>', '<=', '>=', 'LIKE', 'IN', 'IS NULL', 'IS NOT NULL'];
-
     private function __construct() {
         try {
             $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
@@ -65,12 +60,8 @@ class Database {
         return self::$instance;
     }
 
-    public function getConnection() {
-        return $this->pdo;
-    }
-
     /**
-     * PDO bağlantısını döndür (alias)
+     * PDO bağlantısını döndür
      * @return PDO
      */
     public function getPdo(): PDO {
@@ -169,38 +160,6 @@ class Database {
         $this->query($sql, array_merge($data, $whereParams));
     }
 
-    /**
-     * Güvenli update - array based where clause
-     * Örnek: updateSafe('users', ['name' => 'John'], ['id' => 5])
-     */
-    public function updateSafe(string $table, array $data, array $conditions): void {
-        $this->validateTable($table);
-        $this->validateColumns(array_keys($data));
-        $this->validateColumns(array_keys($conditions));
-
-        $set = [];
-        foreach (array_keys($data) as $column) {
-            $set[] = "{$column} = :set_{$column}";
-        }
-
-        $where = [];
-        foreach (array_keys($conditions) as $column) {
-            $where[] = "{$column} = :where_{$column}";
-        }
-
-        $sql = "UPDATE {$table} SET " . implode(', ', $set) . " WHERE " . implode(' AND ', $where);
-
-        $params = [];
-        foreach ($data as $key => $value) {
-            $params["set_{$key}"] = $value;
-        }
-        foreach ($conditions as $key => $value) {
-            $params["where_{$key}"] = $value;
-        }
-
-        $this->query($sql, $params);
-    }
-
     public function delete($table, $where, $params = []) {
         $this->validateTable($table);
         $this->validateWhereClause($where);
@@ -209,22 +168,6 @@ class Database {
         $this->query($sql, $params);
     }
 
-    /**
-     * Güvenli delete - array based where clause
-     * Örnek: deleteSafe('users', ['id' => 5])
-     */
-    public function deleteSafe(string $table, array $conditions): void {
-        $this->validateTable($table);
-        $this->validateColumns(array_keys($conditions));
-
-        $where = [];
-        foreach (array_keys($conditions) as $column) {
-            $where[] = "{$column} = :{$column}";
-        }
-
-        $sql = "DELETE FROM {$table} WHERE " . implode(' AND ', $where);
-        $this->query($sql, $conditions);
-    }
 }
 
 // Kısa erişim fonksiyonu

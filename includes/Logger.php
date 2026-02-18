@@ -369,25 +369,3 @@ class Logger
         }
     }
 }
-
-/**
- * Global logger helper
- *
- * @param string|null $message
- * @param array $context
- * @param string $level
- * @return Logger|null
- */
-if (!function_exists('logger')) {
-    function logger(?string $message = null, array $context = [], string $level = 'info'): ?Logger
-    {
-        $logger = Logger::getInstance();
-
-        if ($message !== null) {
-            $logger->$level($message, $context);
-            return null;
-        }
-
-        return $logger;
-    }
-}

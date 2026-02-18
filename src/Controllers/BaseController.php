@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Pastane\Controllers;
 
 use Pastane\Exceptions\HttpException;
-use Pastane\Exceptions\ValidationException;
 
 /**
  * Base Controller
@@ -128,79 +127,6 @@ abstract class BaseController
     public function setUser(?array $user): void
     {
         $this->user = $user;
-    }
-
-    /**
-     * Validate request data
-     *
-     * @param array $rules Validation rules
-     * @param array|null $data Data to validate (defaults to request)
-     * @return array Validated data
-     * @throws ValidationException
-     */
-    protected function validate(array $rules, ?array $data = null): array
-    {
-        $data = $data ?? $this->request;
-        $errors = [];
-        $validated = [];
-
-        foreach ($rules as $field => $ruleSet) {
-            $ruleList = is_string($ruleSet) ? explode('|', $ruleSet) : $ruleSet;
-            $value = $data[$field] ?? null;
-
-            foreach ($ruleList as $rule) {
-                $ruleName = $rule;
-                $ruleParam = null;
-
-                if (str_contains($rule, ':')) {
-                    [$ruleName, $ruleParam] = explode(':', $rule, 2);
-                }
-
-                $error = $this->applyRule($field, $value, $ruleName, $ruleParam, $data);
-
-                if ($error !== null) {
-                    $errors[$field][] = $error;
-                }
-            }
-
-            if (!isset($errors[$field]) && $value !== null) {
-                $validated[$field] = $value;
-            }
-        }
-
-        if (!empty($errors)) {
-            throw new ValidationException('Validation failed', $errors);
-        }
-
-        return $validated;
-    }
-
-    /**
-     * Apply validation rule
-     *
-     * @param string $field
-     * @param mixed $value
-     * @param string $rule
-     * @param string|null $param
-     * @param array $data
-     * @return string|null Error message or null if valid
-     */
-    protected function applyRule(string $field, mixed $value, string $rule, ?string $param, array $data): ?string
-    {
-        return match ($rule) {
-            'required' => ($value === null || $value === '') ? "{$field} alanı zorunludur." : null,
-            'string' => (!is_string($value) && $value !== null) ? "{$field} metin olmalıdır." : null,
-            'integer' => (!is_numeric($value) && $value !== null) ? "{$field} sayı olmalıdır." : null,
-            'numeric' => (!is_numeric($value) && $value !== null) ? "{$field} sayısal olmalıdır." : null,
-            'email' => (!filter_var($value, FILTER_VALIDATE_EMAIL) && $value !== null) ? "{$field} geçerli email olmalıdır." : null,
-            'min' => (strlen((string)$value) < (int)$param && $value !== null) ? "{$field} en az {$param} karakter olmalıdır." : null,
-            'max' => (strlen((string)$value) > (int)$param && $value !== null) ? "{$field} en fazla {$param} karakter olabilir." : null,
-            'in' => (!in_array($value, explode(',', $param ?? '')) && $value !== null) ? "{$field} geçersiz değer." : null,
-            'confirmed' => ($value !== ($data["{$field}_confirmation"] ?? null)) ? "{$field} eşleşmiyor." : null,
-            'date' => (!strtotime($value ?? '') && $value !== null) ? "{$field} geçerli tarih olmalıdır." : null,
-            'array' => (!is_array($value) && $value !== null) ? "{$field} dizi olmalıdır." : null,
-            default => null,
-        };
     }
 
     /**

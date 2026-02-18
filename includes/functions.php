@@ -7,7 +7,6 @@
  *
  * Eşdeğer helpers.php fonksiyonları:
  * - e() -> e() (aynı)
- * - slugify() -> str_slug()
  * - formatPrice() -> format_price()
  * - redirect() -> redirect()
  */
@@ -43,22 +42,6 @@ if (!function_exists('getYogunlukDurumu')) {
 if (!function_exists('e')) {
     function e($string) {
         return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
-    }
-}
-
-/**
- * Slug oluşturma
- * @see helpers.php str_slug() fonksiyonu (eşdeğer)
- */
-if (!function_exists('slugify')) {
-    function slugify($text) {
-        $turkce = ['ş', 'Ş', 'ı', 'İ', 'ğ', 'Ğ', 'ü', 'Ü', 'ö', 'Ö', 'ç', 'Ç'];
-        $latin = ['s', 's', 'i', 'i', 'g', 'g', 'u', 'u', 'o', 'o', 'c', 'c'];
-        $text = str_replace($turkce, $latin, $text);
-        $text = strtolower($text);
-        $text = preg_replace('/[^a-z0-9]+/', '-', $text);
-        $text = trim($text, '-');
-        return $text;
     }
 }
 
@@ -145,47 +128,6 @@ if (!function_exists('getProducts')) {
 
         $sql .= " ORDER BY u.sira ASC, u.created_at DESC";
         return db()->fetchAll($sql, $params);
-    }
-}
-
-/**
- * Tek ürün getir
- * @deprecated urun_service()->find($id) kullanın
- */
-if (!function_exists('getProduct')) {
-    function getProduct($id) {
-        return db()->fetch(
-            "SELECT u.*, k.ad as kategori_ad
-             FROM urunler u
-             LEFT JOIN kategoriler k ON u.kategori_id = k.id
-             WHERE u.id = :id",
-            ['id' => $id]
-        );
-    }
-}
-
-// ==========================================
-// WHATSAPP FONKSİYONLARI
-// ==========================================
-
-/**
- * WhatsApp linki oluştur
- */
-if (!function_exists('whatsappLink')) {
-    function whatsappLink($message = '') {
-        $number = defined('WHATSAPP_NUMBER') ? WHATSAPP_NUMBER : '';
-        $encodedMessage = urlencode($message);
-        return "https://wa.me/{$number}?text={$encodedMessage}";
-    }
-}
-
-/**
- * Ürün WhatsApp sipariş linki
- */
-if (!function_exists('productWhatsappLink')) {
-    function productWhatsappLink($product) {
-        $message = "Merhaba, '{$product['ad']}' ürünü hakkında bilgi almak istiyorum.";
-        return whatsappLink($message);
     }
 }
 

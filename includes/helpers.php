@@ -43,32 +43,6 @@ if (!function_exists('storage_path')) {
     }
 }
 
-if (!function_exists('public_path')) {
-    /**
-     * Get public path
-     *
-     * @param string $path
-     * @return string
-     */
-    function public_path(string $path = ''): string
-    {
-        return app_path($path);
-    }
-}
-
-if (!function_exists('config_path')) {
-    /**
-     * Get config path
-     *
-     * @param string $path
-     * @return string
-     */
-    function config_path(string $path = ''): string
-    {
-        return app_path('config' . ($path ? DIRECTORY_SEPARATOR . ltrim($path, '/\\') : ''));
-    }
-}
-
 // ============================================
 // URL HELPERS
 // ============================================
@@ -94,34 +68,6 @@ if (!function_exists('url')) {
     }
 }
 
-if (!function_exists('route')) {
-    /**
-     * Generate URL for named route
-     *
-     * @param string $name
-     * @param array $params
-     * @return string
-     */
-    function route(string $name, array $params = []): string
-    {
-        return Router::getInstance()->url($name, $params);
-    }
-}
-
-if (!function_exists('asset')) {
-    /**
-     * Generate asset URL
-     *
-     * @param string $path
-     * @return string
-     */
-    function asset(string $path): string
-    {
-        $version = config('app.asset_version', '1.0');
-        return url($path) . '?v=' . $version;
-    }
-}
-
 if (!function_exists('redirect')) {
     /**
      * Redirect to URL
@@ -135,31 +81,6 @@ if (!function_exists('redirect')) {
         http_response_code($status);
         header("Location: {$url}");
         exit;
-    }
-}
-
-if (!function_exists('back')) {
-    /**
-     * Redirect back to previous page
-     *
-     * @param string $fallback
-     * @return never
-     */
-    function back(string $fallback = '/'): never
-    {
-        $referer = $_SERVER['HTTP_REFERER'] ?? $fallback;
-
-        // Open Redirect koruması - sadece aynı host'a yönlendirmeye izin ver
-        $currentHost = $_SERVER['HTTP_HOST'] ?? '';
-        $refererParsed = parse_url($referer);
-
-        // Referer'ın host'u mevcut host ile eşleşmeli veya referer relative path olmalı
-        if (isset($refererParsed['host']) && $refererParsed['host'] !== $currentHost) {
-            // Farklı host'a yönlendirme - fallback kullan
-            redirect($fallback);
-        }
-
-        redirect($referer);
     }
 }
 
@@ -343,19 +264,6 @@ if (!function_exists('now')) {
     function now(string $format = 'Y-m-d H:i:s'): string
     {
         return date($format);
-    }
-}
-
-if (!function_exists('carbon')) {
-    /**
-     * Parse date string (simple helper without Carbon dependency)
-     *
-     * @param string|null $date
-     * @return int|false
-     */
-    function carbon(?string $date = null): int|false
-    {
-        return $date ? strtotime($date) : time();
     }
 }
 
@@ -548,29 +456,6 @@ if (!function_exists('session_forget')) {
     }
 }
 
-if (!function_exists('flash')) {
-    /**
-     * Flash message helper
-     *
-     * @param string $key
-     * @param string|null $value
-     * @return mixed
-     */
-    function flash(string $key, ?string $value = null): mixed
-    {
-        if ($value !== null) {
-            session_put("_flash_{$key}", $value);
-            return null;
-        }
-
-        $flashKey = "_flash_{$key}";
-        $value = session($flashKey);
-        session_forget($flashKey);
-
-        return $value;
-    }
-}
-
 // ============================================
 // VALIDATION HELPERS
 // ============================================
@@ -620,45 +505,6 @@ if (!function_exists('validate_phone')) {
         }
 
         return false;
-    }
-}
-
-// ============================================
-// DEBUG HELPERS
-// ============================================
-
-if (!function_exists('dd')) {
-    /**
-     * Dump and die
-     *
-     * @param mixed ...$vars
-     * @return never
-     */
-    function dd(mixed ...$vars): never
-    {
-        foreach ($vars as $var) {
-            echo '<pre>';
-            var_dump($var);
-            echo '</pre>';
-        }
-        exit;
-    }
-}
-
-if (!function_exists('dump')) {
-    /**
-     * Dump variable
-     *
-     * @param mixed ...$vars
-     * @return void
-     */
-    function dump(mixed ...$vars): void
-    {
-        foreach ($vars as $var) {
-            echo '<pre>';
-            var_dump($var);
-            echo '</pre>';
-        }
     }
 }
 
