@@ -35,6 +35,14 @@ class MusteriRepository extends BaseRepository
     ];
 
     /**
+     * @var array Sortable columns whitelist
+     */
+    protected array $sortableColumns = [
+        'id', 'isim', 'telefon', 'siparis_sayisi', 'toplam_harcama',
+        'son_siparis_tarihi', 'hediye_hak_edildi', 'created_at', 'updated_at',
+    ];
+
+    /**
      * Telefon numarasına göre müşteri bul
      *
      * @param string $telefon
@@ -55,12 +63,13 @@ class MusteriRepository extends BaseRepository
      */
     public function getAllWithSearch(?string $arama = null, string $siralama = 'siparis_sayisi', string $yon = 'DESC'): array
     {
-        // Geçerli sıralama alanları
-        $gecerliSiralama = ['siparis_sayisi', 'son_siparis_tarihi', 'isim', 'telefon', 'hediye_hak_edildi', 'toplam_harcama'];
-        if (!in_array($siralama, $gecerliSiralama)) {
+        // BaseRepository'deki sortableColumns whitelist'i kullan
+        try {
+            $siralama = $this->validateOrderBy($siralama);
+        } catch (\InvalidArgumentException) {
             $siralama = 'siparis_sayisi';
         }
-        $yon = strtoupper($yon) === 'ASC' ? 'ASC' : 'DESC';
+        $yon = $this->validateDirection($yon);
 
         $sql = "SELECT * FROM {$this->table}";
         $params = [];

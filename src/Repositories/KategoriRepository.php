@@ -34,6 +34,13 @@ class KategoriRepository extends BaseRepository
     ];
 
     /**
+     * @var array Sortable columns whitelist
+     */
+    protected array $sortableColumns = [
+        'id', 'ad', 'slug', 'sira', 'created_at', 'updated_at',
+    ];
+
+    /**
      * @var bool Timestamps
      */
     protected bool $timestamps = true;

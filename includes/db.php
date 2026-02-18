@@ -6,8 +6,11 @@
 require_once __DIR__ . '/config.php';
 
 class Database {
-    private static $instance = null;
-    private $pdo;
+    private static ?Database $instance = null;
+    private PDO $pdo;
+    private int $queryCount = 0;
+    private array $queryLog = [];
+    private bool $logging = false;
 
     /**
      * İzin verilen tablo adları - SQL Injection koruması
@@ -21,13 +24,20 @@ class Database {
         'kullanicilar',
         'ayarlar',
         'login_attempts',
+        'login_log',
         'rate_limits',
         'cache',
-        // Codex + Antigravity tarafından tespit edilen eksik tablolar
         'iletisim_mesajlari',
         'admin_kullanicilar',
         'siparis_arsiv',
-        'odemeler'
+        'odemeler',
+        'jwt_blacklist',
+        'migrations',
+        'musteriler',
+        'musteri_sadakat',
+        'password_history',
+        'siparis_puan_ayarlari',
+        'kategori_fiyatlari',
     ];
 
     /**
@@ -42,14 +52,16 @@ class Database {
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_STRINGIFY_FETCHES => false,
+                PDO::MYSQL_ATTR_FOUND_ROWS => true,
             ];
             $this->pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            $this->logging = defined('DEBUG_MODE') && DEBUG_MODE;
         } catch (PDOException $e) {
-            if (DEBUG_MODE) {
-                die("Veritabanı bağlantı hatası: " . $e->getMessage());
-            } else {
-                die("Bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
+            if (defined('DEBUG_MODE') && DEBUG_MODE) {
+                throw new RuntimeException("Veritabanı bağlantı hatası: " . $e->getMessage());
             }
+            throw new RuntimeException("Veritabanı bağlantısı kurulamadı.");
         }
     }
 
@@ -69,8 +81,19 @@ class Database {
     }
 
     public function query($sql, $params = []) {
+        $start = microtime(true);
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
+        $this->queryCount++;
+
+        if ($this->logging) {
+            $this->queryLog[] = [
+                'sql' => $sql,
+                'params' => $params,
+                'time' => round((microtime(true) - $start) * 1000, 2),
+            ];
+        }
+
         return $stmt;
     }
 
@@ -160,12 +183,103 @@ class Database {
         $this->query($sql, array_merge($data, $whereParams));
     }
 
-    public function delete($table, $where, $params = []) {
+    public function delete($table, $where, $params = []): int {
         $this->validateTable($table);
         $this->validateWhereClause($where);
 
         $sql = "DELETE FROM {$table} WHERE {$where}";
-        $this->query($sql, $params);
+        $stmt = $this->query($sql, $params);
+        return $stmt->rowCount();
+    }
+
+    // ========================================
+    // TRANSACTION MANAGEMENT
+    // ========================================
+
+    /**
+     * Transaction başlat
+     */
+    public function beginTransaction(): bool
+    {
+        return $this->pdo->beginTransaction();
+    }
+
+    /**
+     * Transaction onayla
+     */
+    public function commit(): bool
+    {
+        return $this->pdo->commit();
+    }
+
+    /**
+     * Transaction geri al
+     */
+    public function rollBack(): bool
+    {
+        return $this->pdo->rollBack();
+    }
+
+    /**
+     * Transaction içinde callback çalıştır
+     * Hata olursa otomatik rollback yapar
+     *
+     * @param callable $callback
+     * @return mixed
+     * @throws \Exception
+     */
+    public function transaction(callable $callback): mixed
+    {
+        $this->beginTransaction();
+        try {
+            $result = $callback($this);
+            $this->commit();
+            return $result;
+        } catch (\Exception $e) {
+            $this->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Transaction aktif mi kontrol et
+     */
+    public function inTransaction(): bool
+    {
+        return $this->pdo->inTransaction();
+    }
+
+    // ========================================
+    // QUERY STATISTICS
+    // ========================================
+
+    /**
+     * Toplam sorgu sayısını al
+     */
+    public function getQueryCount(): int
+    {
+        return $this->queryCount;
+    }
+
+    /**
+     * Sorgu log'unu al (debug mode'da)
+     */
+    public function getQueryLog(): array
+    {
+        return $this->queryLog;
+    }
+
+    /**
+     * Bağlantı sağlıklı mı kontrol et
+     */
+    public function isHealthy(): bool
+    {
+        try {
+            $this->pdo->query('SELECT 1');
+            return true;
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 
 }

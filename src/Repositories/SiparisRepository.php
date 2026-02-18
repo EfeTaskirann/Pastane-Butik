@@ -43,6 +43,14 @@ class SiparisRepository extends BaseRepository
     ];
 
     /**
+     * @var array Sortable columns whitelist
+     */
+    protected array $sortableColumns = [
+        'id', 'tarih', 'durum', 'toplam_tutar', 'ad_soyad', 'telefon',
+        'kategori', 'kanal', 'odeme_tipi', 'created_at', 'updated_at',
+    ];
+
+    /**
      * Geçerli sipariş durumları
      */
     public const VALID_STATUSES = ['beklemede', 'onaylandi', 'hazirlaniyor', 'teslim_edildi', 'iptal'];

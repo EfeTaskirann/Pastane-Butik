@@ -36,6 +36,13 @@ class MesajRepository extends BaseRepository
     ];
 
     /**
+     * @var array Sortable columns whitelist
+     */
+    protected array $sortableColumns = [
+        'id', 'ad', 'email', 'okundu', 'created_at', 'updated_at',
+    ];
+
+    /**
      * @var bool Timestamps
      */
     protected bool $timestamps = true;

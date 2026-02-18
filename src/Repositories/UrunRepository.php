@@ -41,6 +41,13 @@ class UrunRepository extends BaseRepository
     ];
 
     /**
+     * @var array Sortable columns whitelist
+     */
+    protected array $sortableColumns = [
+        'id', 'ad', 'fiyat', 'kategori_id', 'aktif', 'sira', 'created_at', 'updated_at', 'slug',
+    ];
+
+    /**
      * @var bool Timestamps
      */
     protected bool $timestamps = true;
@@ -69,6 +76,7 @@ class UrunRepository extends BaseRepository
         $sql .= " ORDER BY u.sira ASC, u.created_at DESC";
 
         if ($limit !== null) {
+            $limit = max(1, (int)$limit);
             $sql .= " LIMIT {$limit}";
         }
 
@@ -116,7 +124,7 @@ class UrunRepository extends BaseRepository
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
                 WHERE u.aktif = 1 AND u.ozellikler LIKE '%\"one_cikan\":true%'
                 ORDER BY u.sira ASC
-                LIMIT {$limit}";
+                LIMIT " . max(1, (int)$limit);
 
         return $this->raw($sql);
     }
@@ -146,7 +154,7 @@ class UrunRepository extends BaseRepository
         $sql .= " ORDER BY
                   CASE WHEN u.ad LIKE ? THEN 1 ELSE 2 END,
                   u.sira ASC
-                  LIMIT {$limit}";
+                  LIMIT " . max(1, (int)$limit);
 
         $params[] = "{$query}%";
 
