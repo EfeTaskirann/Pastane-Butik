@@ -30,13 +30,8 @@ class ApiAuthMiddleware implements MiddlewareInterface
      */
     public function handle(callable $next): mixed
     {
-        $payload = \JWT::requireAuth();
-
-        if ($payload === null) {
-            throw HttpException::unauthorized('Geçersiz veya eksik token.');
-        }
-
-        $this->payload = $payload;
+        // requireAuth() başarısızlıkta HttpException fırlatır — null check gereksiz
+        $this->payload = \JWT::requireAuth();
 
         return $next();
     }

@@ -105,7 +105,7 @@ class JWTTest extends TestCase
         // Simulate Authorization header
         $_SERVER['HTTP_AUTHORIZATION'] = "Bearer {$token}";
 
-        $extracted = JWT::extractFromHeader();
+        $extracted = JWT::getTokenFromHeader();
 
         $this->assertEquals($token, $extracted);
 
@@ -120,7 +120,7 @@ class JWTTest extends TestCase
     {
         unset($_SERVER['HTTP_AUTHORIZATION']);
 
-        $extracted = JWT::extractFromHeader();
+        $extracted = JWT::getTokenFromHeader();
 
         $this->assertNull($extracted);
     }
