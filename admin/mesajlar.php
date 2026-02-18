@@ -1,6 +1,6 @@
 <?php
 /**
- * Iletisim Mesajlari - Professional UI
+ * İletişim Mesajları - Professional UI
  * MVC: MesajService kullanır
  */
 
@@ -11,15 +11,15 @@ requireLogin();
 // MesajService instance
 $mesajService = mesaj_service();
 
-// POST islemleri (guvenli)
+// POST işlemleri (güvenli)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRF()) {
-        setFlash('error', 'Guvenlik dogrulamasi basarisiz.');
+        setFlash('error', 'Güvenlik doğrulaması başarısız.');
         header('Location: mesajlar.php');
         exit;
     }
 
-    // Silme islemi
+    // Silme işlemi
     if (isset($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
         $id = (int)$_POST['delete_id'];
         $mesajService->delete($id);
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Okundu isaretleme
+    // Okundu işaretleme
     if (isset($_POST['read_id']) && is_numeric($_POST['read_id'])) {
         $id = (int)$_POST['read_id'];
         $mesajService->markAsRead($id);
@@ -36,10 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Tumunu okundu isaretle
+    // Tümünü okundu işaretle
     if (isset($_POST['mark_all_read'])) {
         $mesajService->markAllAsRead();
-        setFlash('success', 'Tum mesajlar okundu olarak isaretlendi.');
+        setFlash('success', 'Tüm mesajlar okundu olarak işaretlendi.');
         header('Location: mesajlar.php');
         exit;
     }
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once __DIR__ . '/includes/header.php';
 
-// Mesajlari listele (service kullanarak)
+// Mesajları listele (service kullanarak)
 $messages = $mesajService->getAllOrdered();
 $unreadCount = $mesajService->getUnreadCount();
 $totalCount = count($messages);
@@ -196,7 +196,7 @@ $totalCount = count($messages);
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
         </svg>
-        Iletisim Mesajlari
+        İletişim Mesajları
     </h2>
     <?php if ($unreadCount > 0): ?>
         <div class="page-header-actions">
@@ -208,7 +208,7 @@ $totalCount = count($messages);
                         <polyline points="9 11 12 14 22 4"/>
                         <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                     </svg>
-                    Tumunu Okundu Isaretle
+                    Tümünü Okundu İşaretle
                 </button>
             </form>
         </div>
@@ -238,7 +238,7 @@ $totalCount = count($messages);
         </div>
         <div class="stat-info">
             <h4><?= $unreadCount ?></h4>
-            <span>Okunmamis</span>
+            <span>Okunmamış</span>
         </div>
     </div>
     <div class="stat-card" style="--stat-color: var(--admin-success);">
@@ -250,7 +250,7 @@ $totalCount = count($messages);
         </div>
         <div class="stat-info">
             <h4><?= $totalCount - $unreadCount ?></h4>
-            <span>Okunmus</span>
+            <span>Okunmuş</span>
         </div>
     </div>
 </div>
@@ -275,8 +275,8 @@ $totalCount = count($messages);
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                     </svg>
                 </div>
-                <h3>Henuz mesaj yok</h3>
-                <p>Iletisim formundan gelen mesajlar burada gorunecek.</p>
+                <h3>Henüz mesaj yok</h3>
+                <p>İletişim formundan gelen mesajlar burada görünecek.</p>
             </div>
         <?php else: ?>
             <div class="message-grid">
@@ -298,7 +298,7 @@ $totalCount = count($messages);
                                         <?php elseif ($msg['telefon']): ?>
                                             <?= e($msg['telefon']) ?>
                                         <?php else: ?>
-                                            <span class="text-muted">Iletisim bilgisi yok</span>
+                                            <span class="text-muted">İletişim bilgisi yok</span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -328,10 +328,10 @@ $totalCount = count($messages);
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                 </svg>
-                Mesaj Detayi
+                Mesaj Detayı
             </h3>
-            <button class="modal-close" onclick="closeMessageModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="modal-close" onclick="closeMessageModal()" aria-label="Kapat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -339,7 +339,7 @@ $totalCount = count($messages);
         </div>
         <div class="modal-body">
             <div class="message-detail-row">
-                <div class="message-detail-label">Gonderen</div>
+                <div class="message-detail-label">Gönderen</div>
                 <div class="message-detail-value" id="modalSender"></div>
             </div>
             <div class="message-detail-row" id="modalEmailRow">
@@ -356,7 +356,7 @@ $totalCount = count($messages);
             </div>
 
             <div style="margin-top: var(--space-4);">
-                <div class="message-detail-label" style="margin-bottom: var(--space-2);">Mesaj Icerigi</div>
+                <div class="message-detail-label" style="margin-bottom: var(--space-2);">Mesaj İçeriği</div>
                 <div class="message-content-box" id="modalContent"></div>
             </div>
         </div>
@@ -368,7 +368,7 @@ $totalCount = count($messages);
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    Okundu Isaretle
+                    Okundu İşaretle
                 </button>
             </form>
             <button type="button" class="btn btn-danger" onclick="deleteMessage()">
@@ -394,8 +394,8 @@ $totalCount = count($messages);
                 </svg>
                 Mesaj Sil
             </h3>
-            <button class="modal-close" onclick="closeDeleteModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="modal-close" onclick="closeDeleteModal()" aria-label="Kapat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -403,14 +403,14 @@ $totalCount = count($messages);
         </div>
         <div class="modal-body">
             <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
-                Bu mesaji silmek istediginize emin misiniz?
+                Bu mesajı silmek istediğinize emin misiniz?
             </p>
             <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
-                Bu islem geri alinamaz.
+                Bu işlem geri alınamaz.
             </p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Iptal</button>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
             <form method="POST" id="deleteForm" style="display: inline;">
                 <?= csrfTokenField() ?>
                 <input type="hidden" name="delete_id" id="deleteId">

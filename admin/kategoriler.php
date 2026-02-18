@@ -1,6 +1,6 @@
 <?php
 /**
- * Kategori Yonetimi - Professional UI
+ * Kategori Yönetimi - Professional UI
  * MVC: KategoriService kullanır
  */
 
@@ -13,16 +13,16 @@ use Pastane\Exceptions\HttpException;
 // KategoriService instance
 $kategoriService = kategori_service();
 
-// Silme islemi (POST ile guvenli)
+// Silme işlemi (POST ile güvenli)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     if (!verifyCSRF()) {
-        setFlash('error', 'Guvenlik dogrulamasi basarisiz.');
+        setFlash('error', 'Güvenlik doğrulaması başarısız.');
     } else {
         $id = (int)$_POST['delete_id'];
 
         try {
             $kategoriService->delete($id);
-            setFlash('success', 'Kategori basariyla silindi.');
+            setFlash('success', 'Kategori başarıyla silindi.');
         } catch (HttpException $e) {
             setFlash('error', $e->getMessage());
         }
@@ -31,31 +31,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     exit;
 }
 
-// Ekleme/Duzenleme POST islemi (header'dan once)
+// Ekleme/Düzenleme POST işlemi (header'dan önce)
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
-    // CSRF kontrolu
+    // CSRF kontrolü
     if (!verifyCSRF()) {
-        $errors[] = 'Guvenlik dogrulamasi basarisiz.';
+        $errors[] = 'Güvenlik doğrulaması başarısız.';
     } else {
         $isim = trim($_POST['isim'] ?? '');
         $sira = (int)($_POST['sira'] ?? 0);
         $edit_id = isset($_POST['edit_id']) ? (int)$_POST['edit_id'] : 0;
 
         if (empty($isim)) {
-            $errors[] = 'Kategori adi gereklidir.';
+            $errors[] = 'Kategori adı gereklidir.';
         }
 
         if (empty($errors)) {
             try {
                 if ($edit_id) {
-                    // Guncelle (service slug'ı otomatik oluşturur)
+                    // Güncelle (service slug'ı otomatik oluşturur)
                     $kategoriService->update($edit_id, [
                         'ad' => $isim,
                         'sira' => $sira
                     ]);
-                    setFlash('success', 'Kategori guncellendi.');
+                    setFlash('success', 'Kategori güncellendi.');
                 } else {
                     // Ekle (service slug'ı otomatik oluşturur)
                     $kategoriService->create([
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
                 header('Location: kategoriler.php');
                 exit;
             } catch (Exception $e) {
-                $errors[] = 'Bir hata olustu: ' . $e->getMessage();
+                $errors[] = 'Bir hata oluştu: ' . $e->getMessage();
             }
         }
     }
@@ -138,7 +138,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
         </div>
         <div class="stat-info">
             <h4><?= $totalProducts ?></h4>
-            <span>Toplam Urun</span>
+            <span>Toplam Ürün</span>
         </div>
     </div>
 </div>
@@ -155,7 +155,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                     <rect x="14" y="14" width="7" height="7"/>
                     <rect x="3" y="14" width="7" height="7"/>
                 </svg>
-                Tum Kategoriler
+                Tüm Kategoriler
             </h3>
             <span class="badge badge-neutral"><?= count($categories) ?> kategori</span>
         </div>
@@ -172,8 +172,8 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                             <line x1="3" y1="18" x2="3.01" y2="18"/>
                         </svg>
                     </div>
-                    <h3>Henuz kategori yok</h3>
-                    <p>Urunlerinizi duzenlemek icin ilk kategorinizi ekleyin.</p>
+                    <h3>Henüz kategori yok</h3>
+                    <p>Ürünlerinizi düzenlemek için ilk kategorinizi ekleyin.</p>
                 </div>
             <?php else: ?>
                 <div class="table-container">
@@ -181,11 +181,11 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                         <thead>
                             <tr>
                                 <th style="width: 50px;">#</th>
-                                <th>Kategori Adi</th>
+                                <th>Kategori Adı</th>
                                 <th>Slug</th>
-                                <th style="text-align: center;">Urun</th>
-                                <th style="text-align: center;">Sira</th>
-                                <th style="width: 120px;">Islemler</th>
+                                <th style="text-align: center;">Ürün</th>
+                                <th style="text-align: center;">Sıra</th>
+                                <th style="width: 120px;">İşlemler</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -215,13 +215,13 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                                 </td>
                                 <td>
                                     <div class="actions">
-                                        <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-ghost btn-icon" data-tooltip="Duzenle">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-ghost btn-icon" data-tooltip="Duzenle" aria-label="<?= e($cat['ad']) ?> kategorisini düzenle">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                             </svg>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-ghost btn-icon text-danger" data-tooltip="Sil" data-id="<?= $cat['id'] ?>" data-name="<?= e($cat['ad']) ?>" onclick="deleteCategory(this.dataset.id, this.dataset.name)">
+                                        <button type="button" class="btn btn-sm btn-ghost btn-icon text-danger" data-tooltip="Sil" aria-label="<?= e($cat['ad']) ?> kategorisini sil" data-id="<?= $cat['id'] ?>" data-name="<?= e($cat['ad']) ?>" onclick="deleteCategory(this.dataset.id, this.dataset.name)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <polyline points="3 6 5 6 21 6"/>
                                                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -249,7 +249,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
-                    Kategori Duzenle
+                    Kategori Düzenle
                 <?php else: ?>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
@@ -269,19 +269,19 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 
                 <div class="form-group">
                     <label for="isim">
-                        Kategori Adi <span class="required">*</span>
+                        Kategori Adı <span class="required">*</span>
                     </label>
                     <input type="text"
                            id="isim"
                            name="isim"
                            class="form-control"
                            required
-                           placeholder="Ornek: Pastalar"
+                           placeholder="Örnek: Pastalar"
                            value="<?= e($_POST['isim'] ?? ($editCategory['ad'] ?? '')) ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="sira">Gosterim Sirasi</label>
+                    <label for="sira">Gösterim Sırası</label>
                     <input type="number"
                            id="sira"
                            name="sira"
@@ -289,7 +289,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                            min="0"
                            placeholder="0"
                            value="<?= e($_POST['sira'] ?? ($editCategory['sira'] ?? '0')) ?>">
-                    <span class="form-hint">Kucuk numara once gosterilir (0 = ilk sira)</span>
+                    <span class="form-hint">Küçük numara önce gösterilir (0 = ilk sıra)</span>
                 </div>
 
                 <div class="flex flex-col gap-2">
@@ -300,7 +300,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                                 <polyline points="17 21 17 13 7 13 7 21"/>
                                 <polyline points="7 3 7 8 15 8"/>
                             </svg>
-                            Degisiklikleri Kaydet
+                            Değişiklikleri Kaydet
                         <?php else: ?>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -316,7 +316,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                                 <line x1="18" y1="6" x2="6" y2="18"/>
                                 <line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
-                            Iptal
+                            İptal
                         </a>
                     <?php endif; ?>
                 </div>
@@ -343,8 +343,8 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                 </svg>
                 Kategori Sil
             </h3>
-            <button class="modal-close" onclick="closeDeleteModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="modal-close" onclick="closeDeleteModal()" aria-label="Kapat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -352,14 +352,14 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
         </div>
         <div class="modal-body">
             <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
-                <strong id="deleteCategoryName" style="color: var(--admin-text);"></strong> kategorisini silmek istediginize emin misiniz?
+                <strong id="deleteCategoryName" style="color: var(--admin-text);"></strong> kategorisini silmek istediğinize emin misiniz?
             </p>
             <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
-                Bu islem geri alinamaz.
+                Bu işlem geri alınamaz.
             </p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Iptal</button>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
             <button type="button" class="btn btn-danger" onclick="confirmDelete()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>

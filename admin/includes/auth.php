@@ -1,22 +1,22 @@
 <?php
 /**
- * Admin Yetkilendirme (Guvenlik Guclendirilmis)
+ * Admin Yetkilendirme (Güvenlik Güçlendirilmiş)
  */
 
 require_once __DIR__ . '/../../includes/security.php';
 
-// Guvenli session baslat
+// Güvenli session başlat
 secureSessionStart();
 
-// Guvenlik headerlarini ayarla
+// Güvenlik header'larını ayarla
 setSecurityHeaders();
 
-// Giris kontrolu
+// Giriş kontrolü
 function isLoggedIn() {
     return isset($_SESSION['admin_id']) && isset($_SESSION['admin_user']);
 }
 
-// Giris gerektir
+// Giriş gerektir
 function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: index.php');
@@ -24,7 +24,7 @@ function requireLogin() {
     }
 }
 
-// Giris yap (guvenlik kontrollu)
+// Giriş yap (güvenlik kontrollü)
 function login($username, $password) {
     // Hesap kilitli mi kontrol et
     if (isAccountLocked($username)) {
@@ -32,7 +32,7 @@ function login($username, $password) {
         $minutes = ceil($remaining / 60);
         return [
             'success' => false,
-            'error' => "Cok fazla basarisiz deneme. Lutfen {$minutes} dakika sonra tekrar deneyin.",
+            'error' => "Çok fazla başarısız deneme. Lütfen {$minutes} dakika sonra tekrar deneyin.",
             'locked' => true
         ];
     }
@@ -43,7 +43,7 @@ function login($username, $password) {
     );
 
     if ($user && password_verify($password, $user['sifre_hash'])) {
-        // Basarili giris
+        // Başarılı giriş
         regenerateSessionOnLogin();
 
         $_SESSION['admin_id'] = $user['id'];
@@ -51,25 +51,25 @@ function login($username, $password) {
         $_SESSION['admin_login_time'] = time();
         $_SESSION['admin_ip'] = getClientIP();
 
-        // Basarili giris logla ve eski denemeleri temizle
+        // Başarılı giriş logla ve eski denemeleri temizle
         logLoginAttempt($username, true);
         clearFailedLogins($username);
 
         return ['success' => true];
     }
 
-    // Basarisiz giris
+    // Başarısız giriş
     recordFailedLogin($username);
     logLoginAttempt($username, false);
 
     return [
         'success' => false,
-        'error' => 'Gecersiz kullanici adi veya sifre.',
+        'error' => 'Geçersiz kullanıcı adı veya şifre.',
         'locked' => false
     ];
 }
 
-// Cikis yap
+// Çıkış yap
 function logout() {
     // Session verilerini temizle
     $_SESSION = [];
@@ -88,11 +88,11 @@ function logout() {
     exit;
 }
 
-// Sifre degistir
+// Şifre değiştir
 function changePassword($userId, $newPassword) {
-    // Sifre gucu kontrolu
+    // Şifre gücü kontrolü
     if (strlen($newPassword) < 8) {
-        return ['success' => false, 'error' => 'Sifre en az 8 karakter olmalidir.'];
+        return ['success' => false, 'error' => 'Şifre en az 8 karakter olmalıdır.'];
     }
 
     $hash = password_hash($newPassword, PASSWORD_DEFAULT, ['cost' => 12]);
@@ -101,19 +101,19 @@ function changePassword($userId, $newPassword) {
     return ['success' => true];
 }
 
-// Session gecerliligi kontrol et
+// Session geçerliliği kontrol et
 function validateSession() {
     if (!isLoggedIn()) {
         return false;
     }
 
-    // IP degismis mi kontrol et (opsiyonel - mobil kullanicilar icin devre disi birakilabilir)
+    // IP değişmiş mi kontrol et (opsiyonel - mobil kullanıcılar için devre dışı bırakılabilir)
     // if (isset($_SESSION['admin_ip']) && $_SESSION['admin_ip'] !== getClientIP()) {
     //     logout();
     //     return false;
     // }
 
-    // Session suresi dolmus mu
+    // Session süresi dolmuş mu
     if (isset($_SESSION['admin_login_time'])) {
         if (time() - $_SESSION['admin_login_time'] > SESSION_LIFETIME) {
             logout();
@@ -124,11 +124,11 @@ function validateSession() {
     return true;
 }
 
-// CSRF dogrulama wrapper
+// CSRF doğrulama wrapper
 function verifyCSRF() {
     $token = $_POST['csrf_token'] ?? '';
     if (!validateSecureCSRFToken($token)) {
-        setFlash('error', 'Guvenlik dogrulamasi basarisiz. Lutfen tekrar deneyin.');
+        setFlash('error', 'Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin.');
         return false;
     }
     return true;

@@ -87,7 +87,7 @@ $recentMessages = array_slice($allMessages, 0, 5);
                         <tr>
                             <td style="width: 60px;">
                                 <?php if ($product['gorsel']): ?>
-                                    <img src="../uploads/products/<?= e($product['gorsel']) ?>" class="product-thumb" alt="">
+                                    <img src="../uploads/products/<?= e($product['gorsel']) ?>" class="product-thumb" alt="<?= e($product['ad']) ?>">
                                 <?php else: ?>
                                     <div class="product-thumb" style="background: #F5E1E9; display: flex; align-items: center; justify-content: center;">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6F5C" stroke-width="2">

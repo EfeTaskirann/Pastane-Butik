@@ -1,6 +1,6 @@
 <?php
 /**
- * Urun Listesi - Professional UI
+ * Ürün Listesi - Professional UI
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
@@ -9,38 +9,38 @@ requireLogin();
 
 $urunService = urun_service();
 
-// POST islemleri (guvenli)
+// POST işlemleri (güvenli)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRF()) {
-        setFlash('error', 'Guvenlik dogrulamasi basarisiz.');
+        setFlash('error', 'Güvenlik doğrulaması başarısız.');
         header('Location: urunler.php');
         exit;
     }
 
-    // Silme islemi
+    // Silme işlemi
     if (isset($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
         $id = (int)$_POST['delete_id'];
         $product = $urunService->find($id);
 
         if ($product) {
-            // Gorseli sil
+            // Görseli sil
             if (!empty($product['gorsel'])) {
                 deleteImage($product['gorsel']);
             }
-            // Urunu service üzerinden sil
+            // Ürünü service üzerinden sil
             $urunService->delete($id);
-            setFlash('success', 'Urun basariyla silindi.');
+            setFlash('success', 'Ürün başarıyla silindi.');
         }
 
         header('Location: urunler.php');
         exit;
     }
 
-    // Durum degistirme
+    // Durum değiştirme
     if (isset($_POST['toggle_id']) && is_numeric($_POST['toggle_id'])) {
         $id = (int)$_POST['toggle_id'];
         $urunService->toggleActive($id);
-        setFlash('success', 'Urun durumu guncellendi.');
+        setFlash('success', 'Ürün durumu güncellendi.');
 
         header('Location: urunler.php');
         exit;
@@ -127,7 +127,7 @@ $inactiveCount = count($products) - $activeCount;
             </svg>
             Urun Listesi
         </h3>
-        <span class="badge badge-neutral"><?= count($products) ?> urun</span>
+        <span class="badge badge-neutral"><?= count($products) ?> ürün</span>
     </div>
     <div class="card-body" style="padding: 0;">
         <?php if (empty($products)): ?>
@@ -137,14 +137,14 @@ $inactiveCount = count($products) - $activeCount;
                         <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
                     </svg>
                 </div>
-                <h3>Henuz urun eklenmemis</h3>
-                <p>Musterilerinize sunmak istediginiz urunleri ekleyerek baslayin.</p>
+                <h3>Henüz ürün eklenmemiş</h3>
+                <p>Müşterilerinize sunmak istediğiniz ürünleri ekleyerek başlayın.</p>
                 <a href="urun-ekle.php" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
-                    Ilk Urunu Ekle
+                    İlk Ürünü Ekle
                 </a>
             </div>
         <?php else: ?>
@@ -153,11 +153,11 @@ $inactiveCount = count($products) - $activeCount;
                     <thead>
                         <tr>
                             <th style="width: 70px;"></th>
-                            <th>Urun Adi</th>
+                            <th>Ürün Adı</th>
                             <th>Kategori</th>
                             <th style="text-align: right;">Fiyat</th>
                             <th style="text-align: center;">Durum</th>
-                            <th style="width: 140px;">Islemler</th>
+                            <th style="width: 140px;">İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -208,8 +208,9 @@ $inactiveCount = count($products) - $activeCount;
                                 <div class="actions">
                                     <a href="urun-duzenle.php?id=<?= $product['id'] ?>"
                                        class="btn btn-sm btn-ghost btn-icon"
-                                       data-tooltip="Duzenle">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                       data-tooltip="Duzenle"
+                                       aria-label="<?= e($product['ad']) ?> ürününü düzenle">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                         </svg>
@@ -217,6 +218,7 @@ $inactiveCount = count($products) - $activeCount;
                                     <button type="button"
                                             class="btn btn-sm btn-ghost btn-icon"
                                             data-tooltip="<?= $product['aktif'] ? 'Pasif Yap' : 'Aktif Yap' ?>"
+                                            aria-label="<?= e($product['ad']) ?> ürününü <?= $product['aktif'] ? 'pasif yap' : 'aktif yap' ?>"
                                             onclick="toggleProduct(<?= $product['id'] ?>)">
                                         <?php if ($product['aktif']): ?>
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-warning);">
@@ -233,10 +235,11 @@ $inactiveCount = count($products) - $activeCount;
                                     <button type="button"
                                             class="btn btn-sm btn-ghost btn-icon"
                                             data-tooltip="Sil"
+                                            aria-label="<?= e($product['ad']) ?> ürününü sil"
                                             data-id="<?= $product['id'] ?>"
                                             data-name="<?= e($product['ad']) ?>"
                                             onclick="deleteProduct(this.dataset.id, this.dataset.name)">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);" aria-hidden="true">
                                             <polyline points="3 6 5 6 21 6"/>
                                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                                             <line x1="10" y1="11" x2="10" y2="17"/>
@@ -275,10 +278,10 @@ $inactiveCount = count($products) - $activeCount;
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                Urun Sil
+                Ürün Sil
             </h3>
-            <button class="modal-close" onclick="closeDeleteModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="modal-close" onclick="closeDeleteModal()" aria-label="Kapat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -286,20 +289,20 @@ $inactiveCount = count($products) - $activeCount;
         </div>
         <div class="modal-body">
             <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
-                <strong id="deleteProductName" style="color: var(--admin-text);"></strong> urununu silmek istediginize emin misiniz?
+                <strong id="deleteProductName" style="color: var(--admin-text);"></strong> ürününü silmek istediğinize emin misiniz?
             </p>
             <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
-                Bu islem geri alinamaz ve urun gorseli de silinecektir.
+                Bu işlem geri alınamaz ve ürün görseli de silinecektir.
             </p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Iptal</button>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
             <button type="button" class="btn btn-danger" onclick="confirmDelete()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
-                Urunu Sil
+                Ürünü Sil
             </button>
         </div>
     </div>

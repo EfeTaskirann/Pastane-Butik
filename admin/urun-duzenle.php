@@ -212,7 +212,7 @@ require_once __DIR__ . '/includes/header.php';
 
                 <?php if ($product['gorsel']): ?>
                     <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
-                        <img src="../uploads/products/<?= e($product['gorsel']) ?>" style="max-width: 150px; border-radius: 8px;">
+                        <img src="../uploads/products/<?= e($product['gorsel']) ?>" alt="<?= e($product['ad']) ?>" style="max-width: 150px; border-radius: 8px;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--admin-danger);">
                             <input type="checkbox" name="delete_image" value="1">
                             Görseli sil
