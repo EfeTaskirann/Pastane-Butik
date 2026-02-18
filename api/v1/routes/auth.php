@@ -106,10 +106,8 @@ $router->post('/api/v1/auth/login', function() {
  * Token yenile
  */
 $router->post('/api/v1/auth/refresh', function() {
+    // requireAuth() artık HttpException fırlatıyor — null check gereksiz
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Geçersiz token.', 401);
-    }
 
     // Generate new token
     $newToken = JWT::create([
@@ -132,14 +130,12 @@ $router->post('/api/v1/auth/logout', function() {
     $token = JWT::getTokenFromHeader();
     $payload = JWT::requireAuth();
 
-    if ($payload) {
-        // Token'ı blacklist'e ekle (gerçek server-side invalidation)
-        if ($token) {
-            JWT::invalidate($token);
-        }
-
-        SecurityAudit::logLogout($payload['user_id']);
+    // Token'ı blacklist'e ekle (gerçek server-side invalidation)
+    if ($token) {
+        JWT::invalidate($token);
     }
+
+    SecurityAudit::logLogout($payload['user_id']);
 
     json_success(null, 'Çıkış yapıldı.');
 });
@@ -150,9 +146,6 @@ $router->post('/api/v1/auth/logout', function() {
  */
 $router->get('/api/v1/auth/me', function() {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $kullanici = db()->fetch(
         "SELECT id, kullanici_adi, email, rol, created_at, last_login_at
@@ -173,9 +166,6 @@ $router->get('/api/v1/auth/me', function() {
  */
 $router->post('/api/v1/auth/change-password', function() {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $data = json_decode(file_get_contents('php://input'), true);
 
@@ -231,9 +221,6 @@ $router->post('/api/v1/auth/change-password', function() {
  */
 $router->post('/api/v1/auth/2fa/enable', function() {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $kullanici = db()->fetch(
         "SELECT * FROM admin_kullanicilar WHERE id = ?",
@@ -271,9 +258,6 @@ $router->post('/api/v1/auth/2fa/enable', function() {
  */
 $router->post('/api/v1/auth/2fa/verify', function() {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $data = json_decode(file_get_contents('php://input'), true);
 
@@ -316,9 +300,6 @@ $router->post('/api/v1/auth/2fa/verify', function() {
  */
 $router->post('/api/v1/auth/2fa/disable', function() {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $data = json_decode(file_get_contents('php://input'), true);
 

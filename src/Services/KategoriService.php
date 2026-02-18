@@ -167,29 +167,14 @@ class KategoriService extends BaseService
 
     /**
      * Metni slug'a çevir
+     * helpers.php str_slug() fonksiyonunu kullanır — tek bir kaynak.
      *
      * @param string $text
      * @return string
      */
     protected function slugify(string $text): string
     {
-        // Türkçe karakter haritası
-        $turkishMap = [
-            'ç' => 'c', 'Ç' => 'C',
-            'ğ' => 'g', 'Ğ' => 'G',
-            'ı' => 'i', 'İ' => 'I',
-            'ö' => 'o', 'Ö' => 'O',
-            'ş' => 's', 'Ş' => 'S',
-            'ü' => 'u', 'Ü' => 'U',
-        ];
-
-        $text = strtr($text, $turkishMap);
-        $text = strtolower($text);
-        $text = preg_replace('/[^a-z0-9\s-]/', '', $text);
-        $text = preg_replace('/[\s-]+/', '-', $text);
-        $text = trim($text, '-');
-
-        return $text;
+        return str_slug($text);
     }
 
     /**

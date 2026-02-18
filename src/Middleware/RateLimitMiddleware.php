@@ -40,25 +40,9 @@ class RateLimitMiddleware implements MiddlewareInterface
      */
     public function handle(callable $next): mixed
     {
-        $result = \RateLimiter::check($this->action);
-
-        // Add rate limit headers
-        header("X-RateLimit-Limit: {$result['limit']}");
-        header("X-RateLimit-Remaining: {$result['remaining']}");
-        header("X-RateLimit-Reset: {$result['reset']}");
-
-        if (!$result['allowed']) {
-            $retryAfter = $result['reset'] - time();
-            header("Retry-After: {$retryAfter}");
-
-            throw HttpException::tooManyRequests(
-                'Çok fazla istek gönderdiniz. Lütfen bekleyin.',
-                $retryAfter
-            );
-        }
-
-        // Record the hit
-        \RateLimiter::hit($this->action);
+        // RateLimiter::enforce() check + hit + header gönderimi tek adımda yapar
+        // Rate limit aşılırsa HttpException::tooManyRequests fırlatır
+        \RateLimiter::enforce($this->action);
 
         return $next();
     }

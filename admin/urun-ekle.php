@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-            db()->insert('urunler', [
+            $urunService = urun_service();
+            $urunService->create([
                 'ad' => $isim,
                 'aciklama' => $aciklama,
                 'fiyat' => $fiyat,
@@ -62,12 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'kategori_id' => $kategori_id,
                 'gorsel' => $gorsel,
                 'aktif' => $aktif,
-                'sira' => $sira
+                'sira' => $sira,
             ]);
 
             setFlash('success', 'Ürün başarıyla eklendi.');
             header('Location: urunler.php');
             exit;
+        } catch (\Pastane\Exceptions\ValidationException $e) {
+            $errors = array_merge($errors, array_values($e->getErrors()));
         } catch (Exception $e) {
             $errors[] = 'Bir hata olustu: ' . $e->getMessage();
         }

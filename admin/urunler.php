@@ -7,6 +7,8 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
+$urunService = urun_service();
+
 // POST islemleri (guvenli)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRF()) {
@@ -18,15 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Silme islemi
     if (isset($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
         $id = (int)$_POST['delete_id'];
-        $product = db()->fetch("SELECT gorsel FROM urunler WHERE id = :id", ['id' => $id]);
+        $product = $urunService->find($id);
 
         if ($product) {
             // Gorseli sil
-            if ($product['gorsel']) {
+            if (!empty($product['gorsel'])) {
                 deleteImage($product['gorsel']);
             }
-            // Urunu sil
-            db()->delete('urunler', 'id = :id', ['id' => $id]);
+            // Urunu service üzerinden sil
+            $urunService->delete($id);
             setFlash('success', 'Urun basariyla silindi.');
         }
 
@@ -37,13 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Durum degistirme
     if (isset($_POST['toggle_id']) && is_numeric($_POST['toggle_id'])) {
         $id = (int)$_POST['toggle_id'];
-        $product = db()->fetch("SELECT aktif FROM urunler WHERE id = :id", ['id' => $id]);
-
-        if ($product) {
-            $newStatus = $product['aktif'] ? 0 : 1;
-            db()->update('urunler', ['aktif' => $newStatus], 'id = :id', ['id' => $id]);
-            setFlash('success', 'Urun durumu guncellendi.');
-        }
+        $urunService->toggleActive($id);
+        setFlash('success', 'Urun durumu guncellendi.');
 
         header('Location: urunler.php');
         exit;
@@ -52,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once __DIR__ . '/includes/header.php';
 
-// Urunleri listele
+// Urunleri listele — kategori bilgisiyle birlikte
+// TODO (FAZ 8): UrunRepository.getAllWithCategory() metodu eklenecek
 $products = db()->fetchAll(
     "SELECT u.*, k.ad as kategori_ad
      FROM urunler u

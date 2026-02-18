@@ -29,13 +29,14 @@ class UrunRepository extends BaseRepository
      */
     protected array $fillable = [
         'ad',
-        'slug',
         'aciklama',
         'fiyat',
+        'fiyat_4kisi',
+        'fiyat_6kisi',
+        'fiyat_8kisi',
+        'fiyat_10kisi',
         'kategori_id',
-        'resim',
-        'galeri',
-        'ozellikler',
+        'gorsel',
         'aktif',
         'sira',
     ];
@@ -44,7 +45,7 @@ class UrunRepository extends BaseRepository
      * @var array Sortable columns whitelist
      */
     protected array $sortableColumns = [
-        'id', 'ad', 'fiyat', 'kategori_id', 'aktif', 'sira', 'created_at', 'updated_at', 'slug',
+        'id', 'ad', 'fiyat', 'kategori_id', 'aktif', 'sira', 'created_at', 'updated_at',
     ];
 
     /**
@@ -119,11 +120,13 @@ class UrunRepository extends BaseRepository
      */
     public function getFeatured(int $limit = 6): array
     {
+        // Veritabanında öne çıkan flag'i yok —
+        // en düşük sıralı aktif ürünleri "öne çıkan" olarak kabul et
         $sql = "SELECT u.*, k.ad as kategori_adi
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
-                WHERE u.aktif = 1 AND u.ozellikler LIKE '%\"one_cikan\":true%'
-                ORDER BY u.sira ASC
+                WHERE u.aktif = 1
+                ORDER BY u.sira ASC, u.created_at DESC
                 LIMIT " . max(1, (int)$limit);
 
         return $this->raw($sql);

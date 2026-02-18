@@ -2,6 +2,9 @@
 /**
  * Siparişler API Routes
  *
+ * Sipariş CRUD ve istatistik endpoint'leri.
+ * Service layer üzerinden veri erişimi tercih edilir.
+ *
  * @package Pastane\API\v1
  */
 
@@ -9,16 +12,15 @@ use Pastane\Router\Router;
 use Pastane\Validators\SiparisValidator;
 
 $router = Router::getInstance();
+$siparisService = siparis_service();
 
 /**
  * GET /api/v1/siparisler
  * Siparişleri listele (Admin)
  */
-$router->get('/api/v1/siparisler', function() {
-    $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
+$router->get('/api/v1/siparisler', function() use ($siparisService) {
+    // JWT::requireAuth() artık HttpException fırlatıyor — null check gereksiz
+    JWT::requireAuth();
 
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $limit = isset($_GET['limit']) ? min(100, max(1, (int)$_GET['limit'])) : 20;
@@ -44,6 +46,9 @@ $router->get('/api/v1/siparisler', function() {
         json_error('Geçersiz bitiş tarihi formatı (YYYY-MM-DD).', 422);
     }
 
+    // Filtrelerle sipariş listesi — SiparisService/Repository henüz bu kadar esnek
+    // filtreleme desteklemediği için bu geçici olarak doğrudan query kullanır.
+    // TODO: SiparisRepository.getFiltered() metodu eklenecek (FAZ 8 optimizasyon)
     $where = "1=1";
     $params = [];
 
@@ -95,20 +100,10 @@ $router->get('/api/v1/siparisler', function() {
  * GET /api/v1/siparisler/{id}
  * Sipariş detayı (Admin)
  */
-$router->get('/api/v1/siparisler/{id}', function($params) {
-    $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
+$router->get('/api/v1/siparisler/{id}', function($params) use ($siparisService) {
+    JWT::requireAuth();
 
-    $siparis = db()->fetch(
-        "SELECT s.*, k.ad as kategori_adi
-         FROM siparisler s
-         LEFT JOIN kategoriler k ON s.kategori = k.slug
-         WHERE s.id = ?",
-        [(int)$params['id']]
-    );
-
+    $siparis = $siparisService->find((int)$params['id']);
     if (!$siparis) {
         json_error('Sipariş bulunamadı.', 404);
     }
@@ -120,7 +115,7 @@ $router->get('/api/v1/siparisler/{id}', function($params) {
  * POST /api/v1/siparisler
  * Yeni sipariş oluştur (Public - Müşteri Siparişi)
  */
-$router->post('/api/v1/siparisler', function() {
+$router->post('/api/v1/siparisler', function() use ($siparisService) {
     $data = json_decode(file_get_contents('php://input'), true);
 
     if ($data === null) {
@@ -132,34 +127,8 @@ $router->post('/api/v1/siparisler', function() {
     $validated = $validator->validate($data);
 
     // GÜVENLİK: birim_fiyat ve toplam_tutar client'tan ALINMAZ
-    // Fiyatlar sunucu tarafında hesaplanmalıdır
-
-    // Create order
-    $id = db()->insert('siparisler', [
-        'ad_soyad' => $validated['ad_soyad'],
-        'telefon' => $validated['telefon'],
-        'email' => $validated['email'] ?? null,
-        'tarih' => $validated['tarih'],
-        'saat' => $validated['saat'] ?? null,
-        'kategori' => $validated['kategori'],
-        'kisi_sayisi' => $validated['kisi_sayisi'] ?? null,
-        'tasarim' => $validated['tasarim'] ?? null,
-        'mesaj' => $validated['mesaj'] ?? null,
-        'ozel_istekler' => $validated['ozel_istekler'] ?? null,
-        'durum' => 'beklemede',
-        'birim_fiyat' => 0,
-        'toplam_tutar' => 0,
-        'odeme_tipi' => $validated['odeme_tipi'] ?? 'online',
-        'kanal' => 'site',
-    ]);
-
-    $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
-
-    // Log the order
-    logger('Yeni sipariş oluşturuldu', [
-        'siparis_id' => $id,
-        'musteri' => $validated['ad_soyad'],
-    ]);
+    // Service layer fiyat hesaplamasını yapar
+    $siparis = $siparisService->create($validated);
 
     json_response([
         'success' => true,
@@ -172,11 +141,8 @@ $router->post('/api/v1/siparisler', function() {
  * PATCH /api/v1/siparisler/{id}/durum
  * Sipariş durumunu güncelle (Admin)
  */
-$router->patch('/api/v1/siparisler/{id}/durum', function($params) {
+$router->patch('/api/v1/siparisler/{id}/durum', function($params) use ($siparisService) {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $id = (int)$params['id'];
     $data = json_decode(file_get_contents('php://input'), true);
@@ -189,23 +155,12 @@ $router->patch('/api/v1/siparisler/{id}/durum', function($params) {
     $validator = new SiparisValidator('status');
     $validated = $validator->validate($data);
 
-    $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
-    if (!$siparis) {
-        json_error('Sipariş bulunamadı.', 404);
-    }
-
-    $eskiDurum = $siparis['durum'];
-
-    db()->update('siparisler', [
-        'durum' => $validated['durum'],
-    ], 'id = :id', ['id' => $id]);
-
-    $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
+    // Service updateStatus kullan — mevcut kayıt kontrolü + müşteri puan güncelleme dahil
+    $siparis = $siparisService->updateStatus($id, $validated['durum']);
 
     // Log status change
     logger('Sipariş durumu güncellendi', [
         'siparis_id' => $id,
-        'eski_durum' => $eskiDurum,
         'yeni_durum' => $validated['durum'],
         'admin_id' => $payload['user_id'] ?? null,
     ]);
@@ -215,25 +170,18 @@ $router->patch('/api/v1/siparisler/{id}/durum', function($params) {
 
 /**
  * DELETE /api/v1/siparisler/{id}
- * Sipariş sil (Admin)
+ * Sipariş sil veya arşivle (Admin)
  */
-$router->delete('/api/v1/siparisler/{id}', function($params) {
+$router->delete('/api/v1/siparisler/{id}', function($params) use ($siparisService) {
     $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
 
     $id = (int)$params['id'];
 
-    $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
-    if (!$siparis) {
-        json_error('Sipariş bulunamadı.', 404);
-    }
-
-    db()->delete('siparisler', 'id = :id', ['id' => $id]);
+    // Service deleteOrArchive kullan — arşivleme + müşteri sipariş sayısı yönetimi dahil
+    $siparisService->deleteOrArchive($id);
 
     // Log deletion
-    logger('Sipariş silindi', [
+    logger('Sipariş silindi/arşivlendi', [
         'siparis_id' => $id,
         'admin_id' => $payload['user_id'] ?? null,
     ]);
@@ -246,10 +194,7 @@ $router->delete('/api/v1/siparisler/{id}', function($params) {
  * Sipariş istatistikleri (Admin)
  */
 $router->get('/api/v1/siparisler/istatistikler', function() {
-    $payload = JWT::requireAuth();
-    if (!$payload) {
-        json_error('Yetkilendirme gerekli.', 401);
-    }
+    JWT::requireAuth();
 
     $bugun = date('Y-m-d');
     $bugunStats = db()->fetch(

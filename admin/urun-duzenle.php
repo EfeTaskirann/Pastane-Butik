@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
+$urunService = urun_service();
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // ID kontrolü (header'dan önce)
@@ -15,7 +16,7 @@ if (!$id) {
     exit;
 }
 
-$product = db()->fetch("SELECT * FROM urunler WHERE id = :id", ['id' => $id]);
+$product = $urunService->find($id);
 
 // Ürün bulunamadı kontrolü (header'dan önce)
 if (!$product) {
@@ -80,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($errors)) {
             try {
-                db()->update('urunler', [
+                $urunService->update($id, [
                     'ad' => $isim,
                     'aciklama' => $aciklama,
                     'fiyat' => $fiyat,
@@ -91,12 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'kategori_id' => $kategori_id,
                     'gorsel' => $gorsel,
                     'aktif' => $aktif,
-                    'sira' => $sira
-                ], 'id = :id', ['id' => $id]);
+                    'sira' => $sira,
+                ]);
 
                 setFlash('success', 'Urun basariyla guncellendi.');
                 header('Location: urunler.php');
                 exit;
+            } catch (\Pastane\Exceptions\ValidationException $e) {
+                $errors = array_merge($errors, array_values($e->getErrors()));
             } catch (Exception $e) {
                 $errors[] = 'Bir hata olustu: ' . $e->getMessage();
             }

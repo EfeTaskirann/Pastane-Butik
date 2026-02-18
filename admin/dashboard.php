@@ -5,16 +5,21 @@
 
 require_once __DIR__ . '/includes/header.php';
 
-// İstatistikleri al
-$totalProducts = db()->fetch("SELECT COUNT(*) as count FROM urunler")['count'];
-$totalCategories = db()->fetch("SELECT COUNT(*) as count FROM kategoriler")['count'];
-$unreadMessages = db()->fetch("SELECT COUNT(*) as count FROM mesajlar WHERE okundu = 0")['count'];
+// İstatistikleri service layer üzerinden al
+$urunService = urun_service();
+$kategoriService = kategori_service();
+$mesajService = mesaj_service();
 
-// Son eklenen ürünler
-$recentProducts = db()->fetchAll("SELECT * FROM urunler ORDER BY created_at DESC LIMIT 5");
+$totalProducts = $urunService->count();
+$totalCategories = $kategoriService->count();
+$unreadMessages = $mesajService->getUnreadCount();
 
-// Son mesajlar
-$recentMessages = db()->fetchAll("SELECT * FROM mesajlar ORDER BY created_at DESC LIMIT 5");
+// Son eklenen ürünler — service üzerinden
+$recentProducts = $urunService->getActive(null, 5);
+
+// Son mesajlar — service üzerinden sıralı mesajlardan ilk 5
+$allMessages = $mesajService->getAllOrdered();
+$recentMessages = array_slice($allMessages, 0, 5);
 ?>
 
 <h2 style="margin-bottom: 1.5rem;">Dashboard</h2>
