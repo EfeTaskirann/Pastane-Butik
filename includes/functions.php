@@ -323,4 +323,3 @@ if (!function_exists('getHaftalikKarsilastirma')) {
         return rapor_service()->getHaftalikKarsilastirma();
     }
 }
-}
