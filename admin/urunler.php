@@ -50,13 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/includes/header.php';
 
 // Urunleri listele — kategori bilgisiyle birlikte
-// TODO (FAZ 8): UrunRepository.getAllWithCategory() metodu eklenecek
-$products = db()->fetchAll(
-    "SELECT u.*, k.ad as kategori_ad
-     FROM urunler u
-     LEFT JOIN kategoriler k ON u.kategori_id = k.id
-     ORDER BY u.sira ASC, u.created_at DESC"
-);
+$products = $urunService->getAllWithCategory();
 
 // Istatistikler
 $activeCount = count(array_filter($products, fn($p) => $p['aktif'] == 1));

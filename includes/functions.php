@@ -105,7 +105,9 @@ if (!function_exists('getFlash')) {
  */
 if (!function_exists('getCategories')) {
     function getCategories() {
-        return db()->fetchAll("SELECT * FROM kategoriler ORDER BY sira ASC, ad ASC");
+        return Cache::getInstance()->remember('categories_all', function () {
+            return db()->fetchAll("SELECT * FROM kategoriler ORDER BY sira ASC, ad ASC");
+        }, 3600); // 1 saat cache
     }
 }
 
@@ -115,19 +117,23 @@ if (!function_exists('getCategories')) {
  */
 if (!function_exists('getProducts')) {
     function getProducts($kategori_id = null) {
-        $sql = "SELECT u.*, k.ad as kategori_ad, k.slug as kategori_slug
-                FROM urunler u
-                LEFT JOIN kategoriler k ON u.kategori_id = k.id
-                WHERE u.aktif = 1";
-        $params = [];
+        $cacheKey = 'products_active' . ($kategori_id ? "_{$kategori_id}" : '');
 
-        if ($kategori_id) {
-            $sql .= " AND u.kategori_id = :kategori_id";
-            $params['kategori_id'] = $kategori_id;
-        }
+        return Cache::getInstance()->remember($cacheKey, function () use ($kategori_id) {
+            $sql = "SELECT u.*, k.ad as kategori_ad, k.slug as kategori_slug
+                    FROM urunler u
+                    LEFT JOIN kategoriler k ON u.kategori_id = k.id
+                    WHERE u.aktif = 1";
+            $params = [];
 
-        $sql .= " ORDER BY u.sira ASC, u.created_at DESC";
-        return db()->fetchAll($sql, $params);
+            if ($kategori_id) {
+                $sql .= " AND u.kategori_id = :kategori_id";
+                $params['kategori_id'] = $kategori_id;
+            }
+
+            $sql .= " ORDER BY u.sira ASC, u.created_at DESC";
+            return db()->fetchAll($sql, $params);
+        }, 1800); // 30 dk cache
     }
 }
 
@@ -157,17 +163,18 @@ if (!function_exists('deleteImage')) {
  */
 if (!function_exists('getUnreadMessageCount')) {
     function getUnreadMessageCount() {
-        // mesaj_service() tanımlıysa onu kullan, değilse fallback
-        if (function_exists('mesaj_service')) {
-            try {
-                return mesaj_service()->getUnreadCount();
-            } catch (Throwable) {
-                // Service hatası durumunda fallback
+        return Cache::getInstance()->remember('unread_message_count', function () {
+            // mesaj_service() tanımlıysa onu kullan, değilse fallback
+            if (function_exists('mesaj_service')) {
+                try {
+                    return mesaj_service()->getUnreadCount();
+                } catch (Throwable) {
+                    // Service hatası durumunda fallback
+                }
             }
-        }
-        // Fallback: doğrudan veritabanı sorgusu
-        $result = db()->fetch("SELECT COUNT(*) as count FROM mesajlar WHERE okundu = 0");
-        return $result['count'] ?? 0;
+            $result = db()->fetch("SELECT COUNT(*) as count FROM mesajlar WHERE okundu = 0");
+            return $result['count'] ?? 0;
+        }, 30); // 30 saniye cache — admin panel'de sık erişilir
     }
 }
 

@@ -74,7 +74,9 @@ class MesajService extends BaseService
     {
         // Mesaj var mı kontrol et
         $this->repository->findOrFail($id);
-        return $this->mesajRepository->markAsRead($id);
+        $result = $this->mesajRepository->markAsRead($id);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -84,7 +86,50 @@ class MesajService extends BaseService
      */
     public function markAllAsRead(): int
     {
-        return $this->mesajRepository->markAllAsRead();
+        $result = $this->mesajRepository->markAllAsRead();
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Mesaj oluştur (override for cache invalidation)
+     *
+     * @param array $data
+     * @return array
+     */
+    public function create(array $data): array
+    {
+        $result = parent::create($data);
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Mesaj sil (override for cache invalidation)
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function delete(int|string $id): bool
+    {
+        $result = parent::delete($id);
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Mesaj cache'ini temizle
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        try {
+            $cache = \Cache::getInstance();
+            $cache->forget('unread_message_count');
+        } catch (\Throwable) {
+            // Cache temizleme hatası mesaj işlemini engellememeli
+        }
     }
 
     /**

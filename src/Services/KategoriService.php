@@ -93,7 +93,9 @@ class KategoriService extends BaseService
         // Varsayılan sıra
         $data['sira'] = $data['sira'] ?? 0;
 
-        return parent::create($data);
+        $result = parent::create($data);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -110,7 +112,9 @@ class KategoriService extends BaseService
             $data['slug'] = $this->generateSlug($data['ad'], (int)$id);
         }
 
-        return parent::update($id, $data);
+        $result = parent::update($id, $data);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -130,7 +134,9 @@ class KategoriService extends BaseService
             );
         }
 
-        return parent::delete($id);
+        $result = parent::delete($id);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -142,6 +148,7 @@ class KategoriService extends BaseService
     public function updateOrder(array $orders): void
     {
         $this->kategoriRepository->updateOrder($orders);
+        $this->clearCache();
     }
 
     /**
@@ -175,6 +182,24 @@ class KategoriService extends BaseService
     protected function slugify(string $text): string
     {
         return str_slug($text);
+    }
+
+    /**
+     * Kategori cache'ini temizle
+     *
+     * Kategori oluşturma/güncelleme/silme/sıralama sonrası çağrılır.
+     * getCategories() fonksiyonunun kullandığı cache key'lerini invalidate eder.
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        try {
+            $cache = \Cache::getInstance();
+            $cache->forget('categories_all');
+        } catch (\Throwable) {
+            // Cache temizleme hatası kategori işlemini engellememeli
+        }
     }
 
     /**

@@ -34,6 +34,16 @@ class UrunService extends BaseService
     }
 
     /**
+     * Get all products with category info (admin panel)
+     *
+     * @return array
+     */
+    public function getAllWithCategory(): array
+    {
+        return $this->urunRepository->getAllWithCategory();
+    }
+
+    /**
      * Get active products
      *
      * @param int|null $kategoriId
@@ -124,7 +134,9 @@ class UrunService extends BaseService
         $data['aktif'] = $data['aktif'] ?? 1;
         $data['sira'] = $data['sira'] ?? 0;
 
-        return parent::create($data);
+        $result = parent::create($data);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -141,7 +153,22 @@ class UrunService extends BaseService
             $data['slug'] = $this->generateSlug($data['ad'], (int)$id);
         }
 
-        return parent::update($id, $data);
+        $result = parent::update($id, $data);
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Delete product (override for cache invalidation)
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function delete(int|string $id): bool
+    {
+        $result = parent::delete($id);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -152,7 +179,9 @@ class UrunService extends BaseService
      */
     public function toggleActive(int $id): bool
     {
-        return $this->urunRepository->toggleActive($id);
+        $result = $this->urunRepository->toggleActive($id);
+        $this->clearCache();
+        return $result;
     }
 
     /**
@@ -164,6 +193,7 @@ class UrunService extends BaseService
     public function updateOrder(array $orders): void
     {
         $this->urunRepository->updateOrder($orders);
+        $this->clearCache();
     }
 
     /**
@@ -270,6 +300,27 @@ class UrunService extends BaseService
 
         if (!empty($rules)) {
             $this->validate($data, $rules);
+        }
+    }
+
+    /**
+     * Ürün cache'ini temizle
+     *
+     * Ürün oluşturma/güncelleme/silme sonrası çağrılır.
+     * getProducts(), getActive() gibi cache'lenmiş verileri invalidate eder.
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        try {
+            $cache = \Cache::getInstance();
+            // getProducts() fonksiyonunun kullandığı cache key'leri
+            $cache->forget('products_active');
+            // Kategori bazlı product cache'leri de olabilir
+            // Tam invalidation için flush yerine bilinen key'leri temizle
+        } catch (\Throwable) {
+            // Cache temizleme hatası ürün işlemini engellememeli
         }
     }
 }

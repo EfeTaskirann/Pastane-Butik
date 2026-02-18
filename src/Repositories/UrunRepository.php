@@ -85,6 +85,21 @@ class UrunRepository extends BaseRepository
     }
 
     /**
+     * Get all products with category info (admin panel)
+     *
+     * @return array
+     */
+    public function getAllWithCategory(): array
+    {
+        $sql = "SELECT u.*, k.ad as kategori_ad
+                FROM {$this->table} u
+                LEFT JOIN kategoriler k ON u.kategori_id = k.id
+                ORDER BY u.sira ASC, u.created_at DESC";
+
+        return $this->raw($sql);
+    }
+
+    /**
      * Get by slug
      *
      * @param string $slug
