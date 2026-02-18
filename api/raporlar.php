@@ -16,13 +16,10 @@ if (in_array($origin, $allowedOrigins)) {
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Credentials: true');
 
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 
 // Kimlik doğrulama kontrolü
-session_start();
-
-// JWT sınıfını yükle (API erişimi için)
-require_once __DIR__ . '/../includes/JWT.php';
+secureSessionStart();
 
 // Admin session kontrolü VEYA JWT token kontrolü
 $authenticated = false;

@@ -26,6 +26,17 @@
             "Pastane\\": "src/",
             "Pastane\\Tests\\": "tests/"
         },
+        "classmap": [
+            "includes/JWT.php",
+            "includes/RateLimiter.php",
+            "includes/SecurityAudit.php",
+            "includes/TwoFactorAuth.php",
+            "includes/PasswordPolicy.php",
+            "includes/Logger.php",
+            "includes/Cache.php",
+            "includes/Migration.php",
+            "includes/HealthCheck.php"
+        ],
         "files": [
             "includes/helpers.php"
         ]

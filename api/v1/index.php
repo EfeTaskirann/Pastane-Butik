@@ -10,14 +10,10 @@
 
 declare(strict_types=1);
 
-// Load bootstrap
+// Load bootstrap (Composer autoload + config + security)
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
-// Load API-specific classes
-require_once __DIR__ . '/../../src/Middleware/CorsMiddleware.php';
-require_once __DIR__ . '/../../src/Middleware/RateLimitMiddleware.php';
-require_once __DIR__ . '/../../src/Middleware/ApiAuthMiddleware.php';
-
+// PSR-4 autoloaded via Composer
 use Pastane\Middleware\CorsMiddleware;
 use Pastane\Middleware\RateLimitMiddleware;
 use Pastane\Router\Router;

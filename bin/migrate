@@ -14,9 +14,8 @@
  * @package Pastane
  */
 
-// Bootstrap
+// Bootstrap (Migration sınıfı Composer classmap ile autoload edilir)
 require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/../includes/Migration.php';
 
 // Parse arguments
 $command = $argv[1] ?? 'migrate';

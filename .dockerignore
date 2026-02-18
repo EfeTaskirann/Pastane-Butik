@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Dependencies (installed in build)
+vendor/
+node_modules/
+
+# Testing
+tests/
+coverage/
+.phpunit.result.cache
+.phpunit.cache/
+phpunit.xml
+
+# Development
+.env
+.env.local
+.env.*.local
+.claude/
+*.md
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Storage (created at runtime)
+storage/logs/*
+storage/cache/*
+storage/sessions/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/sessions/.gitkeep

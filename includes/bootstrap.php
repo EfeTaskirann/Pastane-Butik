@@ -29,23 +29,27 @@ if (file_exists(BASE_PATH . '/includes/security.php')) {
     require_once BASE_PATH . '/includes/security.php';
 }
 
-// Güvenlik sınıfları (PSR-4 autoload kapsamında değil)
-$securityClasses = [
-    '/includes/JWT.php',
-    '/includes/RateLimiter.php',
-    '/includes/SecurityAudit.php',
-    '/includes/TwoFactorAuth.php',
-    '/includes/PasswordPolicy.php',
-    '/includes/Logger.php',
-    '/includes/Cache.php',
-];
-foreach ($securityClasses as $classFile) {
-    if (file_exists(BASE_PATH . $classFile)) {
-        require_once BASE_PATH . $classFile;
+// Güvenlik sınıfları — Composer classmap ile autoload ediliyor (composer.json)
+// Fallback: Composer autoload çalışmazsa manuel yükle
+if (!class_exists('JWT', false)) {
+    $securityClasses = [
+        '/includes/JWT.php',
+        '/includes/RateLimiter.php',
+        '/includes/SecurityAudit.php',
+        '/includes/TwoFactorAuth.php',
+        '/includes/PasswordPolicy.php',
+        '/includes/Logger.php',
+        '/includes/Cache.php',
+    ];
+    foreach ($securityClasses as $classFile) {
+        if (file_exists(BASE_PATH . $classFile)) {
+            require_once BASE_PATH . $classFile;
+        }
     }
 }
 
 // Helper fonksiyonlar (service fonksiyonları burada)
+// helpers.php Composer files autoload ile de yüklenir ama require_once ile çift yükleme engellenir
 require_once BASE_PATH . '/includes/helpers.php';
 require_once BASE_PATH . '/includes/functions.php';
 

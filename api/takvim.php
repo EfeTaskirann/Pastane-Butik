@@ -14,7 +14,7 @@ if (in_array($origin, $allowedOrigins)) {
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Credentials: true');
 
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 
 // Yoğunluk kategorileri (Yumuşak Pastel Tonlar)
 function getYogunlukKategorisi($puan) {

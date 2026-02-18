@@ -3,7 +3,7 @@
  * Admin Giris Sayfasi (Guvenlik Guclendirilmis)
  */
 
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 
 // Cikis kontrolu - POST ile CSRF korumalı (GET ile logout CSRF zafiyetine açıktır)

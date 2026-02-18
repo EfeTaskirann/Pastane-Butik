@@ -1,36 +1,45 @@
+# ===========================================
 # Tatlı Düşler - Butik Pasta
-# Production Docker Image
+# Multi-stage Production Docker Image
+# ===========================================
 
 # Stage 1: Build frontend assets
 FROM node:20-alpine AS frontend
+WORKDIR /build
 
-WORKDIR /app
-
-# Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --production=false
 
-# Copy source and build
 COPY assets/ assets/
 COPY vite.config.js ./
 RUN npm run build
 
-# Stage 2: PHP Application
-FROM php:8.2-apache
+# Stage 2: Install PHP dependencies (separate stage for caching)
+FROM composer:2 AS composer
+WORKDIR /build
+
+COPY composer.json composer.lock* ./
+COPY src/ src/
+COPY includes/ includes/
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Stage 3: Production runtime
+FROM php:8.2-apache AS runtime
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
+    libsodium-dev \
     unzip \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
+# Install PHP extensions (sodium for Argon2ID password hashing)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
@@ -38,7 +47,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         mbstring \
         gd \
         zip \
-        opcache
+        opcache \
+        sodium
 
 # Enable Apache modules
 RUN a2enmod rewrite headers expires
@@ -52,39 +62,34 @@ COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy application files
+# Copy application files (respects .dockerignore)
 COPY --chown=www-data:www-data . .
 
-# Copy built frontend assets
-COPY --from=frontend /app/dist ./dist
+# Copy Composer vendor from build stage (replaces runtime install)
+COPY --from=composer /build/vendor ./vendor
 
-# Install Composer dependencies
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copy built frontend assets from frontend stage
+COPY --from=frontend /build/dist ./dist
 
-# Create necessary directories
-RUN mkdir -p storage/logs storage/cache storage/uploads \
-    && chown -R www-data:www-data storage \
-    && chmod -R 775 storage
+# Create necessary directories with proper permissions
+RUN mkdir -p storage/logs storage/cache storage/sessions uploads/products \
+    && chown -R www-data:www-data storage uploads \
+    && chmod -R 775 storage uploads
 
-# Remove development files
+# Remove development files from production image
 RUN rm -rf \
     .env.example \
-    .git \
-    .gitignore \
-    docker \
-    tests \
-    phpunit.xml \
+    .dockerignore \
+    docker/ \
     package*.json \
     vite.config.js \
-    assets
+    node_modules/ \
+    assets/
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost/api/health/live || exit 1
 
-# Expose port
 EXPOSE 80
 
-# Start Apache
 CMD ["apache2-foreground"]
