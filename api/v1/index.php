@@ -18,24 +18,24 @@ use Pastane\Middleware\CorsMiddleware;
 use Pastane\Middleware\RateLimitMiddleware;
 use Pastane\Router\Router;
 
-// Initialize router
-$router = Router::getInstance();
-
-// Apply global middleware
+// Apply CORS headers early (before any output)
 $cors = new CorsMiddleware();
 $cors->handle(function() {});
 
+// Initialize router
+$router = Router::getInstance();
+
 // API Info endpoint
 $router->get('/api/v1', function() {
-    return json_response([
+    json_success([
         'name' => 'Tatlı Düşler API',
         'version' => '1.0.0',
         'status' => 'active',
-        'documentation' => url('/api/docs'),
         'endpoints' => [
             'products' => '/api/v1/urunler',
             'categories' => '/api/v1/kategoriler',
             'orders' => '/api/v1/siparisler',
+            'auth' => '/api/v1/auth',
             'reports' => '/api/v1/raporlar',
         ],
     ]);
@@ -47,28 +47,38 @@ require_once __DIR__ . '/routes/kategoriler.php';
 require_once __DIR__ . '/routes/siparisler.php';
 require_once __DIR__ . '/routes/auth.php';
 
-// Get request path
+// Parse request
 $requestUri = $_SERVER['REQUEST_URI'];
-$basePath = '/api/v1';
-
-// Simple routing based on URI
 $path = parse_url($requestUri, PHP_URL_PATH);
-$path = str_replace($basePath, '', $path);
+
+// Pastane base path'i çıkar (örn: /pastane/api/v1/urunler → /api/v1/urunler)
+$basePath = config('app.base_path', '/pastane');
+if ($basePath && str_starts_with($path, $basePath)) {
+    $path = substr($path, strlen($basePath));
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Rate limiting
+// Rate limiting + Dispatch
 $rateLimiter = new RateLimitMiddleware('api');
 try {
     $rateLimiter->handle(function() use ($router, $method, $path) {
-        // Dispatch request
         try {
-            echo $router->dispatch($method, '/api/v1' . $path);
+            echo $router->dispatch($method, $path);
+        } catch (\Pastane\Exceptions\ValidationException $e) {
+            json_error($e->getMessage(), 422, $e->getErrors());
         } catch (\Pastane\Exceptions\HttpException $e) {
-            http_response_code($e->getStatusCode());
-            json_response($e->toArray(), $e->getStatusCode());
+            json_error($e->getMessage(), $e->getStatusCode());
         }
     });
+} catch (\Pastane\Exceptions\ValidationException $e) {
+    json_error($e->getMessage(), 422, $e->getErrors());
 } catch (\Pastane\Exceptions\HttpException $e) {
-    http_response_code($e->getStatusCode());
-    json_response($e->toArray(), $e->getStatusCode());
+    json_error($e->getMessage(), $e->getStatusCode());
+} catch (\Throwable $e) {
+    // Beklenmeyen hatalar — production'da detay gösterme
+    $message = (defined('DEBUG_MODE') && DEBUG_MODE)
+        ? $e->getMessage()
+        : 'Sunucu hatası oluştu.';
+    json_error($message, 500);
 }

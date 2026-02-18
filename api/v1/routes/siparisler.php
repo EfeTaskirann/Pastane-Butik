@@ -6,6 +6,7 @@
  */
 
 use Pastane\Router\Router;
+use Pastane\Validators\SiparisValidator;
 
 $router = Router::getInstance();
 
@@ -23,9 +24,25 @@ $router->get('/api/v1/siparisler', function() {
     $limit = isset($_GET['limit']) ? min(100, max(1, (int)$_GET['limit'])) : 20;
     $offset = ($page - 1) * $limit;
 
+    // Parametreleri güvenli şekilde al ve doğrula
     $durum = $_GET['durum'] ?? null;
     $baslangic = $_GET['baslangic'] ?? null;
     $bitis = $_GET['bitis'] ?? null;
+
+    // Durum whitelist kontrolü
+    $gecerliDurumlar = ['beklemede', 'onaylandi', 'hazirlaniyor', 'teslim_edildi', 'iptal'];
+    if ($durum !== null && !in_array($durum, $gecerliDurumlar, true)) {
+        json_error('Geçersiz durum filtresi.', 422);
+    }
+
+    // Tarih format kontrolü
+    $datePattern = '/^\d{4}-\d{2}-\d{2}$/';
+    if ($baslangic !== null && !preg_match($datePattern, $baslangic)) {
+        json_error('Geçersiz başlangıç tarihi formatı (YYYY-MM-DD).', 422);
+    }
+    if ($bitis !== null && !preg_match($datePattern, $bitis)) {
+        json_error('Geçersiz bitiş tarihi formatı (YYYY-MM-DD).', 422);
+    }
 
     $where = "1=1";
     $params = [];
@@ -104,60 +121,35 @@ $router->get('/api/v1/siparisler/{id}', function($params) {
  * Yeni sipariş oluştur (Public - Müşteri Siparişi)
  */
 $router->post('/api/v1/siparisler', function() {
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    // Validation
-    $errors = [];
-
-    if (empty($data['ad_soyad'])) {
-        $errors['ad_soyad'] = ['Ad soyad zorunludur.'];
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
 
-    if (empty($data['telefon'])) {
-        $errors['telefon'] = ['Telefon numarası zorunludur.'];
-    } elseif (!validate_phone($data['telefon'])) {
-        $errors['telefon'] = ['Geçerli bir telefon numarası giriniz.'];
-    }
-
-    if (empty($data['tarih'])) {
-        $errors['tarih'] = ['Teslim tarihi zorunludur.'];
-    } else {
-        // Geçmiş tarih kontrolü - bugünden önce olamaz
-        $teslimTarihi = strtotime($data['tarih']);
-        $bugun = strtotime(date('Y-m-d'));
-        if ($teslimTarihi !== false && $teslimTarihi < $bugun) {
-            $errors['tarih'] = ['Teslim tarihi geçmiş bir tarih olamaz.'];
-        }
-    }
-
-    if (empty($data['kategori'])) {
-        $errors['kategori'] = ['Kategori seçimi zorunludur.'];
-    }
-
-    if (!empty($errors)) {
-        json_error('Doğrulama hatası.', 422, $errors);
-    }
+    // Validator ile doğrula
+    $validator = new SiparisValidator('create');
+    $validated = $validator->validate($data);
 
     // GÜVENLİK: birim_fiyat ve toplam_tutar client'tan ALINMAZ
-    // Fiyatlar sunucu tarafında hesaplanmalıdır (admin tarafından sonradan belirlenir)
-    // Client'ın fiyat göndermesi price manipulation saldırısına açıktır
+    // Fiyatlar sunucu tarafında hesaplanmalıdır
 
     // Create order
     $id = db()->insert('siparisler', [
-        'ad_soyad' => $data['ad_soyad'],
-        'telefon' => $data['telefon'],
-        'email' => $data['email'] ?? null,
-        'tarih' => $data['tarih'],
-        'saat' => $data['saat'] ?? null,
-        'kategori' => $data['kategori'],
-        'kisi_sayisi' => $data['kisi_sayisi'] ?? null,
-        'tasarim' => $data['tasarim'] ?? null,
-        'mesaj' => $data['mesaj'] ?? null,
-        'ozel_istekler' => $data['ozel_istekler'] ?? null,
+        'ad_soyad' => $validated['ad_soyad'],
+        'telefon' => $validated['telefon'],
+        'email' => $validated['email'] ?? null,
+        'tarih' => $validated['tarih'],
+        'saat' => $validated['saat'] ?? null,
+        'kategori' => $validated['kategori'],
+        'kisi_sayisi' => $validated['kisi_sayisi'] ?? null,
+        'tasarim' => $validated['tasarim'] ?? null,
+        'mesaj' => $validated['mesaj'] ?? null,
+        'ozel_istekler' => $validated['ozel_istekler'] ?? null,
         'durum' => 'beklemede',
         'birim_fiyat' => 0,
         'toplam_tutar' => 0,
-        'odeme_tipi' => $data['odeme_tipi'] ?? 'online',
+        'odeme_tipi' => $validated['odeme_tipi'] ?? 'online',
         'kanal' => 'site',
     ]);
 
@@ -166,7 +158,7 @@ $router->post('/api/v1/siparisler', function() {
     // Log the order
     logger('Yeni sipariş oluşturuldu', [
         'siparis_id' => $id,
-        'musteri' => $data['ad_soyad'],
+        'musteri' => $validated['ad_soyad'],
     ]);
 
     json_response([
@@ -187,24 +179,25 @@ $router->patch('/api/v1/siparisler/{id}/durum', function($params) {
     }
 
     $id = (int)$params['id'];
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['durum'])) {
-        json_error('Durum zorunludur.', 422);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
 
-    $gecerliDurumlar = ['beklemede', 'onaylandi', 'hazirlaniyor', 'teslim_edildi', 'iptal'];
-    if (!in_array($data['durum'], $gecerliDurumlar)) {
-        json_error('Geçersiz durum.', 422);
-    }
+    // Validator ile durum doğrula
+    $validator = new SiparisValidator('status');
+    $validated = $validator->validate($data);
 
     $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
     if (!$siparis) {
         json_error('Sipariş bulunamadı.', 404);
     }
 
+    $eskiDurum = $siparis['durum'];
+
     db()->update('siparisler', [
-        'durum' => $data['durum'],
+        'durum' => $validated['durum'],
     ], 'id = :id', ['id' => $id]);
 
     $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);
@@ -212,8 +205,8 @@ $router->patch('/api/v1/siparisler/{id}/durum', function($params) {
     // Log status change
     logger('Sipariş durumu güncellendi', [
         'siparis_id' => $id,
-        'eski_durum' => $siparis['durum'] ?? 'bilinmiyor',
-        'yeni_durum' => $data['durum'],
+        'eski_durum' => $eskiDurum,
+        'yeni_durum' => $validated['durum'],
         'admin_id' => $payload['user_id'] ?? null,
     ]);
 
@@ -258,7 +251,6 @@ $router->get('/api/v1/siparisler/istatistikler', function() {
         json_error('Yetkilendirme gerekli.', 401);
     }
 
-    // Today's stats
     $bugun = date('Y-m-d');
     $bugunStats = db()->fetch(
         "SELECT COUNT(*) as siparis_sayisi, COALESCE(SUM(toplam_tutar), 0) as toplam_tutar
@@ -266,7 +258,6 @@ $router->get('/api/v1/siparisler/istatistikler', function() {
         [$bugun]
     );
 
-    // This month's stats
     $ayBaslangic = date('Y-m-01');
     $ayStats = db()->fetch(
         "SELECT COUNT(*) as siparis_sayisi, COALESCE(SUM(toplam_tutar), 0) as toplam_tutar
@@ -274,12 +265,10 @@ $router->get('/api/v1/siparisler/istatistikler', function() {
         [$ayBaslangic]
     );
 
-    // Status counts
     $durumlar = db()->fetchAll(
         "SELECT durum, COUNT(*) as sayi FROM siparisler GROUP BY durum"
     );
 
-    // Pending orders
     $bekleyenler = db()->fetch(
         "SELECT COUNT(*) as sayi FROM siparisler WHERE durum = 'beklemede'"
     );

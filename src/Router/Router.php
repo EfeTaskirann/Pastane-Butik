@@ -251,6 +251,15 @@ class Router
         $route = $this->findRoute($method, $uri);
 
         if ($route === null) {
+            // Check if route exists for other methods (405 Method Not Allowed)
+            $allowedMethods = $this->getAllowedMethods($uri);
+            if (!empty($allowedMethods)) {
+                header('Allow: ' . implode(', ', $allowedMethods));
+                throw HttpException::methodNotAllowed(
+                    'Bu endpoint için ' . $method . ' metodu desteklenmiyor. İzin verilen: ' . implode(', ', $allowedMethods)
+                );
+            }
+
             throw HttpException::notFound('Sayfa bulunamadı.');
         }
 
@@ -260,6 +269,28 @@ class Router
         return $this->executeMiddleware($middlewareStack, function () use ($route) {
             return $route->execute();
         });
+    }
+
+    /**
+     * Get allowed HTTP methods for a given URI
+     *
+     * @param string $uri
+     * @return array
+     */
+    protected function getAllowedMethods(string $uri): array
+    {
+        $allowed = [];
+
+        foreach ($this->routes as $method => $routes) {
+            foreach ($routes as $path => $route) {
+                if ($this->matchRoute($path, $uri) !== false) {
+                    $allowed[] = $method;
+                    break;
+                }
+            }
+        }
+
+        return $allowed;
     }
 
     /**

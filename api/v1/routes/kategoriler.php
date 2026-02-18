@@ -6,6 +6,7 @@
  */
 
 use Pastane\Router\Router;
+use Pastane\Validators\KategoriValidator;
 
 $router = Router::getInstance();
 
@@ -95,31 +96,34 @@ $router->post('/api/v1/kategoriler', function() {
         json_error('Yetkilendirme gerekli.', 401);
     }
 
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    // Validation
-    if (empty($data['ad'])) {
-        json_error('Kategori adı zorunludur.', 422, ['ad' => ['Kategori adı zorunludur.']]);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
 
+    // Validator ile doğrula
+    $validator = new KategoriValidator('create');
+    $validated = $validator->validate($data);
+
     // Generate slug
-    if (empty($data['slug'])) {
-        $data['slug'] = str_slug($data['ad']);
+    if (empty($validated['slug'])) {
+        $validated['slug'] = str_slug($validated['ad']);
     }
 
     // Check if slug exists
-    $existing = db()->fetch("SELECT id FROM kategoriler WHERE slug = ?", [$data['slug']]);
+    $existing = db()->fetch("SELECT id FROM kategoriler WHERE slug = ?", [$validated['slug']]);
     if ($existing) {
-        $data['slug'] .= '-' . time();
+        $validated['slug'] .= '-' . time();
     }
 
     $id = db()->insert('kategoriler', [
-        'ad' => $data['ad'],
-        'slug' => $data['slug'],
-        'aciklama' => $data['aciklama'] ?? null,
-        'resim' => $data['resim'] ?? null,
-        'aktif' => $data['aktif'] ?? 1,
-        'sira' => $data['sira'] ?? 0,
+        'ad' => $validated['ad'],
+        'slug' => $validated['slug'],
+        'aciklama' => $validated['aciklama'] ?? null,
+        'resim' => $validated['resim'] ?? null,
+        'aktif' => $validated['aktif'] ?? 1,
+        'sira' => (int)($validated['sira'] ?? 0),
     ]);
 
     $kategori = db()->fetch("SELECT * FROM kategoriler WHERE id = ?", [$id]);
@@ -142,37 +146,35 @@ $router->put('/api/v1/kategoriler/{id}', function($params) {
     }
 
     $id = (int)$params['id'];
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
+    }
 
     $kategori = db()->fetch("SELECT * FROM kategoriler WHERE id = ?", [$id]);
     if (!$kategori) {
         json_error('Kategori bulunamadı.', 404);
     }
 
+    // Validator ile doğrula (update senaryosu)
+    $validator = new KategoriValidator('update');
+    $validated = $validator->validate($data);
+
+    // Sadece gönderilen alanları güncelle (whitelist)
     $updateData = [];
+    $allowedFields = ['ad', 'slug', 'aciklama', 'resim', 'aktif', 'sira'];
 
-    if (isset($data['ad'])) {
-        $updateData['ad'] = $data['ad'];
-    }
-
-    if (isset($data['slug'])) {
-        $updateData['slug'] = $data['slug'];
-    }
-
-    if (isset($data['aciklama'])) {
-        $updateData['aciklama'] = $data['aciklama'];
-    }
-
-    if (isset($data['resim'])) {
-        $updateData['resim'] = $data['resim'];
-    }
-
-    if (isset($data['aktif'])) {
-        $updateData['aktif'] = $data['aktif'] ? 1 : 0;
-    }
-
-    if (isset($data['sira'])) {
-        $updateData['sira'] = (int)$data['sira'];
+    foreach ($allowedFields as $field) {
+        if (array_key_exists($field, $validated)) {
+            if ($field === 'aktif') {
+                $updateData[$field] = $validated[$field] ? 1 : 0;
+            } elseif ($field === 'sira') {
+                $updateData[$field] = (int)$validated[$field];
+            } else {
+                $updateData[$field] = $validated[$field];
+            }
+        }
     }
 
     if (!empty($updateData)) {

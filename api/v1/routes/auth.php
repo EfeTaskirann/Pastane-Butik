@@ -6,6 +6,7 @@
  */
 
 use Pastane\Router\Router;
+use Pastane\Validators\AuthValidator;
 
 $router = Router::getInstance();
 
@@ -14,11 +15,15 @@ $router = Router::getInstance();
  * Admin girişi
  */
 $router->post('/api/v1/auth/login', function() {
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['kullanici_adi']) || empty($data['sifre'])) {
-        json_error('Kullanıcı adı ve şifre zorunludur.', 422);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
+
+    // Validator ile doğrula
+    $validator = new AuthValidator('login');
+    $validated = $validator->validate($data);
 
     // Rate limit check
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
@@ -27,7 +32,7 @@ $router->post('/api/v1/auth/login', function() {
     if (!$rateLimitResult['allowed']) {
         SecurityAudit::log(SecurityAudit::RATE_LIMIT_EXCEEDED, null, [
             'action' => 'login',
-            'username' => $data['kullanici_adi'],
+            'username' => $validated['kullanici_adi'],
         ]);
 
         json_error('Çok fazla başarısız deneme. Lütfen bekleyin.', 429);
@@ -36,19 +41,19 @@ $router->post('/api/v1/auth/login', function() {
     // Find user
     $kullanici = db()->fetch(
         "SELECT * FROM admin_kullanicilar WHERE kullanici_adi = ?",
-        [$data['kullanici_adi']]
+        [$validated['kullanici_adi']]
     );
 
     if (!$kullanici) {
         RateLimiter::hit('login', $ip);
-        SecurityAudit::logFailedLogin($data['kullanici_adi'], 'user_not_found');
+        SecurityAudit::logFailedLogin($validated['kullanici_adi'], 'user_not_found');
         json_error('Geçersiz kullanıcı adı veya şifre.', 401);
     }
 
     // Check password (kolon adı: sifre_hash)
-    if (!password_verify($data['sifre'], $kullanici['sifre_hash'])) {
+    if (!password_verify($validated['sifre'], $kullanici['sifre_hash'])) {
         RateLimiter::hit('login', $ip);
-        SecurityAudit::logFailedLogin($data['kullanici_adi'], 'invalid_password');
+        SecurityAudit::logFailedLogin($validated['kullanici_adi'], 'invalid_password');
         json_error('Geçersiz kullanıcı adı veya şifre.', 401);
     }
 
@@ -58,9 +63,7 @@ $router->post('/api/v1/auth/login', function() {
     }
 
     // Check if 2FA is enabled
-    if (!empty($kullanici['two_factor_secret']) && empty($data['two_factor_code'])) {
-        // HTTP 401 Unauthorized - 2FA kodu eksik
-        // Client requires_2fa flag'ını kontrol edip 2FA formunu göstermeli
+    if (!empty($kullanici['two_factor_secret']) && empty($validated['two_factor_code'])) {
         json_response([
             'success' => false,
             'requires_2fa' => true,
@@ -69,8 +72,8 @@ $router->post('/api/v1/auth/login', function() {
     }
 
     // Verify 2FA code if provided
-    if (!empty($kullanici['two_factor_secret']) && !empty($data['two_factor_code'])) {
-        if (!TwoFactorAuth::verify($kullanici['two_factor_secret'], $data['two_factor_code'])) {
+    if (!empty($kullanici['two_factor_secret']) && !empty($validated['two_factor_code'])) {
+        if (!TwoFactorAuth::verify($kullanici['two_factor_secret'], $validated['two_factor_code'])) {
             SecurityAudit::log(SecurityAudit::TWO_FACTOR_FAILED, $kullanici['id']);
             json_error('Geçersiz doğrulama kodu.', 401);
         }
@@ -174,11 +177,15 @@ $router->post('/api/v1/auth/change-password', function() {
         json_error('Yetkilendirme gerekli.', 401);
     }
 
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['mevcut_sifre']) || empty($data['yeni_sifre'])) {
-        json_error('Mevcut şifre ve yeni şifre zorunludur.', 422);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
+
+    // Validator ile doğrula
+    $validator = new AuthValidator('change_password');
+    $validated = $validator->validate($data);
 
     // Get current user
     $kullanici = db()->fetch(
@@ -187,23 +194,23 @@ $router->post('/api/v1/auth/change-password', function() {
     );
 
     // Verify current password (kolon adı: sifre_hash)
-    if (!password_verify($data['mevcut_sifre'], $kullanici['sifre_hash'])) {
+    if (!password_verify($validated['mevcut_sifre'], $kullanici['sifre_hash'])) {
         json_error('Mevcut şifreniz hatalı.', 401);
     }
 
-    // Validate new password
-    $validation = PasswordPolicy::validate($data['yeni_sifre'], $kullanici['kullanici_adi']);
-    if (!$validation['valid']) {
-        json_error('Yeni şifre geçersiz.', 422, ['errors' => $validation['errors']]);
+    // Validate new password with PasswordPolicy
+    $policyValidation = PasswordPolicy::validate($validated['yeni_sifre'], $kullanici['kullanici_adi']);
+    if (!$policyValidation['valid']) {
+        json_error('Yeni şifre geçersiz.', 422, ['errors' => $policyValidation['errors']]);
     }
 
     // Check password history
-    if (PasswordPolicy::isInHistory($data['yeni_sifre'], $payload['user_id'])) {
+    if (PasswordPolicy::isInHistory($validated['yeni_sifre'], $payload['user_id'])) {
         json_error('Bu şifreyi daha önce kullandınız. Lütfen farklı bir şifre seçin.', 422);
     }
 
     // Hash and update password
-    $hashedPassword = password_hash($data['yeni_sifre'], PASSWORD_ARGON2ID);
+    $hashedPassword = password_hash($validated['yeni_sifre'], PASSWORD_ARGON2ID);
 
     db()->update('admin_kullanicilar', [
         'sifre_hash' => $hashedPassword,
@@ -268,11 +275,15 @@ $router->post('/api/v1/auth/2fa/verify', function() {
         json_error('Yetkilendirme gerekli.', 401);
     }
 
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['code'])) {
-        json_error('Doğrulama kodu zorunludur.', 422);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
+
+    // Validator ile doğrula
+    $validator = new AuthValidator('2fa_verify');
+    $validated = $validator->validate($data);
 
     // Get temp secret
     $tempSecret = session('2fa_temp_secret');
@@ -281,7 +292,7 @@ $router->post('/api/v1/auth/2fa/verify', function() {
     }
 
     // Verify code
-    if (!TwoFactorAuth::verify($tempSecret, $data['code'])) {
+    if (!TwoFactorAuth::verify($tempSecret, $validated['code'])) {
         json_error('Geçersiz doğrulama kodu.', 401);
     }
 
@@ -309,11 +320,15 @@ $router->post('/api/v1/auth/2fa/disable', function() {
         json_error('Yetkilendirme gerekli.', 401);
     }
 
-    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+    $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['sifre'])) {
-        json_error('Şifrenizi onaylayın.', 422);
+    if ($data === null) {
+        json_error('Geçersiz JSON verisi.', 400);
     }
+
+    // Validator ile doğrula
+    $validator = new AuthValidator('2fa_disable');
+    $validated = $validator->validate($data);
 
     $kullanici = db()->fetch(
         "SELECT * FROM admin_kullanicilar WHERE id = ?",
@@ -321,7 +336,7 @@ $router->post('/api/v1/auth/2fa/disable', function() {
     );
 
     // Verify password (kolon adı: sifre_hash)
-    if (!password_verify($data['sifre'], $kullanici['sifre_hash'])) {
+    if (!password_verify($validated['sifre'], $kullanici['sifre_hash'])) {
         json_error('Şifreniz hatalı.', 401);
     }
 

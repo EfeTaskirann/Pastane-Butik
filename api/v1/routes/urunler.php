@@ -18,8 +18,13 @@ $router->get('/api/v1/urunler', function() {
     $service = new UrunService();
 
     $kategoriId = isset($_GET['kategori_id']) ? (int)$_GET['kategori_id'] : null;
-    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : null;
-    $search = $_GET['q'] ?? null;
+    $limit = isset($_GET['limit']) ? min(100, max(1, (int)$_GET['limit'])) : null;
+    $search = isset($_GET['q']) ? trim((string)$_GET['q']) : null;
+
+    // Search query uzunluk kontrolü
+    if ($search !== null && (mb_strlen($search) < 1 || mb_strlen($search) > 100)) {
+        json_error('Arama sorgusu 1-100 karakter arasında olmalıdır.', 422);
+    }
 
     if ($search) {
         $urunler = $service->search($search, $kategoriId, $limit ?? 20);

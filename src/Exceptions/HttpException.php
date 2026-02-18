@@ -142,6 +142,31 @@ class HttpException extends Exception
     }
 
     /**
+     * Create Method Not Allowed exception
+     *
+     * @param string $message
+     * @param array $allowedMethods
+     * @return static
+     */
+    public static function methodNotAllowed(string $message = 'Metod desteklenmiyor', array $allowedMethods = []): static
+    {
+        $details = !empty($allowedMethods) ? ['allowed_methods' => $allowedMethods] : [];
+        return new static($message, 405, $details);
+    }
+
+    /**
+     * Create Unprocessable Entity (Validation) exception
+     *
+     * @param string $message
+     * @param array $errors
+     * @return static
+     */
+    public static function validationError(string $message = 'Doğrulama hatası', array $errors = []): static
+    {
+        return new static($message, 422, $errors);
+    }
+
+    /**
      * Create Too Many Requests exception
      *
      * @param string $message
