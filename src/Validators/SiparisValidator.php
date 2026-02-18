@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pastane\Validators;
 
+use Pastane\Exceptions\ValidationException;
+
 /**
  * Sipariş Doğrulayıcı
  *
@@ -72,7 +74,7 @@ class SiparisValidator extends BaseValidator
             $bugun = strtotime(date('Y-m-d'));
             if ($teslimTarihi !== false && $teslimTarihi < $bugun) {
                 $this->errors['tarih'][] = 'Teslim tarihi geçmiş bir tarih olamaz.';
-                throw new \Pastane\Exceptions\ValidationException('Doğrulama hatası.', $this->errors);
+                throw new ValidationException('Doğrulama hatası.', $this->errors);
             }
         }
 

@@ -187,19 +187,11 @@ class KategoriService extends BaseService
     /**
      * Kategori cache'ini temizle
      *
-     * Kategori oluşturma/güncelleme/silme/sıralama sonrası çağrılır.
-     * getCategories() fonksiyonunun kullandığı cache key'lerini invalidate eder.
-     *
      * @return void
      */
     protected function clearCache(): void
     {
-        try {
-            $cache = \Cache::getInstance();
-            $cache->forget('categories_all');
-        } catch (\Throwable) {
-            // Cache temizleme hatası kategori işlemini engellememeli
-        }
+        $this->clearCacheKeys('categories_all');
     }
 
     /**

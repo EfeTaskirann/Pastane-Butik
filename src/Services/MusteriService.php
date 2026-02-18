@@ -114,7 +114,7 @@ class MusteriService extends BaseService
     public function recordDeliveredOrder(string $telefon, float $tutar = 0, ?string $isim = null, ?string $adres = null): array
     {
         $musteri = $this->findByPhone($telefon);
-        $hedijeKazanildi = false;
+        $hediyeKazanildi = false;
 
         if ($musteri) {
             // Mevcut müşteri - sipariş sayısını artır
@@ -130,7 +130,7 @@ class MusteriService extends BaseService
             // Her 5 siparişte hediye
             if ($yeniSiparisSayisi % self::ORDERS_PER_GIFT === 0) {
                 $this->musteriRepository->incrementGiftCount((int)$musteri['id']);
-                $hedijeKazanildi = true;
+                $hediyeKazanildi = true;
             }
 
             // Güncel müşteri bilgisini al
@@ -152,7 +152,7 @@ class MusteriService extends BaseService
 
         return [
             'musteri' => $musteri,
-            'hediye_kazanildi' => $hedijeKazanildi
+            'hediye_kazanildi' => $hediyeKazanildi
         ];
     }
 
@@ -167,7 +167,7 @@ class MusteriService extends BaseService
     public function reverseDeliveredOrder(string $telefon, float $tutar = 0): array
     {
         $musteri = $this->findByPhone($telefon);
-        $hedijeGeriAlindi = false;
+        $hediyeGeriAlindi = false;
 
         if (!$musteri || $musteri['siparis_sayisi'] <= 0) {
             return [
@@ -181,7 +181,7 @@ class MusteriService extends BaseService
         // Eğer mevcut sipariş sayısı 5'in katı ise ve hediye varsa, hediyeyi geri al
         if ($mevcutSiparisSayisi % self::ORDERS_PER_GIFT === 0 && $musteri['hediye_hak_edildi'] > 0) {
             $this->musteriRepository->decrementGiftCount((int)$musteri['id']);
-            $hedijeGeriAlindi = true;
+            $hediyeGeriAlindi = true;
         }
 
         // Sipariş sayısını azalt
@@ -192,7 +192,7 @@ class MusteriService extends BaseService
 
         return [
             'musteri' => $musteri,
-            'hediye_geri_alindi' => $hedijeGeriAlindi
+            'hediye_geri_alindi' => $hediyeGeriAlindi
         ];
     }
 

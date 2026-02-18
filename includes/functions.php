@@ -20,14 +20,19 @@ require_once __DIR__ . '/db.php';
 /**
  * Takvim yoğunluk durumu
  * Puana göre CSS class döndürür
+ *
+ * @param int $puan İş yükü puanı
+ * @return array{class: string, label: string}
+ * @deprecated SiparisService::getWorkloadCategory() kullanın
  */
 if (!function_exists('getYogunlukDurumu')) {
     function getYogunlukDurumu($puan) {
-        if ($puan <= 10) {
+        // Eşik değerleri SiparisService sabitleriyle uyumlu tutulmalıdır
+        if ($puan <= \Pastane\Services\SiparisService::WORKLOAD_BOS) {
             return ['class' => 'bos', 'label' => 'Boş'];
-        } elseif ($puan <= 40) {
+        } elseif ($puan <= \Pastane\Services\SiparisService::WORKLOAD_UYGUN) {
             return ['class' => 'uygun', 'label' => 'Uygun'];
-        } elseif ($puan <= 80) {
+        } elseif ($puan <= \Pastane\Services\SiparisService::WORKLOAD_YOGUN) {
             return ['class' => 'yogun', 'label' => 'Yoğun'];
         } else {
             return ['class' => 'cok-yogun', 'label' => 'Çok Yoğun'];

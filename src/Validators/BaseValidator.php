@@ -73,7 +73,12 @@ abstract class BaseValidator
     }
 
     /**
-     * Tekil kural uygula
+     * Tekil kuralı uygula
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param string $rule Kural (örn: "min:3")
+     * @return void
      */
     protected function applyRule(string $field, mixed $value, string $rule): void
     {
@@ -92,7 +97,12 @@ abstract class BaseValidator
     }
 
     /**
-     * Hata ekle
+     * Doğrulama hatası ekle
+     *
+     * @param string $field Alan adı
+     * @param string $rule Kural adı
+     * @param string $defaultMessage Varsayılan hata mesajı
+     * @return void
      */
     protected function addError(string $field, string $rule, string $defaultMessage): void
     {
@@ -106,6 +116,14 @@ abstract class BaseValidator
     // BUILT-IN VALIDATION RULES
     // ========================================
 
+    /**
+     * Zorunlu alan kuralı
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param array $params Kural parametreleri
+     * @return void
+     */
     protected function ruleRequired(string $field, mixed $value, array $params): void
     {
         if ($value === null || $value === '' || $value === []) {
@@ -113,6 +131,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired Zorunlu alan — metin tipi kontrolü */
     protected function ruleString(string $field, mixed $value, array $params): void
     {
         if ($value !== null && !is_string($value)) {
@@ -120,6 +139,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired Zorunlu alan — sayısal kontrol */
     protected function ruleNumeric(string $field, mixed $value, array $params): void
     {
         if ($value !== null && !is_numeric($value)) {
@@ -127,6 +147,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired Zorunlu alan — tam sayı kontrolü */
     protected function ruleInteger(string $field, mixed $value, array $params): void
     {
         if ($value !== null && !is_int($value) && !ctype_digit((string)$value)) {
@@ -134,6 +155,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired Zorunlu alan — e-posta format kontrolü */
     protected function ruleEmail(string $field, mixed $value, array $params): void
     {
         if ($value !== null && $value !== '' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
@@ -141,6 +163,14 @@ abstract class BaseValidator
         }
     }
 
+    /**
+     * Minimum uzunluk/değer kuralı
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param array $params [0] => minimum değer
+     * @return void
+     */
     protected function ruleMin(string $field, mixed $value, array $params): void
     {
         $min = (int)($params[0] ?? 0);
@@ -152,6 +182,14 @@ abstract class BaseValidator
         }
     }
 
+    /**
+     * Maksimum uzunluk/değer kuralı
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param array $params [0] => maksimum değer
+     * @return void
+     */
     protected function ruleMax(string $field, mixed $value, array $params): void
     {
         $max = (int)($params[0] ?? 0);
@@ -163,6 +201,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired İzin verilen değerler listesi kontrolü */
     protected function ruleIn(string $field, mixed $value, array $params): void
     {
         if ($value !== null && !in_array($value, $params, true)) {
@@ -170,6 +209,14 @@ abstract class BaseValidator
         }
     }
 
+    /**
+     * Tarih format kuralı
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param array $params [0] => tarih formatı (varsayılan: Y-m-d)
+     * @return void
+     */
     protected function ruleDate(string $field, mixed $value, array $params): void
     {
         if ($value !== null && $value !== '') {
@@ -181,6 +228,7 @@ abstract class BaseValidator
         }
     }
 
+    /** @see ruleRequired Telefon numarası format kontrolü */
     protected function rulePhone(string $field, mixed $value, array $params): void
     {
         if ($value !== null && $value !== '' && function_exists('validate_phone') && !validate_phone($value)) {
@@ -188,12 +236,21 @@ abstract class BaseValidator
         }
     }
 
+    /**
+     * Nullable kuralı — değer null ise sonraki kuralları atla
+     *
+     * @param string $field Alan adı
+     * @param mixed $value Değer
+     * @param array $params Kural parametreleri
+     * @return void
+     */
     protected function ruleNullable(string $field, mixed $value, array $params): void
     {
         // nullable kuralı: değer null ise diğer kuralları atla
         // Bu kural başka kurallardan önce gelmelidir
     }
 
+    /** @see ruleRequired Boolean tipi kontrolü */
     protected function ruleBoolean(string $field, mixed $value, array $params): void
     {
         if ($value !== null && !in_array($value, [true, false, 0, 1, '0', '1'], true)) {
@@ -202,7 +259,9 @@ abstract class BaseValidator
     }
 
     /**
-     * Hataları al
+     * Doğrulama hatalarını getir
+     *
+     * @return array<string, array<string>> Alan bazlı hata mesajları
      */
     public function getErrors(): array
     {

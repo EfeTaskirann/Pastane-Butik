@@ -534,7 +534,7 @@ abstract class BaseRepository
             $result = $callback($this);
             $this->commit();
             return $result;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->rollback();
             throw $e;
         }

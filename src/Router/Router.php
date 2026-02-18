@@ -420,17 +420,39 @@ class Router
 }
 
 /**
- * Route class
+ * Route
+ *
+ * Tek bir rota tanımını temsil eder.
+ * Middleware, parametreler ve handler bilgisi içerir.
+ *
+ * @package Pastane\Router
+ * @since 1.0.0
  */
 class Route
 {
+    /** @var string HTTP metodu (GET, POST, vb.) */
     protected string $method;
+
+    /** @var string URL pattern */
     protected string $path;
+
+    /** @var mixed Route handler (callable veya [class, method] array) */
     protected $handler;
+
+    /** @var array<string> Middleware listesi */
     protected array $middleware = [];
+
+    /** @var array<string, string> URL parametreleri */
     protected array $params = [];
+
+    /** @var string|null Rota adı */
     protected ?string $name = null;
 
+    /**
+     * @param string $method HTTP metodu
+     * @param string $path URL pattern
+     * @param callable|array $handler İşleyici fonksiyon veya [Controller, method]
+     */
     public function __construct(string $method, string $path, callable|array $handler)
     {
         $this->method = $method;
@@ -438,54 +460,106 @@ class Route
         $this->handler = $handler;
     }
 
+    /**
+     * Rotaya middleware ekle
+     *
+     * @param string|array $middleware Middleware adı veya listesi
+     * @return self Fluent interface
+     */
     public function middleware(string|array $middleware): self
     {
         $this->middleware = array_merge($this->middleware, (array)$middleware);
         return $this;
     }
 
+    /**
+     * Rotaya isim ata
+     *
+     * @param string $name Rota adı
+     * @return self Fluent interface
+     */
     public function name(string $name): self
     {
         $this->name = $name;
         return $this;
     }
 
+    /**
+     * Rota adını getir
+     *
+     * @return string|null
+     */
     public function getName(): ?string
     {
         return $this->name;
     }
 
+    /**
+     * Middleware listesini getir
+     *
+     * @return array<string>
+     */
     public function getMiddleware(): array
     {
         return $this->middleware;
     }
 
+    /**
+     * URL parametrelerini ayarla
+     *
+     * @param array<string, string> $params
+     * @return void
+     */
     public function setParams(array $params): void
     {
         $this->params = $params;
     }
 
+    /**
+     * URL parametrelerini getir
+     *
+     * @return array<string, string>
+     */
     public function getParams(): array
     {
         return $this->params;
     }
 
+    /**
+     * Route handler'ı çalıştır
+     *
+     * Array handler'lar [ControllerClass, 'method'] formatında controller üzerinden,
+     * callable handler'lar doğrudan çağrılır.
+     *
+     * @return mixed Handler sonucu
+     * @throws \RuntimeException Geçersiz handler durumunda
+     */
     public function execute(): mixed
     {
-        if (is_callable($this->handler)) {
-            return call_user_func($this->handler, $this->params);
-        }
+        $handler = $this->handler;
 
-        if (is_array($this->handler)) {
-            [$class, $method] = $this->handler;
+        // Array handler: [ControllerClass::class, 'method']
+        if (is_array($handler)) {
+            [$class, $method] = $handler;
             $controller = new $class();
             $controller->setParams($this->params);
             return $controller->$method();
         }
 
+        // Callable handler (closure, function name, vb.)
+        if (is_callable($handler)) {
+            return call_user_func($handler, $this->params);
+        }
+
         throw new \RuntimeException('Invalid route handler');
     }
 
+    /**
+     * Parametrelerle URL oluştur
+     *
+     * @param array<string, string|int> $params Yerleştirilecek parametreler
+     * @return string Oluşturulan URL
+     */
     public function generateUrl(array $params = []): string
     {
         $url = $this->path;
@@ -495,7 +569,7 @@ class Route
             $url = str_replace("{{$key}?}", (string)$value, $url);
         }
 
-        // Remove unfilled optional params
+        // Doldurulmamış opsiyonel parametreleri temizle
         $url = preg_replace('/\{[a-zA-Z_]+\?\}/', '', $url);
 
         return $url;

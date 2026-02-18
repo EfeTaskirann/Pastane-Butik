@@ -1,23 +1,24 @@
 <?php
 /**
- * Guvenlik Fonksiyonlari
- * Brute-force korumasi, rate limiting, guvenlik headerlari
+ * Güvenlik Fonksiyonları
+ *
+ * Brute-force koruması, rate limiting, güvenlik başlıkları.
+ *
+ * @package Pastane
+ * @since 1.0.0
  */
 
-// Guvenlik sabitleri
+// Güvenlik sabitleri
 if (!defined('MAX_LOGIN_ATTEMPTS')) {
-    define('MAX_LOGIN_ATTEMPTS', 5);          // Maksimum giris denemesi
-    define('LOGIN_LOCKOUT_TIME', 900);        // Kilitleme suresi (15 dakika)
-    define('SESSION_LIFETIME', 3600);         // Session suresi (1 saat)
-    define('CSRF_TOKEN_LIFETIME', 3600);      // CSRF token suresi (1 saat)
-    define('SESSION_NAME', 'PASTANE_SESSION'); // Session adi
+    define('MAX_LOGIN_ATTEMPTS', 5);          // Maksimum giriş denemesi
+    define('LOGIN_LOCKOUT_TIME', 900);        // Kilitleme süresi (15 dakika)
+    define('SESSION_LIFETIME', 3600);         // Session süresi (1 saat)
+    define('CSRF_TOKEN_LIFETIME', 3600);      // CSRF token süresi (1 saat)
+    define('SESSION_NAME', 'PASTANE_SESSION'); // Session adı
     define('MAX_FILE_SIZE', 5242880);         // Maksimum dosya boyutu (5MB)
-    define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif', 'webp']); // Izin verilen uzantilar
+    define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif', 'webp']); // İzin verilen uzantılar
 }
 
-/**
- * Guvenlik headerlarini ayarla
- */
 /**
  * CSP nonce değerini al veya oluştur (request başına tek nonce)
  *
@@ -31,17 +32,24 @@ function getCspNonce(): string {
     return $nonce;
 }
 
+/**
+ * Güvenlik başlıklarını ayarla
+ *
+ * CSP, clickjacking koruması, XSS koruması vb.
+ *
+ * @return void
+ */
 function setSecurityHeaders() {
-    // Clickjacking korumasi
+    // Clickjacking koruması
     header('X-Frame-Options: DENY');
 
-    // XSS korumasi
+    // XSS koruması
     header('X-XSS-Protection: 1; mode=block');
 
-    // MIME type sniffing korumasi
+    // MIME type sniffing koruması
     header('X-Content-Type-Options: nosniff');
 
-    // Referrer politikasi
+    // Referrer politikası
     header('Referrer-Policy: strict-origin-when-cross-origin');
 
     // Permissions Policy
@@ -66,22 +74,26 @@ function setSecurityHeaders() {
     ];
     header("Content-Security-Policy: " . implode('; ', $csp));
 
-    // HTTPS zorlamasi (production icin)
+    // HTTPS zorlaması (production için)
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
     }
 }
 
 /**
- * Guvenli session baslatma
+ * Güvenli session başlatma
+ *
+ * Session fixation ve timeout koruması içerir.
+ *
+ * @return void
  */
 function secureSessionStart() {
-    // Session zaten baslamissa cik
+    // Session zaten başlamışsa çık
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
 
-    // Guvenli session ayarlari
+    // Güvenli session ayarları
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? 1 : 0);
     ini_set('session.use_strict_mode', 1);
@@ -91,7 +103,7 @@ function secureSessionStart() {
     session_name(SESSION_NAME);
     session_start();
 
-    // Session timeout kontrolu
+    // Session timeout kontrolü
     if (isset($_SESSION['last_activity'])) {
         if (time() - $_SESSION['last_activity'] > SESSION_LIFETIME) {
             session_unset();
@@ -101,7 +113,7 @@ function secureSessionStart() {
     }
     $_SESSION['last_activity'] = time();
 
-    // Session fixation korumasi
+    // Session fixation koruması
     if (!isset($_SESSION['created'])) {
         $_SESSION['created'] = time();
     } else if (time() - $_SESSION['created'] > 1800) {
@@ -112,7 +124,11 @@ function secureSessionStart() {
 }
 
 /**
- * Giris sonrasi session yenileme
+ * Giriş sonrası session yenileme
+ *
+ * Session fixation saldırılarına karşı ID yeniler.
+ *
+ * @return void
  */
 function regenerateSessionOnLogin() {
     session_regenerate_id(true);
@@ -121,11 +137,13 @@ function regenerateSessionOnLogin() {
 }
 
 /**
- * IP adresini al
+ * İstemci IP adresini al
  *
  * GÜVENLİK: HTTP_X_FORWARDED_FOR ve HTTP_CLIENT_IP başlıkları
  * client tarafından manipüle edilebilir. Sadece güvenilir proxy'ler
  * arkasında bu başlıklara güvenilmeli.
+ *
+ * @return string
  */
 function getClientIP() {
     // Güvenilir proxy CIDR aralıkları
@@ -176,7 +194,10 @@ function getClientIP() {
 }
 
 /**
- * Basarisiz giris denemesini kaydet
+ * Başarısız giriş denemesini kaydet
+ *
+ * @param string $username Kullanıcı adı
+ * @return void
  */
 function recordFailedLogin($username) {
     $ip = getClientIP();
@@ -187,12 +208,15 @@ function recordFailedLogin($username) {
         [$ip, $username]
     );
 
-    // Eski kayitlari temizle (24 saatten eski)
+    // Eski kayıtları temizle (24 saatten eski)
     $db->query("DELETE FROM login_attempts WHERE deneme_zamani < DATE_SUB(NOW(), INTERVAL 24 HOUR)");
 }
 
 /**
- * Basarisiz giris denemelerini temizle
+ * Başarısız giriş denemelerini temizle
+ *
+ * @param string|null $username Kullanıcı adı (null ise sadece IP bazlı temizle)
+ * @return void
  */
 function clearFailedLogins($username = null) {
     $ip = getClientIP();
@@ -210,13 +234,18 @@ function clearFailedLogins($username = null) {
 
 /**
  * Hesap kilitli mi kontrol et
+ *
+ * IP ve kullanıcı adı bazlı kontrol yapar.
+ *
+ * @param string|null $username Kullanıcı adı
+ * @return bool
  */
 function isAccountLocked($username = null) {
     $ip = getClientIP();
     $db = db();
     $lockoutTime = date('Y-m-d H:i:s', time() - LOGIN_LOCKOUT_TIME);
 
-    // IP bazli kontrol
+    // IP bazlı kontrol
     $ipAttempts = $db->fetch(
         "SELECT COUNT(*) as count FROM login_attempts WHERE ip_adresi = ? AND deneme_zamani > ?",
         [$ip, $lockoutTime]
@@ -226,7 +255,7 @@ function isAccountLocked($username = null) {
         return true;
     }
 
-    // Kullanici adi bazli kontrol
+    // Kullanıcı adı bazlı kontrol
     if ($username) {
         $userAttempts = $db->fetch(
             "SELECT COUNT(*) as count FROM login_attempts WHERE kullanici_adi = ? AND deneme_zamani > ?",
@@ -242,14 +271,17 @@ function isAccountLocked($username = null) {
 }
 
 /**
- * Kalan kilitleme suresini al (saniye)
+ * Kalan kilitleme süresini al
+ *
+ * @param string|null $username Kullanıcı adı
+ * @return int Kalan süre (saniye)
  */
 function getRemainingLockoutTime($username = null) {
     $ip = getClientIP();
     $db = db();
     $lockoutTime = date('Y-m-d H:i:s', time() - LOGIN_LOCKOUT_TIME);
 
-    // En son deneme zamanini bul
+    // En son deneme zamanını bul
     $lastAttempt = $db->fetch(
         "SELECT MAX(deneme_zamani) as last_attempt FROM login_attempts
          WHERE (ip_adresi = ? OR kullanici_adi = ?) AND deneme_zamani > ?",
@@ -267,7 +299,11 @@ function getRemainingLockoutTime($username = null) {
 }
 
 /**
- * Giris logunu kaydet
+ * Giriş logunu kaydet
+ *
+ * @param string $username Kullanıcı adı
+ * @param bool $success Başarılı mı
+ * @return void
  */
 function logLoginAttempt($username, $success) {
     $ip = getClientIP();
@@ -282,7 +318,9 @@ function logLoginAttempt($username, $success) {
 }
 
 /**
- * Gelismis CSRF token olustur
+ * Gelişmiş CSRF token oluştur
+ *
+ * @return string Token değeri
  */
 function generateSecureCSRFToken() {
     $token = bin2hex(random_bytes(32));
@@ -292,14 +330,17 @@ function generateSecureCSRFToken() {
 }
 
 /**
- * CSRF token dogrula (zaman kontrolu ile)
+ * CSRF token doğrula (zaman kontrolü ile)
+ *
+ * @param string $token Doğrulanacak token
+ * @return bool
  */
 function validateSecureCSRFToken($token) {
     if (empty($_SESSION['csrf_token']) || empty($token)) {
         return false;
     }
 
-    // Zaman kontrolu
+    // Zaman kontrolü
     if (isset($_SESSION['csrf_token_time'])) {
         if (time() - $_SESSION['csrf_token_time'] > CSRF_TOKEN_LIFETIME) {
             unset($_SESSION['csrf_token'], $_SESSION['csrf_token_time']);
@@ -311,24 +352,31 @@ function validateSecureCSRFToken($token) {
 }
 
 /**
- * CSRF token input fieldi olustur
- * Not: Ayni sayfada birden fazla form varsa token'i yeniden kullanir
+ * CSRF token input alanı oluştur
+ *
+ * Aynı sayfada birden fazla form varsa mevcut token'ı yeniden kullanır.
+ *
+ * @return string HTML hidden input
  */
 function csrfTokenField() {
-    // Mevcut ve gecerli bir token varsa onu kullan, yoksa yeni olustur
+    // Mevcut ve geçerli bir token varsa onu kullan, yoksa yeni oluştur
     if (!empty($_SESSION['csrf_token']) && isset($_SESSION['csrf_token_time'])) {
-        // Token suresi dolmamissa mevcut token'i kullan
+        // Token süresi dolmamışsa mevcut token'ı kullan
         if (time() - $_SESSION['csrf_token_time'] <= CSRF_TOKEN_LIFETIME) {
             return '<input type="hidden" name="csrf_token" value="' . e($_SESSION['csrf_token']) . '">';
         }
     }
-    // Gecerli token yoksa yeni olustur
+    // Geçerli token yoksa yeni oluştur
     $token = generateSecureCSRFToken();
     return '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
 }
 
 /**
- * Dosya MIME type kontrolu
+ * Dosya MIME type kontrolü
+ *
+ * @param string $filePath Dosya yolu
+ * @param array|null $allowedMimes İzin verilen MIME türleri
+ * @return bool
  */
 function validateFileMimeType($filePath, $allowedMimes = null) {
     if ($allowedMimes === null) {
@@ -348,43 +396,55 @@ function validateFileMimeType($filePath, $allowedMimes = null) {
 }
 
 /**
- * Guvenli dosya yukleme
+ * Güvenli dosya yükleme
+ *
+ * Boyut, uzantı ve MIME type kontrolü yapar.
+ *
+ * @param array $file $_FILES dizisi elemanı
+ * @param string $folder Hedef klasör
+ * @return array ['success' => bool, 'filename' => string|null, 'error' => string|null]
  */
 function secureUploadImage($file, $folder = 'products') {
     if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
-        return ['success' => false, 'error' => 'Dosya secilmedi'];
+        return ['success' => false, 'error' => 'Dosya seçilmedi'];
     }
 
-    // Dosya boyutu kontrolu
+    // Dosya boyutu kontrolü
     if ($file['size'] > MAX_FILE_SIZE) {
-        return ['success' => false, 'error' => 'Dosya cok buyuk (Max: 5MB)'];
+        return ['success' => false, 'error' => 'Dosya çok büyük (Max: 5MB)'];
     }
 
-    // Uzanti kontrolu
+    // Uzantı kontrolü
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($extension, ALLOWED_EXTENSIONS)) {
-        return ['success' => false, 'error' => 'Gecersiz dosya turu'];
+        return ['success' => false, 'error' => 'Geçersiz dosya türü'];
     }
 
-    // MIME type kontrolu
+    // MIME type kontrolü
     if (!validateFileMimeType($file['tmp_name'])) {
-        return ['success' => false, 'error' => 'Gecersiz dosya icerigi'];
+        return ['success' => false, 'error' => 'Geçersiz dosya içeriği'];
     }
 
-    // Guvenli dosya adi olustur
+    // Güvenli dosya adı oluştur
     $filename = bin2hex(random_bytes(16)) . '.' . $extension;
     $uploadPath = UPLOAD_PATH . $filename;
 
-    // Dosyayi tasma
+    // Dosyayı taşı
     if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
         return ['success' => true, 'filename' => $filename];
     }
 
-    return ['success' => false, 'error' => 'Yukleme basarisiz'];
+    return ['success' => false, 'error' => 'Yükleme başarısız'];
 }
 
 /**
  * Input temizleme
+ *
+ * Türe göre uygun sanitize işlemi uygular.
+ *
+ * @param mixed $input Temizlenecek değer
+ * @param string $type Tür (string, email, int, float, url)
+ * @return mixed Temizlenmiş değer
  */
 function sanitizeInput($input, $type = 'string') {
     if (is_array($input)) {
@@ -411,7 +471,12 @@ function sanitizeInput($input, $type = 'string') {
 }
 
 /**
- * Rate limiting kontrolu
+ * Rate limiting kontrolü (session-based)
+ *
+ * @param string $action İşlem adı
+ * @param int $maxRequests Maksimum istek sayısı
+ * @param int $timeWindow Zaman penceresi (saniye)
+ * @return bool İstek izni var mı
  */
 function checkRateLimit($action, $maxRequests = 60, $timeWindow = 60) {
     $ip = getClientIP();
@@ -426,7 +491,7 @@ function checkRateLimit($action, $maxRequests = 60, $timeWindow = 60) {
 
     $data = &$_SESSION[$key];
 
-    // Zaman penceresi gecmisse sifirla
+    // Zaman penceresi geçmişse sıfırla
     if (time() - $data['start_time'] > $timeWindow) {
         $data['count'] = 0;
         $data['start_time'] = time();

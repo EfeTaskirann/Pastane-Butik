@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset name="Pastane PSR-12">
+    <description>PSR-12 coding standard for Pastane project</description>
+
+    <!-- PSR-12 base -->
+    <rule ref="PSR12"/>
+
+    <!-- Paths to check -->
+    <file>src</file>
+
+    <!-- Exclude patterns -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <!-- Line length: warn at 120, error at 150 -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="150"/>
+        </properties>
+    </rule>
+
+    <!-- Show sniff codes in reports -->
+    <arg value="sp"/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+</ruleset>

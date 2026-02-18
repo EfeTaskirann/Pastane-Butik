@@ -311,4 +311,25 @@ abstract class BaseService
     {
         return $this->repository;
     }
+
+    /**
+     * Cache key'lerini temizle
+     *
+     * Service'lerde CRUD sonrası çağrılır.
+     * Alt sınıflar $cacheKeys property'si ile temizlenecek key'leri tanımlar.
+     *
+     * @param string ...$keys Temizlenecek cache key'leri
+     * @return void
+     */
+    protected function clearCacheKeys(string ...$keys): void
+    {
+        try {
+            $cache = \Cache::getInstance();
+            foreach ($keys as $key) {
+                $cache->forget($key);
+            }
+        } catch (\Throwable) {
+            // Cache temizleme hatası business logic'i engellememeli
+        }
+    }
 }

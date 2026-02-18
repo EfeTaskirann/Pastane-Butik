@@ -1,19 +1,19 @@
 <?php
 /**
- * Admin Giris Sayfasi (Guvenlik Guclendirilmis)
+ * Admin Giriş Sayfası (Güvenlik Güçlendirilmiş)
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Cikis kontrolu - POST ile CSRF korumalı (GET ile logout CSRF zafiyetine açıktır)
+// Çıkış kontrolü — POST ile CSRF korumalı (GET ile logout CSRF zafiyetine açıktır)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
     if (verifyCSRF()) {
         logout();
     }
 }
 
-// Zaten giris yapmissa dashboard'a yonlendir
+// Zaten giriş yapmışsa dashboard'a yönlendir
 if (isLoggedIn()) {
     header('Location: dashboard.php');
     exit;
@@ -22,21 +22,21 @@ if (isLoggedIn()) {
 $error = '';
 $locked = false;
 
-// Form gonderildi mi?
+// Form gönderildi mi?
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Rate limiting kontrolu
+    // Rate limiting kontrolü
     if (!checkRateLimit('login', 10, 60)) {
-        $error = 'Cok fazla istek. Lutfen biraz bekleyin.';
+        $error = 'Çok fazla istek. Lütfen biraz bekleyin.';
     } else {
-        // CSRF kontrolu
+        // CSRF kontrolü
         if (!verifyCSRF()) {
-            $error = 'Guvenlik dogrulamasi basarisiz. Lutfen sayfayi yenileyip tekrar deneyin.';
+            $error = 'Güvenlik doğrulaması başarısız. Lütfen sayfayı yenileyip tekrar deneyin.';
         } else {
             $username = trim($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
 
             if (empty($username) || empty($password)) {
-                $error = 'Kullanici adi ve sifre gereklidir.';
+                $error = 'Kullanıcı adı ve şifre gereklidir.';
             } else {
                 $result = login($username, $password);
 
@@ -52,12 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Hesap kilitli mi kontrol et (sayfa yuklendiginde)
+// Hesap kilitli mi kontrol et (sayfa yüklendiğinde)
 $username = trim($_POST['username'] ?? '');
 if (!empty($username) && isAccountLocked($username)) {
     $remaining = getRemainingLockoutTime($username);
     $minutes = ceil($remaining / 60);
-    $error = "Hesap gecici olarak kilitlendi. {$minutes} dakika sonra tekrar deneyin.";
+    $error = "Hesap geçici olarak kilitlendi. {$minutes} dakika sonra tekrar deneyin.";
     $locked = true;
 }
 ?>
@@ -67,7 +67,7 @@ if (!empty($username) && isAccountLocked($username)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Admin Giris - <?= e(SITE_NAME) ?></title>
+    <title>Admin Girişi - <?= e(SITE_NAME) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/admin.css">
@@ -102,7 +102,7 @@ if (!empty($username) && isAccountLocked($username)) {
     <div class="login-wrapper">
         <div class="login-card">
             <h1><?= e(SITE_NAME) ?></h1>
-            <p>Admin Paneline Giris</p>
+            <p>Admin Paneline Giriş</p>
 
             <?php if ($error): ?>
                 <div class="alert <?= $locked ? 'alert-warning' : 'alert-error' ?>">
@@ -114,7 +114,7 @@ if (!empty($username) && isAccountLocked($username)) {
                 <?= csrfTokenField() ?>
 
                 <div class="form-group <?= $locked ? 'disabled' : '' ?>">
-                    <label for="username">Kullanici Adi</label>
+                    <label for="username">Kullanıcı Adı</label>
                     <input type="text" id="username" name="username" class="form-control"
                            required autocomplete="username"
                            value="<?= e($_POST['username'] ?? '') ?>"
@@ -122,7 +122,7 @@ if (!empty($username) && isAccountLocked($username)) {
                 </div>
 
                 <div class="form-group <?= $locked ? 'disabled' : '' ?>">
-                    <label for="password">Sifre</label>
+                    <label for="password">Şifre</label>
                     <input type="password" id="password" name="password" class="form-control"
                            required autocomplete="current-password"
                            <?= $locked ? 'disabled' : '' ?>>
@@ -130,26 +130,26 @@ if (!empty($username) && isAccountLocked($username)) {
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;"
                         <?= $locked ? 'disabled' : '' ?>>
-                    <?= $locked ? 'Hesap Kilitli' : 'Giris Yap' ?>
+                    <?= $locked ? 'Hesap Kilitli' : 'Giriş Yap' ?>
                 </button>
             </form>
 
             <div class="security-notice">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Guvenli baglanti
+                Güvenli bağlantı
             </div>
 
             <p style="margin-top: 1rem; font-size: 0.8rem;">
-                <a href="../index.php" style="color: var(--admin-primary);">&larr; Siteye Don</a>
+                <a href="../index.php" style="color: var(--admin-primary);">&larr; Siteye Dön</a>
             </p>
         </div>
     </div>
 
     <script nonce="<?= getCspNonce() ?>">
-        // Kilitli ise geri sayim goster
+        // Kilitli ise geri sayım göster
         <?php if ($locked && isset($remaining) && $remaining > 0): ?>
         (function() {
             let remaining = <?= $remaining ?>;

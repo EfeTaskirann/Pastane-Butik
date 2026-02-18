@@ -18,6 +18,11 @@ use Pastane\Exceptions\ValidationException;
 class UrunService extends BaseService
 {
     /**
+     * Arama için minimum karakter sayısı
+     */
+    private const MIN_SEARCH_LENGTH = 2;
+
+    /**
      * @var UrunRepository
      */
     protected UrunRepository $urunRepository;
@@ -98,7 +103,7 @@ class UrunService extends BaseService
      */
     public function search(string $query, ?int $kategoriId = null, int $limit = 20): array
     {
-        if (strlen($query) < 2) {
+        if (strlen($query) < self::MIN_SEARCH_LENGTH) {
             return [];
         }
 
@@ -306,21 +311,10 @@ class UrunService extends BaseService
     /**
      * Ürün cache'ini temizle
      *
-     * Ürün oluşturma/güncelleme/silme sonrası çağrılır.
-     * getProducts(), getActive() gibi cache'lenmiş verileri invalidate eder.
-     *
      * @return void
      */
     protected function clearCache(): void
     {
-        try {
-            $cache = \Cache::getInstance();
-            // getProducts() fonksiyonunun kullandığı cache key'leri
-            $cache->forget('products_active');
-            // Kategori bazlı product cache'leri de olabilir
-            // Tam invalidation için flush yerine bilinen key'leri temizle
-        } catch (\Throwable) {
-            // Cache temizleme hatası ürün işlemini engellememeli
-        }
+        $this->clearCacheKeys('products_active');
     }
 }

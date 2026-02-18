@@ -36,6 +36,18 @@ class SiparisService extends BaseService
     public const CATEGORIES = ['pasta', 'cupcake', 'cheesecake', 'kurabiye', 'ozel'];
 
     /**
+     * İş yükü eşik değerleri (puan)
+     */
+    public const WORKLOAD_BOS = 10;
+    public const WORKLOAD_UYGUN = 40;
+    public const WORKLOAD_YOGUN = 80;
+
+    /**
+     * Arama için minimum karakter sayısı
+     */
+    public const MIN_SEARCH_LENGTH = 2;
+
+    /**
      * @var SiparisRepository
      */
     protected SiparisRepository $siparisRepository;
@@ -54,7 +66,7 @@ class SiparisService extends BaseService
     public function __construct(?SiparisRepository $repository = null, ?MusteriService $musteriService = null)
     {
         $this->siparisRepository = $repository ?? new SiparisRepository();
-        $this->musteriService = $musteriService ?? new MusteriService();
+        $this->musteriService = $musteriService ?? musteri_service();
         $this->repository = $this->siparisRepository;
     }
 
@@ -143,8 +155,8 @@ class SiparisService extends BaseService
         // Durumu güncelle
         $this->siparisRepository->updateStatus($id, $yeniDurum);
 
-        $hedijeKazanildi = false;
-        $hedijeGeriAlindi = false;
+        $hediyeKazanildi = false;
+        $hediyeGeriAlindi = false;
         $mesaj = self::STATUSES[$yeniDurum] . ' olarak işaretlendi.';
 
         // Müşteri sadakat programı entegrasyonu
@@ -163,9 +175,9 @@ class SiparisService extends BaseService
                 // Müşteri kaydedildi olarak işaretle
                 $this->siparisRepository->markCustomerRecorded($id);
 
-                $hedijeKazanildi = $result['hediye_kazanildi'];
+                $hediyeKazanildi = $result['hediye_kazanildi'];
 
-                if ($hedijeKazanildi) {
+                if ($hediyeKazanildi) {
                     $mesaj = 'Sipariş teslim edildi! 🎉 Bu müşteri ' . $result['musteri']['siparis_sayisi'] . '. siparişini tamamladı ve HEDİYE kazandı!';
                 } else {
                     $mesaj = 'Sipariş teslim edildi. Müşterinin toplam sipariş sayısı: ' . $result['musteri']['siparis_sayisi'];
@@ -178,9 +190,9 @@ class SiparisService extends BaseService
                     (float)($siparis['toplam_tutar'] ?? 0)
                 );
 
-                $hedijeGeriAlindi = $result['hediye_geri_alindi'];
+                $hediyeGeriAlindi = $result['hediye_geri_alindi'];
 
-                if ($hedijeGeriAlindi) {
+                if ($hediyeGeriAlindi) {
                     $mesaj = 'Sipariş durumu güncellendi. Müşteri sipariş sayısı ve hediye durumu düzeltildi.';
                 } else {
                     $mesaj = 'Sipariş durumu güncellendi. Müşteri sipariş sayısı düzeltildi.';
@@ -194,8 +206,8 @@ class SiparisService extends BaseService
         return [
             'siparis' => $siparis,
             'mesaj' => $mesaj,
-            'hediye_kazanildi' => $hedijeKazanildi,
-            'hediye_geri_alindi' => $hedijeGeriAlindi
+            'hediye_kazanildi' => $hediyeKazanildi,
+            'hediye_geri_alindi' => $hediyeGeriAlindi
         ];
     }
 
@@ -274,13 +286,13 @@ class SiparisService extends BaseService
      */
     public function getWorkloadCategory(int $puan): array
     {
-        if ($puan <= 10) {
+        if ($puan <= self::WORKLOAD_BOS) {
             return ['durum' => 'bos', 'label' => 'Boş', 'renk' => '#B8D4B8'];
         }
-        if ($puan <= 40) {
+        if ($puan <= self::WORKLOAD_UYGUN) {
             return ['durum' => 'uygun', 'label' => 'Uygun', 'renk' => '#B8D4E8'];
         }
-        if ($puan <= 80) {
+        if ($puan <= self::WORKLOAD_YOGUN) {
             return ['durum' => 'yogun', 'label' => 'Yoğun', 'renk' => '#F5D4B0'];
         }
 

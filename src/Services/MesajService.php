@@ -124,12 +124,7 @@ class MesajService extends BaseService
      */
     protected function clearCache(): void
     {
-        try {
-            $cache = \Cache::getInstance();
-            $cache->forget('unread_message_count');
-        } catch (\Throwable) {
-            // Cache temizleme hatası mesaj işlemini engellememeli
-        }
+        $this->clearCacheKeys('unread_message_count');
     }
 
     /**
