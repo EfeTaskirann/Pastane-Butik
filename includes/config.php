@@ -15,11 +15,18 @@ Env::load(dirname(__DIR__));
 if (!function_exists('config')) {
     function config($key = null, $default = null) {
         $config = [
+            // App
             'app.url' => defined('SITE_URL') ? SITE_URL : env('APP_URL', 'http://localhost/pastane'),
             'app.name' => defined('SITE_NAME') ? SITE_NAME : env('APP_NAME', 'Tatlı Düşler'),
             'app.debug' => defined('DEBUG_MODE') ? DEBUG_MODE : env('APP_DEBUG', false),
             'app.timezone' => env('APP_TIMEZONE', 'Europe/Istanbul'),
-            'app.asset_version' => '1.0',
+            'app.asset_version' => '1.1',
+
+            // Security
+            'security.jwt.expiration' => (int) env('SESSION_LIFETIME', 3600),
+            'security.cors.allowed_origins' => [env('APP_URL', 'http://localhost/pastane')],
+
+            // Cache
             'cache.driver' => env('CACHE_DRIVER', 'file'),
             'cache.path' => env('CACHE_PATH', 'storage/cache'),
             'cache.ttl' => 3600,

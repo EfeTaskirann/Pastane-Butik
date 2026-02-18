@@ -6,9 +6,11 @@
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Cikis kontrolu
-if (isset($_GET['logout'])) {
-    logout();
+// Cikis kontrolu - POST ile CSRF korumalı (GET ile logout CSRF zafiyetine açıktır)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    if (verifyCSRF()) {
+        logout();
+    }
 }
 
 // Zaten giris yapmissa dashboard'a yonlendir
@@ -146,7 +148,7 @@ if (!empty($username) && isAccountLocked($username)) {
         </div>
     </div>
 
-    <script>
+    <script nonce="<?= getCspNonce() ?>">
         // Kilitli ise geri sayim goster
         <?php if ($locked && isset($remaining) && $remaining > 0): ?>
         (function() {

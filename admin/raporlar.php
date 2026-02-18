@@ -707,7 +707,7 @@ $renkler = [
 <!-- Chart.js (Local) -->
 <script src="../assets/js/vendor/chart.min.js"></script>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 // Grafik renkleri
 const renkler = {
     primary: '#D4A5A5',
@@ -864,7 +864,7 @@ new Chart(document.getElementById('kanalChart'), {
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 // Modal fonksiyonları
 const modal = document.getElementById('raporModal');
 const modalTitle = document.getElementById('modalTitle');

@@ -45,8 +45,8 @@ $router->post('/api/v1/auth/login', function() {
         json_error('Geçersiz kullanıcı adı veya şifre.', 401);
     }
 
-    // Check password
-    if (!password_verify($data['sifre'], $kullanici['sifre'])) {
+    // Check password (kolon adı: sifre_hash)
+    if (!password_verify($data['sifre'], $kullanici['sifre_hash'])) {
         RateLimiter::hit('login', $ip);
         SecurityAudit::logFailedLogin($data['kullanici_adi'], 'invalid_password');
         json_error('Geçersiz kullanıcı adı veya şifre.', 401);
@@ -126,14 +126,17 @@ $router->post('/api/v1/auth/refresh', function() {
  * Çıkış yap (token invalidation için)
  */
 $router->post('/api/v1/auth/logout', function() {
+    $token = JWT::getTokenFromHeader();
     $payload = JWT::requireAuth();
 
     if ($payload) {
+        // Token'ı blacklist'e ekle (gerçek server-side invalidation)
+        if ($token) {
+            JWT::invalidate($token);
+        }
+
         SecurityAudit::logLogout($payload['user_id']);
     }
-
-    // Note: JWT'ler stateless olduğu için server-side invalidation için
-    // blacklist sistemi gerekir (Redis/DB). Şimdilik sadece log atıyoruz.
 
     json_success(null, 'Çıkış yapıldı.');
 });
@@ -183,8 +186,8 @@ $router->post('/api/v1/auth/change-password', function() {
         [$payload['user_id']]
     );
 
-    // Verify current password
-    if (!password_verify($data['mevcut_sifre'], $kullanici['sifre'])) {
+    // Verify current password (kolon adı: sifre_hash)
+    if (!password_verify($data['mevcut_sifre'], $kullanici['sifre_hash'])) {
         json_error('Mevcut şifreniz hatalı.', 401);
     }
 
@@ -203,7 +206,7 @@ $router->post('/api/v1/auth/change-password', function() {
     $hashedPassword = password_hash($data['yeni_sifre'], PASSWORD_ARGON2ID);
 
     db()->update('admin_kullanicilar', [
-        'sifre' => $hashedPassword,
+        'sifre_hash' => $hashedPassword,
     ], 'id = :id', ['id' => $payload['user_id']]);
 
     // Add to password history
@@ -317,8 +320,8 @@ $router->post('/api/v1/auth/2fa/disable', function() {
         [$payload['user_id']]
     );
 
-    // Verify password
-    if (!password_verify($data['sifre'], $kullanici['sifre'])) {
+    // Verify password (kolon adı: sifre_hash)
+    if (!password_verify($data['sifre'], $kullanici['sifre_hash'])) {
         json_error('Şifreniz hatalı.', 401);
     }
 

@@ -29,6 +29,22 @@ if (file_exists(BASE_PATH . '/includes/security.php')) {
     require_once BASE_PATH . '/includes/security.php';
 }
 
+// Güvenlik sınıfları (PSR-4 autoload kapsamında değil)
+$securityClasses = [
+    '/includes/JWT.php',
+    '/includes/RateLimiter.php',
+    '/includes/SecurityAudit.php',
+    '/includes/TwoFactorAuth.php',
+    '/includes/PasswordPolicy.php',
+    '/includes/Logger.php',
+    '/includes/Cache.php',
+];
+foreach ($securityClasses as $classFile) {
+    if (file_exists(BASE_PATH . $classFile)) {
+        require_once BASE_PATH . $classFile;
+    }
+}
+
 // Helper fonksiyonlar (service fonksiyonları burada)
 require_once BASE_PATH . '/includes/helpers.php';
 require_once BASE_PATH . '/includes/functions.php';

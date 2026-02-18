@@ -151,18 +151,14 @@ return new class {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
-        // Varsayılan admin kullanıcısı (sadece tablo yeni oluşturulduysa ekle)
-        // Mevcut tablolarda zaten admin var, bu yüzden IGNORE kullanıyoruz
-        try {
-            $defaultPassword = password_hash('admin123', PASSWORD_ARGON2ID);
-            $stmt = $db->prepare("
-                INSERT IGNORE INTO admin_kullanicilar (kullanici_adi, sifre_hash)
-                VALUES ('admin', ?)
-            ");
-            $stmt->execute([$defaultPassword]);
-        } catch (PDOException $e) {
-            // Tablo yapısı farklıysa sessizce devam et
-        }
+        // GÜVENLİK: Varsayılan admin kullanıcısı artık hardcoded şifre ile oluşturulmaz.
+        // İlk kurulumda admin kullanıcısı CLI aracılığıyla güvenli bir şifre ile oluşturulmalıdır:
+        //   php cli/create-admin.php --username=admin --password=<güçlü-şifre>
+        // Veya migration sonrası aşağıdaki SQL ile:
+        //   INSERT INTO admin_kullanicilar (kullanici_adi, sifre_hash)
+        //   VALUES ('admin', '<password_hash_output>');
+        //
+        // Eski hardcoded 'admin123' şifresi GÜVENLİK ZAFİYETİ oluşturuyordu.
     }
 
     /**

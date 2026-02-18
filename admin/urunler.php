@@ -313,7 +313,7 @@ $inactiveCount = count($products) - $activeCount;
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 let deleteId = null;
 
 function toggleProduct(id) {

@@ -45,6 +45,21 @@ abstract class BaseRepository
     protected array $hidden = [];
 
     /**
+     * @var array Sortable columns whitelist (override in child classes)
+     * If empty, all valid column names are allowed for ORDER BY.
+     */
+    protected array $sortableColumns = [];
+
+    /**
+     * @var array Allowed SQL operators for WHERE conditions
+     */
+    protected array $allowedOperators = [
+        '=', '!=', '<>', '<', '>', '<=', '>=',
+        'LIKE', 'NOT LIKE', 'IN', 'NOT IN',
+        'IS NULL', 'IS NOT NULL', 'BETWEEN',
+    ];
+
+    /**
      * @var bool Use soft deletes
      */
     protected bool $softDeletes = false;
@@ -97,6 +112,8 @@ abstract class BaseRepository
         }
 
         if ($orderBy) {
+            $orderBy = $this->validateOrderBy($orderBy);
+            $direction = $this->validateDirection($direction);
             $sql .= " ORDER BY {$orderBy} {$direction}";
         }
 
@@ -156,6 +173,7 @@ abstract class BaseRepository
      */
     public function findBy(string $column, mixed $value, array $columns = ['*']): ?array
     {
+        $column = $this->validateColumnName($column);
         $cols = $this->buildColumns($columns);
         $sql = "SELECT {$cols} FROM {$this->table} WHERE {$column} = ?";
 
@@ -180,6 +198,7 @@ abstract class BaseRepository
      */
     public function findAllBy(string $column, mixed $value, array $columns = ['*']): array
     {
+        $column = $this->validateColumnName($column);
         $cols = $this->buildColumns($columns);
         $sql = "SELECT {$cols} FROM {$this->table} WHERE {$column} = ?";
 
@@ -223,10 +242,14 @@ abstract class BaseRepository
         }
 
         if ($orderBy) {
+            $orderBy = $this->validateOrderBy($orderBy);
+            $direction = $this->validateDirection($direction);
             $sql .= " ORDER BY {$orderBy} {$direction}";
         }
 
         if ($limit !== null) {
+            $limit = max(1, (int)$limit);
+            $offset = max(0, (int)$offset);
             $sql .= " LIMIT {$limit} OFFSET {$offset}";
         }
 
@@ -533,10 +556,11 @@ abstract class BaseRepository
             return '*';
         }
 
-        // Filter out hidden columns
+        // Filter out hidden columns and validate each column name
         $columns = array_diff($columns, $this->hidden);
+        $validatedColumns = array_map([$this, 'validateColumnName'], $columns);
 
-        return implode(', ', $columns);
+        return implode(', ', $validatedColumns);
     }
 
     /**
@@ -555,9 +579,12 @@ abstract class BaseRepository
         $params = [];
 
         foreach ($conditions as $column => $value) {
+            $column = $this->validateColumnName($column);
+
             if (is_array($value)) {
                 // ['column' => ['operator', 'value']]
                 [$operator, $val] = $value;
+                $operator = $this->validateOperator($operator);
                 $clauses[] = "{$column} {$operator} ?";
                 $params[] = $val;
             } elseif ($value === null) {
@@ -606,5 +633,80 @@ abstract class BaseRepository
     public function getPrimaryKey(): string
     {
         return $this->primaryKey;
+    }
+
+    // ========================================
+    // SQL INJECTION PREVENTION METHODS
+    // ========================================
+
+    /**
+     * Validate column name to prevent SQL injection
+     *
+     * Only allows alphanumeric characters, underscores, dots (table.column)
+     *
+     * @param string $column
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    protected function validateColumnName(string $column): string
+    {
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $column)) {
+            throw new \InvalidArgumentException("Invalid column name: {$column}");
+        }
+        return $column;
+    }
+
+    /**
+     * Validate ORDER BY column against sortable whitelist
+     *
+     * If $sortableColumns is defined in child class, only those columns are allowed.
+     * Otherwise falls back to basic column name validation.
+     *
+     * @param string $column
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    protected function validateOrderBy(string $column): string
+    {
+        $this->validateColumnName($column);
+
+        if (!empty($this->sortableColumns) && !in_array($column, $this->sortableColumns, true)) {
+            throw new \InvalidArgumentException(
+                "Column '{$column}' is not allowed for sorting. Allowed: " . implode(', ', $this->sortableColumns)
+            );
+        }
+
+        return $column;
+    }
+
+    /**
+     * Validate sort direction (only ASC or DESC allowed)
+     *
+     * @param string $direction
+     * @return string
+     */
+    protected function validateDirection(string $direction): string
+    {
+        $direction = strtoupper(trim($direction));
+        if (!in_array($direction, ['ASC', 'DESC'], true)) {
+            return 'ASC';
+        }
+        return $direction;
+    }
+
+    /**
+     * Validate SQL operator against whitelist
+     *
+     * @param string $operator
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    protected function validateOperator(string $operator): string
+    {
+        $operator = strtoupper(trim($operator));
+        if (!in_array($operator, $this->allowedOperators, true)) {
+            throw new \InvalidArgumentException("Invalid SQL operator: {$operator}");
+        }
+        return $operator;
     }
 }

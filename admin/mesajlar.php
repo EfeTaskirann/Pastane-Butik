@@ -426,7 +426,7 @@ $totalCount = count($messages);
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 let currentMessage = null;
 
 function openMessageModal(mesaj) {

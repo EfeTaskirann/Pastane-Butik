@@ -138,6 +138,10 @@ $router->post('/api/v1/siparisler', function() {
         json_error('Doğrulama hatası.', 422, $errors);
     }
 
+    // GÜVENLİK: birim_fiyat ve toplam_tutar client'tan ALINMAZ
+    // Fiyatlar sunucu tarafında hesaplanmalıdır (admin tarafından sonradan belirlenir)
+    // Client'ın fiyat göndermesi price manipulation saldırısına açıktır
+
     // Create order
     $id = db()->insert('siparisler', [
         'ad_soyad' => $data['ad_soyad'],
@@ -151,10 +155,10 @@ $router->post('/api/v1/siparisler', function() {
         'mesaj' => $data['mesaj'] ?? null,
         'ozel_istekler' => $data['ozel_istekler'] ?? null,
         'durum' => 'beklemede',
-        'birim_fiyat' => $data['birim_fiyat'] ?? 0,
-        'toplam_tutar' => $data['toplam_tutar'] ?? 0,
+        'birim_fiyat' => 0,
+        'toplam_tutar' => 0,
         'odeme_tipi' => $data['odeme_tipi'] ?? 'online',
-        'kanal' => $data['kanal'] ?? 'site',
+        'kanal' => 'site',
     ]);
 
     $siparis = db()->fetch("SELECT * FROM siparisler WHERE id = ?", [$id]);

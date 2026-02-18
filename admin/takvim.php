@@ -1112,7 +1112,7 @@ $kategoriLabels = [
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 // Sipariş verileri
 const siparisler = <?= json_encode(array_values($gunSiparisleri), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const kategoriLabels = <?= json_encode($kategoriLabels, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;

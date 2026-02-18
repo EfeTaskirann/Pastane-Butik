@@ -48,10 +48,13 @@ class CorsMiddleware implements MiddlewareInterface
     {
         $config = $config ?? config('security.cors', []);
 
-        $this->allowedOrigins = $config['allowed_origins'] ?? ['*'];
+        // GÜVENLİK: Wildcard '*' yerine .env'den APP_URL kullanılır
+        // Production'da mutlaka spesifik origin'ler tanımlanmalıdır
+        $defaultOrigin = env('APP_URL', 'http://localhost/pastane');
+        $this->allowedOrigins = $config['allowed_origins'] ?? [$defaultOrigin];
         $this->allowedMethods = $config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
         $this->allowedHeaders = $config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With'];
-        $this->allowCredentials = $config['allow_credentials'] ?? false;
+        $this->allowCredentials = $config['allow_credentials'] ?? true;
         $this->maxAge = $config['max_age'] ?? 86400;
     }
 

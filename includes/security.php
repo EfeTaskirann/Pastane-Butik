@@ -18,6 +18,19 @@ if (!defined('MAX_LOGIN_ATTEMPTS')) {
 /**
  * Guvenlik headerlarini ayarla
  */
+/**
+ * CSP nonce değerini al veya oluştur (request başına tek nonce)
+ *
+ * @return string
+ */
+function getCspNonce(): string {
+    static $nonce = null;
+    if ($nonce === null) {
+        $nonce = base64_encode(random_bytes(16));
+    }
+    return $nonce;
+}
+
 function setSecurityHeaders() {
     // Clickjacking korumasi
     header('X-Frame-Options: DENY');
@@ -31,12 +44,16 @@ function setSecurityHeaders() {
     // Referrer politikasi
     header('Referrer-Policy: strict-origin-when-cross-origin');
 
-    // Content Security Policy (güçlendirilmiş)
-    // NOT: unsafe-inline şimdilik gerekli (inline script/style kullanımı var)
-    // TODO: Inline scriptleri harici dosyalara taşıyınca nonce kullanımına geçilebilir
+    // Permissions Policy
+    header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+
+    // Content Security Policy (nonce-based)
+    // Nonce sistemi sayesinde 'unsafe-inline' kaldırıldı (script-src için)
+    // Style için unsafe-inline hala gerekli (Google Fonts + inline styles)
+    $nonce = getCspNonce();
     $csp = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "script-src 'self' 'nonce-{$nonce}'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
@@ -48,9 +65,6 @@ function setSecurityHeaders() {
         "upgrade-insecure-requests",        // HTTP isteklerini HTTPS'e yükselt
     ];
     header("Content-Security-Policy: " . implode('; ', $csp));
-
-    // X-Frame-Options (eski tarayıcılar için yedek)
-    header('X-Frame-Options: DENY');
 
     // HTTPS zorlamasi (production icin)
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {

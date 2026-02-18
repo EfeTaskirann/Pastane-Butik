@@ -371,7 +371,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 let deleteId = null;
 
 function deleteCategory(id, name) {

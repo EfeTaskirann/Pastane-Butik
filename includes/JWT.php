@@ -27,24 +27,32 @@ class JWT
     private static string $issuer = 'pastane';
 
     /**
+     * @var array In-memory blacklisted token IDs (jti) for current request
+     */
+    private static array $blacklist = [];
+
+    /**
      * Initialize JWT with secret key
      *
-     * GÜVENLİK: APP_KEY mutlaka .env dosyasında tanımlanmalı!
+     * GÜVENLİK: JWT_SECRET (veya fallback APP_KEY) .env dosyasında tanımlanmalı!
+     * JWT_SECRET ayrı bir key olmalı, APP_KEY ile aynı olmamalıdır.
      *
      * @param string|null $secretKey
      * @return void
-     * @throws RuntimeException APP_KEY tanımlı değilse
+     * @throws RuntimeException Secret key tanımlı değilse
      */
     public static function init(?string $secretKey = null): void
     {
-        $key = $secretKey ?? env('APP_KEY', '');
+        // JWT_SECRET varsa onu kullan, yoksa APP_KEY'e fallback yap
+        $key = $secretKey ?? env('JWT_SECRET', '') ?: env('APP_KEY', '');
 
         // Güvenlik kontrolü: Varsayılan veya boş key kabul edilmez
         if (empty($key) || $key === 'default-secret-key-change-in-production' ||
-            str_starts_with($key, 'base64:GENERATE')) {
+            str_starts_with($key, 'base64:GENERATE') ||
+            $key === 'GENERATE_A_SECURE_JWT_SECRET_HERE') {
             throw new RuntimeException(
-                'GÜVENLİK HATASI: APP_KEY .env dosyasında tanımlanmalı! ' .
-                'Güvenli bir key oluşturmak için: php -r "echo base64_encode(random_bytes(32));"'
+                'GÜVENLİK HATASI: JWT_SECRET .env dosyasında tanımlanmalı! ' .
+                'Güvenli bir key oluşturmak için: php -r "echo bin2hex(random_bytes(32));"'
             );
         }
 
@@ -141,6 +149,11 @@ class JWT
 
         // Check expiration
         if (isset($payload['exp']) && $payload['exp'] < time()) {
+            return false;
+        }
+
+        // Check token blacklist (jti)
+        if (isset($payload['jti']) && self::isBlacklisted($payload['jti'])) {
             return false;
         }
 
@@ -288,5 +301,95 @@ class JWT
     public static function setExpiration(int $seconds): void
     {
         self::$expiration = $seconds;
+    }
+
+    // ========================================
+    // TOKEN BLACKLIST (Logout Invalidation)
+    // ========================================
+
+    /**
+     * Blacklist a token by its JTI (token ID)
+     * Stores in database for persistence across requests
+     *
+     * @param string $jti Token unique identifier
+     * @param int $expiresAt Token expiration timestamp
+     * @return bool
+     */
+    public static function blacklist(string $jti, int $expiresAt): bool
+    {
+        // In-memory cache
+        self::$blacklist[$jti] = true;
+
+        // Persist to database
+        try {
+            db()->query(
+                "INSERT IGNORE INTO jwt_blacklist (jti, expires_at, created_at) VALUES (?, ?, NOW())",
+                [$jti, date('Y-m-d H:i:s', $expiresAt)]
+            );
+            return true;
+        } catch (\Exception $e) {
+            // If table doesn't exist yet, just use in-memory
+            return false;
+        }
+    }
+
+    /**
+     * Check if token JTI is blacklisted
+     *
+     * @param string $jti
+     * @return bool
+     */
+    public static function isBlacklisted(string $jti): bool
+    {
+        // Check in-memory first
+        if (isset(self::$blacklist[$jti])) {
+            return true;
+        }
+
+        // Check database
+        try {
+            $result = db()->fetch(
+                "SELECT 1 FROM jwt_blacklist WHERE jti = ? AND expires_at > NOW()",
+                [$jti]
+            );
+            if ($result) {
+                self::$blacklist[$jti] = true;
+                return true;
+            }
+        } catch (\Exception $e) {
+            // Table doesn't exist yet, not blacklisted
+        }
+
+        return false;
+    }
+
+    /**
+     * Invalidate (blacklist) a token string
+     *
+     * @param string $token Full JWT token
+     * @return bool
+     */
+    public static function invalidate(string $token): bool
+    {
+        $payload = self::verify($token);
+        if ($payload && isset($payload['jti']) && isset($payload['exp'])) {
+            return self::blacklist($payload['jti'], $payload['exp']);
+        }
+        return false;
+    }
+
+    /**
+     * Clean expired entries from blacklist
+     *
+     * @return int Number of deleted entries
+     */
+    public static function cleanBlacklist(): int
+    {
+        try {
+            $stmt = db()->query("DELETE FROM jwt_blacklist WHERE expires_at < NOW()");
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 }

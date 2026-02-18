@@ -204,7 +204,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<script>
+<script nonce="<?= getCspNonce() ?>">
 document.getElementById('gorsel').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
