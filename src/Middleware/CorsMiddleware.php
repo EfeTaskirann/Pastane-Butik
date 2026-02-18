@@ -61,6 +61,9 @@ class CorsMiddleware implements MiddlewareInterface
     /**
      * Handle the request
      *
+     * Preflight (OPTIONS) istekleri burada cevaplanır ve sonlandırılır.
+     * Normal isteklerde CORS header'ları set edilip $next çağrılır.
+     *
      * @param callable $next
      * @return mixed
      */
@@ -68,10 +71,12 @@ class CorsMiddleware implements MiddlewareInterface
     {
         $this->setHeaders();
 
-        // Handle preflight
+        // Handle preflight — OPTIONS isteğine 204 ile cevap ver
+        // Bu durumda exit gerekli çünkü preflight'ın body'si olmamalı
+        // ve router'a girmemeli. Bu bir "request termination", exception değil.
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(204);
-            exit;
+            return '';
         }
 
         return $next();
@@ -87,10 +92,10 @@ class CorsMiddleware implements MiddlewareInterface
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
         // Check if origin is allowed
+        // GÜVENLİK: Wildcard '*' fallback kaldırıldı.
+        // Sadece açıkça izin verilen origin'lere Access-Control-Allow-Origin gönderilir.
         if ($this->isOriginAllowed($origin)) {
             header("Access-Control-Allow-Origin: {$origin}");
-        } elseif (in_array('*', $this->allowedOrigins)) {
-            header('Access-Control-Allow-Origin: *');
         }
 
         header('Access-Control-Allow-Methods: ' . implode(', ', $this->allowedMethods));
@@ -117,16 +122,12 @@ class CorsMiddleware implements MiddlewareInterface
             return false;
         }
 
-        if (in_array('*', $this->allowedOrigins)) {
-            return true;
-        }
-
         foreach ($this->allowedOrigins as $allowed) {
             if ($allowed === $origin) {
                 return true;
             }
 
-            // Support wildcard subdomains
+            // Support wildcard subdomains (e.g., *.example.com)
             if (str_starts_with($allowed, '*.')) {
                 $pattern = '/^https?:\/\/([a-z0-9-]+\.)?' . preg_quote(substr($allowed, 2), '/') . '$/i';
                 if (preg_match($pattern, $origin)) {

@@ -88,9 +88,7 @@ class RateLimiter
         } catch (Exception $e) {
             // GÜVENLİK: Fail-closed - database hatası durumunda isteği reddet
             // Bu, saldırganların DB hatası oluşturarak rate limiting'i bypass etmesini önler
-            if (function_exists('error_log')) {
-                error_log("RateLimiter DB hatası [{$action}]: " . $e->getMessage());
-            }
+            self::log('error', "RateLimiter DB hatası [{$action}]", ['exception' => $e->getMessage()]);
             return [
                 'allowed' => false,
                 'remaining' => 0,
@@ -133,7 +131,7 @@ class RateLimiter
                 ]);
             }
         } catch (Exception $e) {
-            // Silently fail
+            self::log('warning', "RateLimiter operation failed", ['exception' => $e->getMessage()]);
         }
     }
 
@@ -156,7 +154,7 @@ class RateLimiter
                 [$blockedUntil, $identifier, $action]
             );
         } catch (Exception $e) {
-            // Silently fail
+            self::log('warning', "RateLimiter operation failed", ['exception' => $e->getMessage()]);
         }
     }
 
@@ -177,7 +175,7 @@ class RateLimiter
                 'action' => $action,
             ]);
         } catch (Exception $e) {
-            // Silently fail
+            self::log('warning', "RateLimiter operation failed", ['exception' => $e->getMessage()]);
         }
     }
 
@@ -194,7 +192,7 @@ class RateLimiter
         try {
             db()->delete('rate_limits', 'identifier = :id', ['id' => $identifier]);
         } catch (Exception $e) {
-            // Silently fail
+            self::log('warning', "RateLimiter operation failed", ['exception' => $e->getMessage()]);
         }
     }
 
@@ -234,7 +232,8 @@ class RateLimiter
      *
      * @param string $action
      * @param string|null $identifier
-     * @return bool True if allowed, exits with 429 if not
+     * @return bool True if allowed
+     * @throws \Pastane\Exceptions\HttpException Rate limit exceeded (429)
      */
     public static function enforce(string $action = 'default', ?string $identifier = null): bool
     {
@@ -242,37 +241,19 @@ class RateLimiter
 
         if (!$status['allowed']) {
             self::sendHeaders($action);
-            self::respondTooManyRequests($status['retry_after'] ?? 60, $status['message'] ?? 'Rate limit exceeded');
-            return false;
+            $retryAfter = $status['retry_after'] ?? 60;
+            header('Retry-After: ' . $retryAfter);
+
+            throw \Pastane\Exceptions\HttpException::tooManyRequests(
+                $status['message'] ?? 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.',
+                $retryAfter
+            );
         }
 
         self::hit($action, $identifier);
         self::sendHeaders($action);
 
         return true;
-    }
-
-    /**
-     * Send 429 Too Many Requests response
-     *
-     * @param int $retryAfter
-     * @param string $message
-     * @return void
-     */
-    private static function respondTooManyRequests(int $retryAfter, string $message): void
-    {
-        http_response_code(429);
-        header('Retry-After: ' . $retryAfter);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => false,
-            'error' => 'Too Many Requests',
-            'message' => $message,
-            'retry_after' => $retryAfter,
-        ], JSON_UNESCAPED_UNICODE);
-
-        exit;
     }
 
     /**
@@ -327,7 +308,29 @@ class RateLimiter
             );
             return $stmt->rowCount();
         } catch (Exception $e) {
+            self::log('warning', "RateLimiter cleanup failed", ['exception' => $e->getMessage()]);
             return 0;
+        }
+    }
+
+    /**
+     * Internal logger — Logger varsa onu kullan, yoksa error_log fallback
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    private static function log(string $level, string $message, array $context = []): void
+    {
+        try {
+            if (class_exists('Logger', false)) {
+                Logger::getInstance()->$level($message, $context);
+            } else {
+                error_log("[{$level}] {$message}: " . json_encode($context));
+            }
+        } catch (Exception) {
+            // Son çare — hiçbir şey yapma
         }
     }
 }

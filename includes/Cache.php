@@ -349,6 +349,7 @@ class Cache
 
             return json_decode($result['value'], true);
         } catch (Exception $e) {
+            $this->logCacheError('getFromDatabase failed', $e, ['key' => $key]);
             return $default;
         }
     }
@@ -375,6 +376,7 @@ class Cache
 
             return true;
         } catch (Exception $e) {
+            $this->logCacheError('setToDatabase failed', $e, ['key' => $key]);
             return false;
         }
     }
@@ -391,6 +393,7 @@ class Cache
             db()->delete('cache', '`key` = :key', ['key' => $key]);
             return true;
         } catch (Exception $e) {
+            $this->logCacheError('forgetFromDatabase failed', $e, ['key' => $key]);
             return false;
         }
     }
@@ -406,6 +409,7 @@ class Cache
             db()->query("TRUNCATE TABLE cache");
             return true;
         } catch (Exception $e) {
+            $this->logCacheError('flushDatabase failed', $e);
             return false;
         }
     }
@@ -515,6 +519,32 @@ class Cache
         }
 
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Log cache errors — Logger varsa onu kullan, yoksa error_log fallback
+     *
+     * Cache hataları kritik değil ama sessiz geçmemeli — debug sırasında önemli.
+     *
+     * @param string $message
+     * @param Exception $e
+     * @param array $context
+     * @return void
+     */
+    private function logCacheError(string $message, Exception $e, array $context = []): void
+    {
+        $context['exception'] = $e->getMessage();
+        $context['driver'] = $this->driver;
+
+        try {
+            if (class_exists('Logger', false)) {
+                Logger::getInstance()->warning("Cache: {$message}", $context);
+            } else {
+                error_log("[Cache WARNING] {$message}: " . $e->getMessage());
+            }
+        } catch (Exception) {
+            // Logger da fail ederse son çare
+        }
     }
 }
 

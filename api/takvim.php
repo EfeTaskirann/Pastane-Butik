@@ -5,16 +5,17 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
-// CORS - Sadece izin verilen origin'ler
-$allowedOrigins = ['http://localhost', 'https://localhost', 'http://127.0.0.1'];
+
+require_once __DIR__ . '/../includes/bootstrap.php';
+
+// CORS — CorsMiddleware kullanılamadığı için basit CORS
+$allowedOrigin = env('APP_URL', 'http://localhost/pastane');
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins)) {
+if ($origin === $allowedOrigin) {
     header('Access-Control-Allow-Origin: ' . $origin);
 }
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Credentials: true');
-
-require_once __DIR__ . '/../includes/bootstrap.php';
 
 // Yoğunluk kategorileri (Yumuşak Pastel Tonlar)
 function getYogunlukKategorisi($puan) {
@@ -93,8 +94,12 @@ function getAyTakvimi($db, $ay, $yil, $ayIsimleri, $ayKisaIsimleri) {
 try {
     $db = db();
 
-    // Görünüm tipi: 'ay' (tek ay) veya 'yil' (12 ay)
-    $gorunum = isset($_GET['gorunum']) ? $_GET['gorunum'] : 'ay';
+    // Görünüm tipi: whitelist validation
+    $gorunum = $_GET['gorunum'] ?? 'ay';
+    $allowedGorunumler = ['ay', 'yil'];
+    if (!in_array($gorunum, $allowedGorunumler, true)) {
+        $gorunum = 'ay'; // Geçersiz değer → varsayılana dön
+    }
 
     // Ay ve yıl parametreleri (varsayılan: bu ay)
     $ay = isset($_GET['ay']) ? (int)$_GET['ay'] : (int)date('n');
@@ -143,9 +148,24 @@ try {
     }
 
 } catch (Exception $e) {
+    // Log the actual error
+    try {
+        if (class_exists('Logger', false)) {
+            Logger::getInstance()->error('Takvim API hatası', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+        } else {
+            error_log("Takvim API hatası: " . $e->getMessage());
+        }
+    } catch (Throwable) {
+        error_log("Takvim API hatası (logger unavailable): " . $e->getMessage());
+    }
+
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Veritabanı hatası'
+        'error' => 'Takvim verisi yüklenirken bir hata oluştu',
     ], JSON_UNESCAPED_UNICODE);
 }

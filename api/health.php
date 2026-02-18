@@ -8,7 +8,8 @@
  *   GET /api/health         - Full health check
  *   GET /api/health/live    - Liveness probe (for k8s)
  *   GET /api/health/ready   - Readiness probe (for k8s)
- *   GET /api/health/metrics - System metrics
+ *   GET /api/health/metrics - System metrics (auth required)
+ *   GET /api/health/errors  - Recent errors (auth required)
  *
  * @package Pastane\API
  */
@@ -49,31 +50,23 @@ try {
             break;
 
         case 'metrics':
-            // Require auth for metrics
-            $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-            $expectedToken = config('app.health_token', '');
-
-            if ($expectedToken && $authHeader !== "Bearer {$expectedToken}") {
-                http_response_code(401);
-                echo json_encode(['error' => 'Unauthorized']);
-                exit;
-            }
-
-            $result = $health->getMetrics();
-            break;
-
         case 'errors':
-            // Require auth for error logs
+            // Require auth for sensitive endpoints
             $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
             $expectedToken = config('app.health_token', '');
 
             if ($expectedToken && $authHeader !== "Bearer {$expectedToken}") {
                 http_response_code(401);
-                echo json_encode(['error' => 'Unauthorized']);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Yetkilendirme gerekli',
+                ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
 
-            $result = $health->getRecentErrors();
+            $result = ($type === 'metrics')
+                ? $health->getMetrics()
+                : $health->getRecentErrors();
             break;
 
         default:
@@ -87,15 +80,26 @@ try {
     echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
 } catch (Exception $e) {
-    // GÜVENLİK: Exception detaylarını client'a gösterme
-    if (function_exists('error_log')) {
-        error_log("Health check error: " . $e->getMessage());
+    // Hata logla — Logger varsa onu kullan
+    try {
+        if (class_exists('Logger', false)) {
+            Logger::getInstance()->error('Health check error', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+        } else {
+            error_log("Health check error: " . $e->getMessage());
+        }
+    } catch (Throwable) {
+        error_log("Health check error (logger unavailable): " . $e->getMessage());
     }
 
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'status' => 'error',
-        'error' => 'Internal server error',
+        'error' => 'Sistem sağlık kontrolü sırasında hata oluştu',
         'timestamp' => date('c'),
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }

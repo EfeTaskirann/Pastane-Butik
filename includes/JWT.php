@@ -231,43 +231,24 @@ class JWT
     /**
      * Middleware: Require valid JWT
      *
-     * @return array|null User data or null (sends 401 response)
+     * @return array User data payload
+     * @throws \Pastane\Exceptions\HttpException On authentication failure
      */
-    public static function requireAuth(): ?array
+    public static function requireAuth(): array
     {
         $token = self::getTokenFromHeader();
 
         if (!$token) {
-            self::sendUnauthorized('No token provided');
-            return null;
+            throw \Pastane\Exceptions\HttpException::unauthorized('No token provided');
         }
 
         $payload = self::verify($token);
 
         if (!$payload) {
-            self::sendUnauthorized('Invalid or expired token');
-            return null;
+            throw \Pastane\Exceptions\HttpException::unauthorized('Invalid or expired token');
         }
 
         return $payload;
-    }
-
-    /**
-     * Send 401 Unauthorized response
-     *
-     * @param string $message
-     * @return void
-     */
-    private static function sendUnauthorized(string $message): void
-    {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => false,
-            'error' => 'Unauthorized',
-            'message' => $message
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
     }
 
     /**

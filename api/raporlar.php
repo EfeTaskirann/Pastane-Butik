@@ -7,16 +7,17 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
-// CORS - Sadece izin verilen origin'ler
-$allowedOrigins = ['http://localhost', 'https://localhost', 'http://127.0.0.1'];
+
+require_once __DIR__ . '/../includes/bootstrap.php';
+
+// CORS — CorsMiddleware kullanılamadığı için basit CORS
+$allowedOrigin = env('APP_URL', 'http://localhost/pastane');
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins)) {
+if ($origin === $allowedOrigin) {
     header('Access-Control-Allow-Origin: ' . $origin);
 }
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Credentials: true');
-
-require_once __DIR__ . '/../includes/bootstrap.php';
 
 // Kimlik doğrulama kontrolü
 secureSessionStart();
@@ -40,9 +41,14 @@ if (!$authenticated) {
                 $authenticated = true;
             }
         } catch (Exception $e) {
-            // Token geçersiz - log yap
-            if (function_exists('error_log')) {
-                error_log("API raporlar.php JWT hatası: " . $e->getMessage());
+            try {
+                if (class_exists('Logger', false)) {
+                    Logger::getInstance()->warning('Raporlar API JWT hatası', [
+                        'exception' => $e->getMessage(),
+                    ]);
+                }
+            } catch (Throwable) {
+                // Logger da fail ederse sessiz kal
             }
         }
     }
@@ -58,15 +64,47 @@ if (!$authenticated) {
 }
 
 // Tarih parametreleri
-$baslangic = $_GET['baslangic'] ?? date('Y-m-01'); // Varsayılan: ayın başı
-// İleri tarihli siparişleri de dahil etmek için varsayılan bitiş: gelecek yılın sonu
-$bitis = $_GET['bitis'] ?? date('Y-12-31', strtotime('+1 year')); // Varsayılan: gelecek yılın sonu
-$tip = $_GET['tip'] ?? 'tum'; // ozet, gunluk, kategori, musteri, tum
+$baslangic = $_GET['baslangic'] ?? date('Y-m-01');
+$bitis = $_GET['bitis'] ?? date('Y-12-31', strtotime('+1 year'));
+$tip = $_GET['tip'] ?? 'tum';
+
+// Tip whitelist validation
+$allowedTips = ['tum', 'ozet', 'gunluk', 'kategori', 'encok', 'musteri', 'odeme', 'kanal', 'haftalik'];
+if (!in_array($tip, $allowedTips, true)) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Geçersiz rapor tipi. İzin verilen: ' . implode(', ', $allowedTips),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // Tarih formatı kontrolü
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $baslangic) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $bitis)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Geçersiz tarih formatı (YYYY-MM-DD)'], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Geçersiz tarih formatı (YYYY-MM-DD)',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Tarih geçerlilik kontrolü
+if (strtotime($baslangic) === false || strtotime($bitis) === false) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Geçersiz tarih değeri',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($baslangic > $bitis) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Başlangıç tarihi bitiş tarihinden sonra olamaz',
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -125,15 +163,33 @@ try {
     // Dönem bilgisi
     $response['donem'] = [
         'baslangic' => $baslangic,
-        'bitis' => $bitis
+        'bitis' => $bitis,
     ];
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
 } catch (Exception $e) {
+    // Log the actual error
+    try {
+        if (class_exists('Logger', false)) {
+            Logger::getInstance()->error('Raporlar API hatası', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'tip' => $tip,
+                'baslangic' => $baslangic,
+                'bitis' => $bitis,
+            ]);
+        } else {
+            error_log("Raporlar API hatası: " . $e->getMessage());
+        }
+    } catch (Throwable) {
+        error_log("Raporlar API hatası (logger unavailable): " . $e->getMessage());
+    }
+
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Veritabanı hatası'
+        'error' => 'Rapor oluşturulurken bir hata oluştu',
     ], JSON_UNESCAPED_UNICODE);
 }

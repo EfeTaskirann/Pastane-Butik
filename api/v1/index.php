@@ -19,8 +19,12 @@ use Pastane\Middleware\RateLimitMiddleware;
 use Pastane\Router\Router;
 
 // Apply CORS headers early (before any output)
+// OPTIONS preflight → boş string döner, sonlandır
 $cors = new CorsMiddleware();
-$cors->handle(function() {});
+$corsResult = $cors->handle(function() { return null; });
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit; // Preflight handled, body yok
+}
 
 // Initialize router
 $router = Router::getInstance();
@@ -76,7 +80,22 @@ try {
 } catch (\Pastane\Exceptions\HttpException $e) {
     json_error($e->getMessage(), $e->getStatusCode());
 } catch (\Throwable $e) {
-    // Beklenmeyen hatalar — production'da detay gösterme
+    // Beklenmeyen hatalar — logla ve production'da detay gösterme
+    try {
+        if (class_exists('Logger', false)) {
+            Logger::getInstance()->error('API v1 unhandled exception', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'path' => $path ?? 'unknown',
+                'method' => $method ?? 'unknown',
+            ]);
+        }
+    } catch (\Throwable) {
+        // Logger fail — global handler yakalayacak
+    }
+
     $message = (defined('DEBUG_MODE') && DEBUG_MODE)
         ? $e->getMessage()
         : 'Sunucu hatası oluştu.';

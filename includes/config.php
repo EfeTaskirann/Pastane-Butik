@@ -73,11 +73,14 @@ if (!defined('DEBUG_MODE')) {
 // Timezone
 date_default_timezone_set('Europe/Istanbul');
 
-// Debug modda hataları göster
+// Error reporting
+// Production'da da E_ALL ile logla, sadece display etme.
+// Sıfır error_reporting kullanmak hataların sessiz kaybolmasına yol açar.
 if (DEBUG_MODE) {
     error_reporting(E_ALL);
     ini_set('display_errors', '1');
 } else {
-    error_reporting(0);
+    error_reporting(E_ALL);
     ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
 }
