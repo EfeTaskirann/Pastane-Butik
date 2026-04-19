@@ -198,7 +198,7 @@ require_once __DIR__ . '/includes/header.php';
                     </svg>
                     <p>Görsel yüklemek için tıklayın<br><small>JPG, PNG, WebP - Max 5MB</small></p>
                 </div>
-                <img id="preview" class="file-preview u-hidden">
+                <img id="preview" class="file-preview u-hidden" alt="">
             </div>
 
             <div class="form-group">
