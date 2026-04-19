@@ -28,7 +28,7 @@ class KategoriRepository extends BaseRepository
      * @var array Fillable columns
      */
     protected array $fillable = [
-        'ad',
+        'isim',
         'slug',
         'sira',
     ];
@@ -37,7 +37,7 @@ class KategoriRepository extends BaseRepository
      * @var array Sortable columns whitelist
      */
     protected array $sortableColumns = [
-        'id', 'ad', 'slug', 'sira', 'created_at', 'updated_at',
+        'id', 'isim', 'slug', 'sira', 'created_at', 'updated_at',
     ];
 
     /**
@@ -52,11 +52,11 @@ class KategoriRepository extends BaseRepository
      */
     public function getAllWithProductCount(): array
     {
-        $sql = "SELECT k.*, COUNT(u.id) as urun_sayisi
+        $sql = "SELECT k.*, k.isim AS ad, COUNT(u.id) as urun_sayisi
                 FROM {$this->table} k
                 LEFT JOIN urunler u ON k.id = u.kategori_id
                 GROUP BY k.id
-                ORDER BY k.sira ASC, k.ad ASC";
+                ORDER BY k.sira ASC, k.isim ASC";
 
         return $this->raw($sql);
     }

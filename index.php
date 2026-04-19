@@ -9,13 +9,13 @@ $categories = getCategories();
 $products = getProducts();
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?= e(locale()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="El yapımı pastalar, cupcake'ler ve tatlılar. Özel günleriniz için butik lezzetler.">
 
-    <title><?= e(SITE_NAME) ?> - Butik Pasta & Tatlı</title>
+    <title><?= e(SITE_NAME) ?> - <?= e(t('home.hero_subtitle')) ?></title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,181 +23,250 @@ $products = getProducts();
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="assets/css/style.css?v=2">
+    <link rel="stylesheet" href="assets/css/style.css?v=4">
     <link rel="stylesheet" href="assets/css/animations.css">
+    <link rel="stylesheet" href="assets/css/utilities.css?v=1.0">
+    <link rel="stylesheet" href="assets/css/themes/dark.css?v=1.0">
+    <?= render_theme_assets() ?>
+    <meta name="theme-color" content="#FDF8F5">
+    <?php
+    // FOUC prevention: theme'i script erken uygula
+    $cspNonce = function_exists('getCspNonce') ? getCspNonce() : '';
+    ?>
+    <script nonce="<?= e($cspNonce) ?>">
+    (function () {
+        try {
+            var stored = localStorage.getItem('pastane_theme');
+            if (stored === 'dark' || stored === 'light') {
+                document.documentElement.setAttribute('data-theme', stored);
+            }
+        } catch (e) {}
+    })();
+    </script>
 </head>
-<body>
-    <!-- Öğrenci İndirim Banner -->
-    <div class="promo-banner" id="promoBanner">
-        <div class="promo-content">
-            <div class="promo-illustration">
-                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Öğrenci Gövdesi -->
-                    <ellipse cx="50" cy="92" rx="18" ry="5" fill="#D4A5B8" opacity="0.3"/>
+<body<?= get_theme_body_attr() ?>>
+    <a href="#hero" class="skip-link"><?= e(t('a11y.skip_to_content')) ?></a>
 
-                    <!-- Bacaklar -->
-                    <rect x="42" y="70" width="6" height="20" rx="3" fill="#5C4A42"/>
-                    <rect x="52" y="70" width="6" height="20" rx="3" fill="#5C4A42"/>
-
-                    <!-- Ayakkabılar -->
-                    <ellipse cx="45" cy="90" rx="5" ry="3" fill="#3D3D3D"/>
-                    <ellipse cx="55" cy="90" rx="5" ry="3" fill="#3D3D3D"/>
-
-                    <!-- Gövde (Tişört) -->
-                    <path d="M35 45 Q35 70 50 70 Q65 70 65 45 L60 40 L40 40 Z" fill="#E8C4D4"/>
-
-                    <!-- Kollar -->
-                    <path d="M35 45 Q28 50 25 60" stroke="#F5E1E9" stroke-width="6" stroke-linecap="round"/>
-                    <path d="M65 45 Q72 50 78 55" stroke="#F5E1E9" stroke-width="6" stroke-linecap="round"/>
-
-                    <!-- Eller -->
-                    <circle cx="25" cy="62" r="4" fill="#F5D4C1"/>
-                    <circle cx="80" cy="57" r="4" fill="#F5D4C1"/>
-
-                    <!-- Baş -->
-                    <circle cx="50" cy="28" r="16" fill="#F5D4C1"/>
-
-                    <!-- Saç -->
-                    <path d="M34 25 Q34 12 50 12 Q66 12 66 25 Q66 20 50 22 Q34 20 34 25" fill="#5C4A42"/>
-                    <ellipse cx="38" cy="18" rx="4" ry="3" fill="#5C4A42"/>
-                    <ellipse cx="62" cy="18" rx="4" ry="3" fill="#5C4A42"/>
-
-                    <!-- Yüz -->
-                    <circle cx="44" cy="27" r="2" fill="#5C4A42"/>
-                    <circle cx="56" cy="27" r="2" fill="#5C4A42"/>
-                    <path d="M46 33 Q50 36 54 33" stroke="#D4A5A5" stroke-width="2" stroke-linecap="round" fill="none"/>
-
-                    <!-- Sırt Çantası -->
-                    <rect x="58" y="38" width="18" height="25" rx="4" fill="#8B6F5C"/>
-                    <rect x="60" y="40" width="14" height="8" rx="2" fill="#A68B7B"/>
-                    <rect x="64" y="50" width="6" height="4" rx="1" fill="#6B5344"/>
-                    <path d="M62 38 Q62 32 68 32 Q74 32 74 38" stroke="#6B5344" stroke-width="2" fill="none"/>
-
-                    <!-- Elde Pasta -->
-                    <g transform="translate(10, 48)">
-                        <!-- Pasta tabanı -->
-                        <ellipse cx="15" cy="18" rx="12" ry="3" fill="#E8C4D4"/>
-                        <rect x="3" y="8" width="24" height="10" rx="2" fill="#F5E1E9"/>
-                        <ellipse cx="15" cy="8" rx="12" ry="3" fill="#FDF8F5"/>
-                        <!-- Krema -->
-                        <path d="M6 6 Q9 2 12 6 Q15 2 18 6 Q21 2 24 6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" fill="none"/>
-                        <!-- Çilek -->
-                        <ellipse cx="15" cy="3" rx="3" ry="4" fill="#D4A5A5"/>
-                        <path d="M14 0 Q15 -2 16 0" stroke="#7BA87B" stroke-width="1.5" fill="none"/>
-                    </g>
-                </svg>
-            </div>
-            <div class="promo-text">
-                <span class="promo-badge">%10</span>
-                <span class="promo-message">Üniversite Öğrencilerine <strong>İndirim!</strong></span>
-            </div>
-            <button class="promo-close" onclick="closePromoBanner()" aria-label="Kapat">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-        </div>
+    <?php
+    // Dil secici (TR/EN) — sag-ust kose
+    $currentLocale = locale();
+    $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+    $sep = (str_contains($currentUri, '?')) ? '&' : '?';
+    ?>
+    <div class="lang-switcher lang-switcher--floating" role="group" aria-label="<?= e(t('a11y.language_menu')) ?>">
+        <a href="<?= e($currentUri . $sep) ?>lang=tr"
+           class="lang-link <?= $currentLocale === 'tr' ? 'is-active' : '' ?>"
+           aria-current="<?= $currentLocale === 'tr' ? 'true' : 'false' ?>"
+           title="<?= e(t('language.turkish')) ?>"><?= e(t('language.tr_short')) ?></a>
+        <span aria-hidden="true">|</span>
+        <a href="<?= e($currentUri . $sep) ?>lang=en"
+           class="lang-link <?= $currentLocale === 'en' ? 'is-active' : '' ?>"
+           aria-current="<?= $currentLocale === 'en' ? 'true' : 'false' ?>"
+           title="<?= e(t('language.english')) ?>"><?= e(t('language.en_short')) ?></a>
     </div>
 
+    <!-- Tema Toggle -->
+    <button class="theme-toggle"
+            type="button"
+            data-action="toggle-theme"
+            aria-label="<?= e(t('a11y.switch_to_dark')) ?>"
+            aria-pressed="false"
+            title="<?= e(t('a11y.toggle_theme')) ?>">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
     <!-- Scroll Progress Bar -->
-    <div class="scroll-progress" id="scrollProgress"></div>
+    <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
     <!-- Sparkle Container -->
-    <div class="sparkle-container" id="sparkleContainer"></div>
+    <div class="sparkle-container" id="sparkleContainer" aria-hidden="true"></div>
 
     <!-- ========== HERO SECTION ========== -->
-    <section class="hero bg-gradient-1" id="hero">
+    <section class="hero bg-gradient-1" id="hero" tabindex="-1">
+        <!-- Parallax Background Layers -->
+        <div class="parallax-layer parallax-layer--back" aria-hidden="true"></div>
+        <div class="parallax-layer parallax-layer--mid" aria-hidden="true"></div>
+        <div class="parallax-layer parallax-layer--front" aria-hidden="true"></div>
+
         <!-- Dekoratif Blob -->
-        <div class="decoration decoration-blob float-slow" style="top: 10%; right: -100px;"></div>
-        <div class="decoration decoration-circle" style="bottom: 20%; left: -150px;"></div>
+        <div class="decoration decoration-blob float-slow u-decor-blob-right" aria-hidden="true"></div>
+        <div class="decoration decoration-circle u-decor-circle-left" aria-hidden="true"></div>
 
         <!-- Light Orbs -->
-        <div class="light-orb light-orb-1"></div>
-        <div class="light-orb light-orb-2"></div>
+        <div class="light-orb light-orb-1" aria-hidden="true"></div>
+        <div class="light-orb light-orb-2" aria-hidden="true"></div>
 
         <!-- Star Sparkles -->
-        <div class="star-sparkle" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
-        <div class="star-sparkle" style="top: 25%; right: 15%; animation-delay: 1s;"></div>
-        <div class="star-sparkle" style="bottom: 30%; left: 8%; animation-delay: 2s;"></div>
-        <div class="star-sparkle" style="bottom: 25%; right: 12%; animation-delay: 1.5s;"></div>
+        <div class="star-sparkle u-sparkle-1" aria-hidden="true"></div>
+        <div class="star-sparkle u-sparkle-2" aria-hidden="true"></div>
+        <div class="star-sparkle u-sparkle-3" aria-hidden="true"></div>
+        <div class="star-sparkle u-sparkle-4" aria-hidden="true"></div>
 
         <div class="hero-content">
             <div class="hero-logo">
-                <h1>Tatlı Düşler</h1>
-                <span>Butik Pasta & Tatlı</span>
+                <h1><?= e(t('home.hero_title')) ?></h1>
+                <span><?= e(t('home.hero_subtitle')) ?></span>
             </div>
 
-            <!-- Paint Tarzı Pasta İllüstrasyonu -->
-            <div class="hero-illustration">
-                <svg viewBox="0 0 400 350" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Pasta Tabanı -->
-                    <ellipse cx="200" cy="310" rx="140" ry="25" fill="#E8C4D4"/>
-                    <path d="M60 290 L60 310 Q60 335 200 335 Q340 335 340 310 L340 290 Q340 265 200 265 Q60 265 60 290Z" fill="#F5E1E9"/>
+            <!-- Altın Divider -->
+            <div class="hero-gold-divider" aria-hidden="true"></div>
 
-                    <!-- Alt Kat -->
-                    <ellipse cx="200" cy="265" rx="130" ry="22" fill="#FDF8F5"/>
-                    <rect x="70" y="200" width="260" height="65" rx="10" fill="#F5E1E9"/>
-                    <ellipse cx="200" cy="200" rx="130" ry="22" fill="#FDF8F5"/>
+            <!-- 4 Katlı Pasta İllüstrasyonu (Claude Design bundle — Pasta.html'den entegre edildi).
+                 Renkler --tier-*, --cream-*, --berry-*, --dot-*, --contact değişkenlerine
+                 bağlı; tema (light/dark/yaz/kış + dark kombinasyonları) otomatik uygular. -->
+            <div class="hero-illustration" data-cake-tiers="4">
+                <svg viewBox="0 0 644 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dört katlı butik pasta" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <radialGradient id="cakeContactShadow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="var(--contact)"/>
+                            <stop offset="65%" stop-color="var(--contact)" stop-opacity=".35"/>
+                            <stop offset="100%" stop-color="var(--contact)" stop-opacity="0"/>
+                        </radialGradient>
+                        <linearGradient id="cakeCreamShade" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--cream)"/>
+                            <stop offset="100%" stop-color="var(--cream-shade)"/>
+                        </linearGradient>
+                    </defs>
 
-                    <!-- Krema Süslemeleri Alt -->
-                    <path d="M80 220 Q90 200 100 220 Q110 200 120 220 Q130 200 140 220" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" fill="none"/>
-                    <path d="M260 220 Q270 200 280 220 Q290 200 300 220 Q310 200 320 220" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" fill="none"/>
+                    <!-- KAİDE -->
+                    <ellipse cx="322" cy="462" rx="120" ry="12" fill="var(--contact)" opacity=".5"/>
+                    <path d="M 218 418 Q 218 446 322 446 Q 426 446 426 418 L 426 452 Q 426 462 322 462 Q 218 462 218 452 Z" fill="var(--tier-base)"/>
+                    <ellipse cx="322" cy="418" rx="104" ry="10" fill="color-mix(in oklab, var(--tier-base), #fff 18%)"/>
 
-                    <!-- Orta Kat -->
-                    <ellipse cx="200" cy="200" rx="110" ry="18" fill="#E8C4D4"/>
-                    <rect x="90" y="145" width="220" height="55" rx="8" fill="#F5E1E9"/>
-                    <ellipse cx="200" cy="145" rx="110" ry="18" fill="#FDF8F5"/>
+                    <!-- 1. KAT (en alt, büyük) -->
+                    <ellipse cx="322" cy="416" rx="140" ry="6" fill="var(--contact)" opacity=".6"/>
+                    <path d="M 182 362 L 182 410 Q 182 424 322 424 Q 462 424 462 410 L 462 362 Z" fill="var(--tier-light)"/>
+                    <path d="M 408 362 L 462 362 L 462 410 Q 462 420 438 423 L 438 362 Z" fill="var(--tier-dark)" opacity="0.35"/>
+                    <path d="M 182 362 L 206 362 L 206 422 Q 194 420 182 416 Z" fill="var(--cream)" opacity="0.10"/>
+                    <ellipse cx="322" cy="362" rx="140" ry="18" fill="var(--tier-mid)"/>
+                    <ellipse cx="322" cy="360" rx="140" ry="16" fill="color-mix(in oklab, var(--tier-mid), #fff 12%)"/>
+                    <path d="M 182 362 Q 198 392 214 368 Q 230 398 246 368 Q 262 396 278 368 Q 294 398 310 368 Q 326 398 342 368 Q 358 396 374 368 Q 390 398 406 368 Q 422 396 438 368 Q 454 394 462 362 L 462 362 Q 322 380 182 362 Z" fill="url(#cakeCreamShade)"/>
+                    <circle cx="218" cy="390" r="5" fill="var(--dot-green)"/>
+                    <circle cx="418" cy="392" r="5" fill="var(--dot-pink)"/>
+                    <circle cx="322" cy="400" r="3.5" fill="var(--dot-pink)" opacity=".75"/>
 
-                    <!-- Krema Süslemeleri Orta -->
-                    <path d="M100 165 Q115 145 130 165 Q145 145 160 165" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none"/>
-                    <path d="M240 165 Q255 145 270 165 Q285 145 300 165" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <!-- 2. KAT (4-modda görünür, 3-modda gizli) -->
+                    <g class="cake-tier-4">
+                        <ellipse cx="322" cy="358" rx="108" ry="4" fill="var(--contact)" opacity=".55"/>
+                        <path d="M 216 310 L 216 352 Q 216 364 322 364 Q 428 364 428 352 L 428 310 Z" fill="var(--tier-mid)"/>
+                        <path d="M 388 310 L 428 310 L 428 352 Q 428 362 406 364 L 406 310 Z" fill="var(--tier-dark)" opacity="0.4"/>
+                        <ellipse cx="322" cy="310" rx="106" ry="15" fill="var(--tier-light)"/>
+                        <ellipse cx="322" cy="308" rx="106" ry="13" fill="color-mix(in oklab, var(--tier-light), #fff 10%)"/>
+                        <path d="M 216 310 Q 230 336 244 312 Q 258 340 272 312 Q 286 338 300 312 Q 314 340 322 312 Q 330 340 344 312 Q 358 338 372 312 Q 386 340 400 312 Q 414 336 428 310 Q 322 326 216 310 Z" fill="url(#cakeCreamShade)"/>
+                        <circle cx="250" cy="334" r="4.5" fill="var(--dot-pink)"/>
+                        <circle cx="394" cy="334" r="4.5" fill="var(--dot-green)"/>
+                        <circle cx="322" cy="342" r="3" fill="var(--cream)" opacity=".9"/>
+                    </g>
 
-                    <!-- Üst Kat -->
-                    <ellipse cx="200" cy="145" rx="90" ry="15" fill="#E8C4D4"/>
-                    <rect x="110" y="100" width="180" height="45" rx="6" fill="#F5E1E9"/>
-                    <ellipse cx="200" cy="100" rx="90" ry="15" fill="#FDF8F5"/>
+                    <!-- 3. KAT (her iki modda görünür) -->
+                    <ellipse cx="322" cy="306" rx="82" ry="4" fill="var(--contact)" opacity=".5"/>
+                    <path d="M 242 262 L 242 302 Q 242 312 322 312 Q 402 312 402 302 L 402 262 Z" fill="var(--tier-mid)"/>
+                    <path d="M 366 262 L 402 262 L 402 302 Q 402 310 384 312 L 384 262 Z" fill="var(--tier-dark)" opacity="0.42"/>
+                    <ellipse cx="322" cy="262" rx="80" ry="12" fill="var(--tier-light)"/>
+                    <ellipse cx="322" cy="260" rx="80" ry="10" fill="color-mix(in oklab, var(--tier-light), #fff 10%)"/>
+                    <path d="M 242 262 Q 254 286 266 264 Q 278 288 290 264 Q 302 288 312 264 Q 322 288 332 264 Q 342 288 354 264 Q 366 288 378 264 Q 390 286 402 262 Q 322 278 242 262 Z" fill="url(#cakeCreamShade)"/>
+                    <circle cx="270" cy="286" r="4" fill="var(--dot-pink)"/>
+                    <circle cx="374" cy="286" r="4" fill="var(--dot-pink)" opacity=".85"/>
+                    <circle cx="322" cy="294" r="2.5" fill="var(--cream)" opacity=".9"/>
 
-                    <!-- Üst Krema -->
-                    <path d="M130 60 Q150 40 170 60 Q190 40 210 60 Q230 40 250 60 Q270 40 270 60" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" fill="none"/>
-                    <ellipse cx="200" cy="55" rx="60" ry="12" fill="#FFFFFF"/>
+                    <!-- EN ÜST KAT -->
+                    <ellipse cx="322" cy="258" rx="58" ry="3.5" fill="var(--contact)" opacity=".5"/>
+                    <path d="M 266 214 L 266 254 Q 266 262 322 262 Q 378 262 378 254 L 378 214 Z" fill="var(--tier-light)"/>
+                    <path d="M 352 214 L 378 214 L 378 254 Q 378 261 364 262 L 364 214 Z" fill="var(--tier-dark)" opacity="0.3"/>
+                    <ellipse cx="322" cy="214" rx="56" ry="10" fill="var(--tier-mid)"/>
+                    <ellipse cx="322" cy="212" rx="56" ry="8" fill="color-mix(in oklab, var(--tier-mid), #fff 10%)"/>
+                    <path d="M 266 214 Q 278 234 290 216 Q 302 236 314 216 Q 322 236 330 216 Q 342 236 354 216 Q 366 234 378 214 Q 322 228 266 214 Z" fill="url(#cakeCreamShade)"/>
+                    <circle cx="286" cy="236" r="3.5" fill="var(--dot-pink)"/>
+                    <circle cx="358" cy="236" r="3.5" fill="var(--dot-green)"/>
 
-                    <!-- Çilek -->
-                    <ellipse cx="200" cy="45" rx="18" ry="22" fill="#D4A5A5"/>
-                    <ellipse cx="200" cy="40" rx="15" ry="18" fill="#C48B8B"/>
-                    <path d="M195 25 Q200 15 205 25" stroke="#8B6F5C" stroke-width="3" fill="none"/>
-                    <ellipse cx="200" cy="28" rx="8" ry="4" fill="#7BA87B"/>
+                    <!-- ÇİLEK -->
+                    <ellipse cx="322" cy="204" rx="24" ry="4" fill="var(--cream)"/>
+                    <path d="M 302 202 Q 310 210 316 204 Q 322 212 328 204 Q 334 210 342 202 Q 338 208 334 208 L 310 208 Q 306 208 302 202 Z" fill="var(--cream)"/>
+                    <path d="M 322 174 Q 334 174 336 186 Q 338 198 322 204 Q 306 198 308 186 Q 310 174 322 174 Z" fill="var(--berry)"/>
+                    <g fill="var(--berry-dark)" opacity="0.85">
+                        <circle cx="316" cy="184" r="1"/>
+                        <circle cx="326" cy="182" r="1"/>
+                        <circle cx="330" cy="190" r="1"/>
+                        <circle cx="318" cy="194" r="1"/>
+                        <circle cx="326" cy="196" r="1"/>
+                        <circle cx="312" cy="190" r="1"/>
+                    </g>
+                    <ellipse cx="317" cy="180" rx="1.5" ry="2.5" fill="var(--sparkle)" opacity=".6"/>
+                    <path d="M 312 176 Q 322 166 332 176 Q 327 180 322 178 Q 317 180 312 176 Z" fill="var(--leaf)"/>
+                    <path d="M 322 170 L 322 176" stroke="var(--leaf)" stroke-width="1.3" stroke-linecap="round"/>
 
-                    <!-- Çilek Tohumları -->
-                    <circle cx="192" cy="38" r="1.5" fill="#FDF8F5"/>
-                    <circle cx="208" cy="42" r="1.5" fill="#FDF8F5"/>
-                    <circle cx="195" cy="50" r="1.5" fill="#FDF8F5"/>
-                    <circle cx="205" cy="35" r="1.5" fill="#FDF8F5"/>
-                    <circle cx="198" cy="55" r="1.5" fill="#FDF8F5"/>
-
-                    <!-- Bonbonlar -->
-                    <circle cx="130" cy="110" r="8" fill="#D4A5A5"/>
-                    <circle cx="270" cy="115" r="7" fill="#A5C4A5"/>
-                    <circle cx="150" cy="155" r="6" fill="#E8C4D4"/>
-                    <circle cx="250" cy="160" r="7" fill="#D4A5A5"/>
-                    <circle cx="100" cy="210" r="8" fill="#A5C4A5"/>
-                    <circle cx="300" cy="215" r="6" fill="#E8C4D4"/>
-
-                    <!-- Pudra Şekeri Efekti -->
-                    <circle cx="160" cy="85" r="2" fill="#FFFFFF" opacity="0.7"/>
-                    <circle cx="240" cy="90" r="2" fill="#FFFFFF" opacity="0.7"/>
-                    <circle cx="180" cy="140" r="2" fill="#FFFFFF" opacity="0.7"/>
-                    <circle cx="220" cy="135" r="2" fill="#FFFFFF" opacity="0.7"/>
+                    <!-- parıltılar -->
+                    <g fill="var(--sparkle)" opacity=".7">
+                        <circle cx="160" cy="250" r="1.5"/>
+                        <circle cx="500" cy="300" r="1.5"/>
+                        <circle cx="130" cy="370" r="1.2"/>
+                        <circle cx="520" cy="370" r="1.2"/>
+                    </g>
                 </svg>
             </div>
 
             <div class="hero-cta">
-                <a href="#products" class="btn btn-primary">Ürünlerimiz</a>
+                <a href="#products" class="btn btn-primary"><?= e(t('nav.products')) ?></a>
+            </div>
+
+            <!-- Öğrenci İndirim Banner (Hero altında) -->
+            <div class="promo-banner" id="promoBanner">
+                <div class="promo-content">
+                    <div class="promo-illustration">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="50" cy="92" rx="18" ry="5" fill="#D4A5B8" opacity="0.3"/>
+                            <rect x="42" y="70" width="6" height="20" rx="3" fill="#5C4A42"/>
+                            <rect x="52" y="70" width="6" height="20" rx="3" fill="#5C4A42"/>
+                            <ellipse cx="45" cy="90" rx="5" ry="3" fill="#3D3D3D"/>
+                            <ellipse cx="55" cy="90" rx="5" ry="3" fill="#3D3D3D"/>
+                            <path d="M35 45 Q35 70 50 70 Q65 70 65 45 L60 40 L40 40 Z" fill="#E8C4D4"/>
+                            <path d="M35 45 Q28 50 25 60" stroke="#F5E1E9" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M65 45 Q72 50 78 55" stroke="#F5E1E9" stroke-width="6" stroke-linecap="round"/>
+                            <circle cx="25" cy="62" r="4" fill="#F5D4C1"/>
+                            <circle cx="80" cy="57" r="4" fill="#F5D4C1"/>
+                            <circle cx="50" cy="28" r="16" fill="#F5D4C1"/>
+                            <path d="M34 25 Q34 12 50 12 Q66 12 66 25 Q66 20 50 22 Q34 20 34 25" fill="#5C4A42"/>
+                            <ellipse cx="38" cy="18" rx="4" ry="3" fill="#5C4A42"/>
+                            <ellipse cx="62" cy="18" rx="4" ry="3" fill="#5C4A42"/>
+                            <circle cx="44" cy="27" r="2" fill="#5C4A42"/>
+                            <circle cx="56" cy="27" r="2" fill="#5C4A42"/>
+                            <path d="M46 33 Q50 36 54 33" stroke="#D4A5A5" stroke-width="2" stroke-linecap="round" fill="none"/>
+                            <rect x="58" y="38" width="18" height="25" rx="4" fill="#8B6F5C"/>
+                            <rect x="60" y="40" width="14" height="8" rx="2" fill="#A68B7B"/>
+                            <rect x="64" y="50" width="6" height="4" rx="1" fill="#6B5344"/>
+                            <path d="M62 38 Q62 32 68 32 Q74 32 74 38" stroke="#6B5344" stroke-width="2" fill="none"/>
+                            <g transform="translate(10, 48)">
+                                <ellipse cx="15" cy="18" rx="12" ry="3" fill="#E8C4D4"/>
+                                <rect x="3" y="8" width="24" height="10" rx="2" fill="#F5E1E9"/>
+                                <ellipse cx="15" cy="8" rx="12" ry="3" fill="#FDF8F5"/>
+                                <path d="M6 6 Q9 2 12 6 Q15 2 18 6 Q21 2 24 6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" fill="none"/>
+                                <ellipse cx="15" cy="3" rx="3" ry="4" fill="#D4A5A5"/>
+                                <path d="M14 0 Q15 -2 16 0" stroke="#7BA87B" stroke-width="1.5" fill="none"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="promo-text">
+                        <span class="promo-badge">%10</span>
+                        <span class="promo-message"><?= e(t('home.promo_student')) ?></span>
+                    </div>
+                    <button class="promo-close" aria-label="<?= e(t('common.close')) ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div class="scroll-indicator">
-            <span>Keşfet</span>
+            <span><?= e(t('btn.discover')) ?></span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12l7 7 7-7"/>
             </svg>
@@ -206,64 +275,147 @@ $products = getProducts();
 
     <!-- ========== HAKKIMIZDA SECTION ========== -->
     <section class="about bg-gradient-2" id="about">
+        <div class="section-texture" aria-hidden="true"></div>
+        <div class="parallax-layer parallax-layer--about" aria-hidden="true"></div>
         <div class="container">
             <div class="about-content">
                 <div class="about-text reveal reveal-left">
-                    <h2>Hikayemiz</h2>
+                    <h2><?= e(t('home.about_title')) ?></h2>
                     <p>
-                        Pastalardan cheesecake'lere, cupcake'lerden el yapımı kurabiyelere kadar
-                        tüm tatlılarımızı sevgiyle ve tutkuyla hazırlıyoruz. Kaliteli malzemeler
-                        ve özenle seçilmiş tariflerle sizin için en özel lezzetleri yaratıyoruz.
+                        <?= e(t('home.about_paragraph_1')) ?>
                     </p>
                     <p>
-                        <strong>Sipariş üzerine üretim</strong> yapıyoruz; bu sayede her tatlımızın
-                        tazeliğini garanti ediyoruz. Doğum günlerinden düğünlere, kutlamalardan
-                        ikramlara, her özel anınızda yanınızdayız.
+                        <?= e(t('home.about_paragraph_2')) ?>
                     </p>
-                    <a href="#contact" class="btn btn-secondary" style="margin-top: 1.5rem;">İletişime Geç</a>
+                    <a href="#contact" class="btn btn-secondary u-mt-5"><?= e(t('btn.contact_us')) ?></a>
                 </div>
 
                 <div class="about-illustration reveal reveal-right">
-                    <!-- Cupcake İllüstrasyonu -->
-                    <svg viewBox="0 0 300 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 350px;">
-                        <!-- Cupcake Kabı -->
-                        <path d="M70 180 L90 260 L210 260 L230 180 Z" fill="#E8C4D4"/>
-                        <path d="M75 185 L80 190 L80 255 L90 260 L90 185 Z" fill="#D4A5B8" opacity="0.5"/>
-                        <path d="M225 185 L220 190 L220 255 L210 260 L210 185 Z" fill="#D4A5B8" opacity="0.5"/>
+                    <!-- Kawaii Cupcake Karakter (Claude Design — Cupcake.html'den entegre).
+                         Renkler --cup-* degiskenlerine bagli; tema (light/dark/yaz/kis +
+                         dark kombinasyonlari) otomatik uygular. Bob, arm-wave, goz-kirp
+                         animasyonlari SVG icinde scope'lanmis (prefers-reduced-motion korumali). -->
+                    <svg class="cupcake-svg" viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tatli Dusler cupcake karakteri" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <style>
+                                .cup-ln { fill: none; stroke: var(--cup-stroke); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+                                .cup-ln-thin { fill: none; stroke: var(--cup-stroke); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+                                .cup-ln-xthin { fill: none; stroke: var(--cup-stroke); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+                                .cup-limb { fill: none; stroke: var(--cup-stroke); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+                            </style>
+                        </defs>
 
-                        <!-- Çizgiler -->
-                        <line x1="100" y1="185" x2="95" y2="255" stroke="#D4A5B8" stroke-width="2"/>
-                        <line x1="130" y1="185" x2="125" y2="255" stroke="#D4A5B8" stroke-width="2"/>
-                        <line x1="160" y1="185" x2="160" y2="255" stroke="#D4A5B8" stroke-width="2"/>
-                        <line x1="190" y1="185" x2="195" y2="255" stroke="#D4A5B8" stroke-width="2"/>
+                        <!-- zemin golgesi -->
+                        <ellipse cx="160" cy="360" rx="80" ry="6" fill="var(--cup-shadow)"/>
 
-                        <!-- Kek Kısmı -->
-                        <ellipse cx="150" cy="180" rx="85" ry="20" fill="#F5E1E9"/>
-                        <path d="M65 180 Q65 130 150 130 Q235 130 235 180" fill="#8B6F5C"/>
-                        <path d="M65 180 Q65 160 150 160 Q235 160 235 180" fill="#A68B7B"/>
+                        <!-- BACAKLAR -->
+                        <path class="cup-limb" d="M 138 326 L 138 352"/>
+                        <path class="cup-limb" d="M 182 326 L 182 352"/>
+                        <circle cx="138" cy="354" r="3.6" fill="var(--cup-stroke)"/>
+                        <circle cx="182" cy="354" r="3.6" fill="var(--cup-stroke)"/>
 
-                        <!-- Krema -->
-                        <path d="M80 130 Q100 80 150 70 Q200 80 220 130" fill="#FDF8F5"/>
-                        <path d="M90 120 Q110 90 150 85 Q190 90 210 120" fill="#FFFFFF"/>
+                        <!-- KOLLAR (sol kol sallanir) -->
+                        <g class="cup-arm-l">
+                            <path class="cup-limb" d="M 102 266 C 84 268, 74 252, 76 238"/>
+                            <circle cx="76" cy="236" r="3.8" fill="var(--cup-stroke)"/>
+                        </g>
+                        <g>
+                            <path class="cup-limb" d="M 218 266 C 238 274, 248 288, 242 302"/>
+                            <circle cx="242" cy="304" r="3.8" fill="var(--cup-stroke)"/>
+                        </g>
 
-                        <!-- Krema Swirl -->
-                        <path d="M120 70 Q140 30 150 50 Q160 30 180 70" fill="#F5E1E9"/>
-                        <ellipse cx="150" cy="50" rx="25" ry="15" fill="#FDF8F5"/>
+                        <!-- KAGIT KALIP -->
+                        <path d="M 94 222 Q 102 220 160 218 Q 218 220 226 222 L 232 320 Q 228 330 218 332 Q 200 338 160 338 Q 120 338 102 332 Q 92 330 88 320 Z" fill="var(--cup-wrap)"/>
+                        <g fill="var(--cup-wrap-dark)" opacity=".9">
+                            <path d="M 114 224 L 116 332 L 126 332 L 126 224 Z"/>
+                            <path d="M 144 224 L 146 334 L 156 334 L 156 224 Z"/>
+                            <path d="M 174 224 L 172 334 L 182 334 L 182 224 Z"/>
+                            <path d="M 202 224 L 200 332 L 210 332 L 212 224 Z"/>
+                        </g>
+                        <path d="M 210 222 Q 224 222 226 222 L 232 320 Q 228 330 218 332 Q 214 334 208 336 L 210 224 Z" fill="var(--cup-wrap-shadow)" opacity=".35"/>
 
-                        <!-- Kiraz -->
-                        <circle cx="150" cy="35" r="15" fill="#D4A5A5"/>
-                        <circle cx="150" cy="32" r="12" fill="#C48B8B"/>
-                        <path d="M150 20 Q155 5 165 10" stroke="#7BA87B" stroke-width="3" fill="none"/>
-                        <ellipse cx="160" cy="12" rx="6" ry="4" fill="#7BA87B"/>
+                        <!-- ust bant -->
+                        <path d="M 86 222 Q 160 206 234 222 Q 226 232 160 234 Q 94 232 86 222 Z" fill="var(--cup-wrap-edge)"/>
+                        <ellipse cx="150" cy="221" rx="22" ry="2.2" fill="#fff" opacity=".55"/>
 
-                        <!-- Işıltı -->
-                        <circle cx="145" cy="28" r="3" fill="#FFFFFF" opacity="0.6"/>
+                        <!-- kalip outline + pili cizgileri -->
+                        <path class="cup-ln" d="M 86 222 Q 160 206 234 222 Q 226 232 160 234 Q 94 232 86 222 Z"/>
+                        <path class="cup-ln" d="M 88 226 L 88 320 Q 92 330 102 332 Q 120 338 160 338 Q 200 338 218 332 Q 228 330 232 320 L 232 226"/>
+                        <g class="cup-ln-thin">
+                            <path d="M 112 226 L 114 330"/>
+                            <path d="M 130 226 L 132 332"/>
+                            <path d="M 146 226 L 148 334"/>
+                            <path d="M 160 226 L 160 338"/>
+                            <path d="M 174 226 L 172 334"/>
+                            <path d="M 190 226 L 188 332"/>
+                            <path d="M 208 226 L 206 330"/>
+                        </g>
 
-                        <!-- Sprinkles -->
-                        <rect x="100" y="95" width="8" height="3" rx="1" fill="#D4A5A5" transform="rotate(-20 100 95)"/>
-                        <rect x="180" y="100" width="8" height="3" rx="1" fill="#A5C4A5" transform="rotate(15 180 100)"/>
-                        <rect x="130" y="110" width="6" height="3" rx="1" fill="#E8C4D4" transform="rotate(-10 130 110)"/>
-                        <rect x="160" y="105" width="7" height="3" rx="1" fill="#8B6F5C" transform="rotate(25 160 105)"/>
+                        <!-- YUZ -->
+                        <ellipse cx="126" cy="270" rx="10" ry="5" fill="var(--cup-cheek)" opacity=".85"/>
+                        <ellipse cx="194" cy="270" rx="10" ry="5" fill="var(--cup-cheek)" opacity=".85"/>
+                        <g class="cup-eyes">
+                            <circle cx="140" cy="260" r="5" fill="var(--cup-stroke)"/>
+                            <circle cx="180" cy="260" r="5" fill="var(--cup-stroke)"/>
+                            <circle cx="141.6" cy="258.4" r="1.5" fill="#fff"/>
+                            <circle cx="181.6" cy="258.4" r="1.5" fill="#fff"/>
+                        </g>
+                        <path d="M 148 278 Q 160 294 172 278 Q 166 292 160 292 Q 154 292 148 278 Z" fill="var(--cup-cherry-shade)" stroke="var(--cup-stroke)" stroke-width="2.2" stroke-linejoin="round"/>
+                        <path d="M 154 286 Q 160 292 166 286 Q 162 290 160 290 Q 158 290 154 286 Z" fill="var(--cup-cherry-light)"/>
+
+                        <!-- KEK TABANI (mafin) -->
+                        <path d="M 66 202 C 86 172, 124 160, 160 160 C 196 160, 234 172, 254 202 C 254 224, 214 230, 160 230 C 106 230, 66 224, 66 202 Z" fill="var(--cup-cake)"/>
+                        <path d="M 70 214 C 100 228, 140 232, 160 232 C 180 232, 220 228, 250 214 C 240 226, 206 232, 160 232 C 114 232, 80 226, 70 214 Z" fill="var(--cup-cake-shade)" opacity=".6"/>
+                        <path class="cup-ln" d="M 66 202 C 86 172, 124 160, 160 160 C 196 160, 234 172, 254 202"/>
+                        <path class="cup-ln" d="M 66 202 C 66 224, 106 230, 160 230 C 214 230, 254 224, 254 202"/>
+
+                        <!-- FROSTING (3 dalga swirl) -->
+                        <path d="M 72 162 C 82 118, 120 100, 160 100 C 200 100, 238 118, 248 162 C 248 176, 220 182, 160 182 C 100 182, 72 176, 72 162 Z" fill="var(--cup-frost)"/>
+                        <path d="M 76 164 C 110 178, 210 178, 244 164 C 236 178, 200 182, 160 182 C 120 182, 84 178, 76 164 Z" fill="var(--cup-frost-mid)"/>
+                        <path d="M 90 128 C 100 96, 130 80, 160 80 C 190 80, 220 96, 230 128 C 226 140, 200 146, 160 146 C 120 146, 94 140, 90 128 Z" fill="var(--cup-frost)"/>
+                        <path d="M 94 130 C 122 142, 198 142, 226 130 C 220 142, 192 146, 160 146 C 128 146, 100 142, 94 130 Z" fill="var(--cup-frost-mid)"/>
+                        <path d="M 120 92 C 128 66, 146 56, 160 56 C 174 56, 192 66, 200 92 C 196 102, 180 106, 160 106 C 140 106, 124 102, 120 92 Z" fill="var(--cup-frost)"/>
+                        <path d="M 124 94 C 140 104, 180 104, 196 94 C 190 104, 178 106, 160 106 C 142 106, 130 104, 124 94 Z" fill="var(--cup-frost-mid)"/>
+
+                        <!-- beyaz swirl highlights -->
+                        <g stroke="#fff" stroke-linecap="round" fill="none" opacity=".9">
+                            <path d="M 98 140 Q 130 128 160 128" stroke-width="3"/>
+                            <path d="M 130 104 Q 150 92 174 94" stroke-width="2.5"/>
+                            <path d="M 140 72 Q 152 64 166 66" stroke-width="2"/>
+                        </g>
+
+                        <!-- serpme sekerler -->
+                        <g fill="var(--cup-sprinkle)">
+                            <ellipse cx="110" cy="150" rx="2.2" ry="1.2" transform="rotate(20 110 150)"/>
+                            <ellipse cx="138" cy="158" rx="2.2" ry="1.2" transform="rotate(-14 138 158)"/>
+                            <ellipse cx="168" cy="156" rx="2.2" ry="1.2" transform="rotate(8 168 156)"/>
+                            <ellipse cx="196" cy="152" rx="2.2" ry="1.2" transform="rotate(-20 196 152)"/>
+                            <ellipse cx="222" cy="148" rx="2.2" ry="1.2" transform="rotate(22 222 148)"/>
+                            <ellipse cx="122" cy="124" rx="2" ry="1.1" transform="rotate(-18 122 124)"/>
+                            <ellipse cx="152" cy="120" rx="2" ry="1.1" transform="rotate(10 152 120)"/>
+                            <ellipse cx="184" cy="118" rx="2" ry="1.1" transform="rotate(-8 184 118)"/>
+                            <ellipse cx="212" cy="124" rx="2" ry="1.1" transform="rotate(24 212 124)"/>
+                            <ellipse cx="146" cy="88" rx="1.8" ry="1" transform="rotate(-18 146 88)"/>
+                            <ellipse cx="178" cy="86" rx="1.8" ry="1" transform="rotate(12 178 86)"/>
+                        </g>
+
+                        <!-- frosting outlines -->
+                        <path class="cup-ln" d="M 120 92 C 128 66, 146 56, 160 56 C 174 56, 192 66, 200 92"/>
+                        <path class="cup-ln-thin" d="M 124 94 C 140 104, 180 104, 196 94"/>
+                        <path class="cup-ln" d="M 90 128 C 100 96, 130 80, 160 80 C 190 80, 220 96, 230 128"/>
+                        <path class="cup-ln-thin" d="M 94 130 C 122 142, 198 142, 226 130"/>
+                        <path class="cup-ln" d="M 72 162 C 82 118, 120 100, 160 100 C 200 100, 238 118, 248 162 C 248 176, 220 182, 160 182 C 100 182, 72 176, 72 162 Z"/>
+
+                        <!-- KIRAZ -->
+                        <path class="cup-ln" d="M 168 40 C 176 22, 192 18, 202 22"/>
+                        <path d="M 196 14 C 212 12, 216 24, 206 30 C 198 30, 192 22, 196 14 Z" fill="var(--cup-leaf)"/>
+                        <path class="cup-ln-thin" d="M 196 14 C 212 12, 216 24, 206 30 C 198 30, 192 22, 196 14 Z"/>
+                        <path class="cup-ln-xthin" d="M 198 18 C 202 22, 205 26, 206 28"/>
+                        <circle cx="160" cy="44" r="16" fill="var(--cup-cherry)"/>
+                        <path d="M 146 46 C 152 60, 168 60, 174 46 C 172 58, 148 58, 146 46 Z" fill="var(--cup-cherry-shade)" opacity=".85"/>
+                        <ellipse cx="152" cy="38" rx="3.2" ry="4.6" fill="#fff" opacity=".95"/>
+                        <circle cx="157" cy="42" r="1.4" fill="#fff" opacity=".85"/>
+                        <circle class="cup-ln" cx="160" cy="44" r="16" fill="none"/>
                     </svg>
                 </div>
             </div>
@@ -272,6 +424,7 @@ $products = getProducts();
 
     <!-- ========== TESLİMAT BİLGİSİ SECTION ========== -->
     <section class="delivery-section bg-gradient-1" id="teslimat">
+        <div class="section-texture" aria-hidden="true"></div>
         <div class="container">
             <div class="delivery-content reveal reveal-up">
                 <!-- Animasyonlu Teslimat Kamyoneti -->
@@ -313,6 +466,7 @@ $products = getProducts();
                     </div>
                 </div>
                 <h2>Teslimat Bilgisi</h2>
+                <div class="gold-divider u-mb-6" aria-hidden="true"></div>
                 <div class="delivery-cards">
                     <div class="delivery-card free">
                         <div class="delivery-card-icon">
@@ -342,17 +496,19 @@ $products = getProducts();
 
     <!-- ========== ÜRÜNLER SECTION ========== -->
     <section class="products bg-gradient-2" id="products">
+        <div class="section-texture" aria-hidden="true"></div>
         <div class="container">
             <div class="section-header reveal reveal-up">
-                <h2>Lezzetlerimiz</h2>
-                <p>El yapımı, taze ve her biri özenle hazırlanmış ürünlerimiz</p>
+                <h2><?= e(t('home.products_title')) ?></h2>
+                <div class="gold-divider" aria-hidden="true"></div>
+                <p><?= e(t('home.products_subtitle')) ?></p>
             </div>
 
             <!-- Kategori Filtreleri -->
             <div class="category-filters reveal reveal-up reveal-delay-1">
-                <button class="filter-btn active" data-category="all">Tümü</button>
+                <button class="filter-btn active" data-category="all"><?= e(t('common.all')) ?></button>
                 <?php foreach ($categories as $cat): ?>
-                    <button class="filter-btn" data-category="<?= e($cat['slug']) ?>"><?= e($cat['ad']) ?></button>
+                    <button class="filter-btn" data-category="<?= e($cat['slug']) ?>"><?= e($cat['isim']) ?></button>
                 <?php endforeach; ?>
             </div>
 
@@ -369,11 +525,11 @@ $products = getProducts();
                     $categoryName = $product['kategori_ad'] ?? '';
 
                     // WhatsApp mesajı için URL encode
-                    $waMessage = urlencode("Merhaba, " . $product['ad'] . " hakkında bilgi almak istiyorum.");
+                    $waMessage = urlencode("Merhaba, " . $product['isim'] . " hakkında bilgi almak istiyorum.");
 
                     // Modal için JSON data
                     $productData = [
-                        'isim' => $product['ad'],
+                        'isim' => $product['isim'],
                         'aciklama' => $product['aciklama'] ?? '',
                         'gorsel' => $product['gorsel'] ?? '',
                         'fiyat' => $product['fiyat'],
@@ -388,7 +544,7 @@ $products = getProducts();
                 <div class="product-card" data-category="<?= e($categorySlug) ?>" data-product='<?= htmlspecialchars(json_encode($productData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>'>
                     <div class="product-image">
                         <?php if ($product['gorsel']): ?>
-                            <img src="uploads/products/<?= e($product['gorsel']) ?>" alt="<?= e($product['ad']) ?>">
+                            <img src="uploads/products/<?= e($product['gorsel']) ?>" alt="<?= e($product['isim']) ?>" loading="lazy" decoding="async">
                         <?php else: ?>
                             <!-- Varsayılan SVG İllüstrasyon -->
                             <svg viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -408,7 +564,7 @@ $products = getProducts();
                         <?php if ($categoryName): ?>
                             <span class="product-category"><?= e($categoryName) ?></span>
                         <?php endif; ?>
-                        <h3 class="product-name"><?= e($product['ad']) ?></h3>
+                        <h3 class="product-name"><?= e($product['isim']) ?></h3>
                         <?php if ($product['aciklama']): ?>
                             <p class="product-description"><?= e($product['aciklama']) ?></p>
                         <?php endif; ?>
@@ -445,7 +601,7 @@ $products = getProducts();
                 <?php endforeach; ?>
 
                 <?php if (empty($products)): ?>
-                    <div class="no-products" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                    <div class="no-products u-grid-empty-center">
                         <p>Henüz ürün bulunmamaktadır.</p>
                     </div>
                 <?php endif; ?>
@@ -462,8 +618,9 @@ $products = getProducts();
     <section class="calendar-section bg-gradient-2" id="takvim">
         <div class="container">
             <div class="section-header reveal reveal-up">
-                <h2>Müsaitlik Takvimi</h2>
-                <p>Sipariş vermeden önce uygunluk durumumuzu kontrol edin</p>
+                <h2><?= e(t('home.calendar_title')) ?></h2>
+                <div class="gold-divider" aria-hidden="true"></div>
+                <p><?= e(t('home.calendar_subtitle')) ?></p>
             </div>
 
             <div class="calendar-wrapper reveal reveal-up reveal-delay-1">
@@ -503,10 +660,11 @@ $products = getProducts();
 
     <!-- ========== İLETİŞİM SECTION ========== -->
     <section class="contact bg-gradient-3" id="contact">
+        <div class="section-texture" aria-hidden="true"></div>
         <div class="container">
             <div class="contact-content">
                 <div class="contact-info reveal reveal-left">
-                    <h2>İletişim</h2>
+                    <h2><?= e(t('home.contact_title')) ?></h2>
                     <p>
                         Özel günleriniz için sipariş vermek veya sorularınız için
                         bizimle iletişime geçebilirsiniz.
@@ -630,7 +788,7 @@ $products = getProducts();
                 <form class="contact-form reveal reveal-right" action="iletisim.php" method="POST">
                     <?= csrfTokenField() ?>
                     <!-- Honeypot - spam koruması -->
-                    <input type="text" name="website" style="display:none;" tabindex="-1" autocomplete="off">
+                    <input type="text" name="website" class="u-hidden" tabindex="-1" autocomplete="off">
                     <div class="form-group">
                         <label for="name">Adınız</label>
                         <input type="text" id="name" name="name" required placeholder="Adınız Soyadınız">
@@ -647,7 +805,7 @@ $products = getProducts();
                         <label for="message">Mesajınız</label>
                         <textarea id="message" name="message" required placeholder="Mesajınızı buraya yazın..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Gönder</button>
+                    <button type="submit" class="btn btn-primary u-w-100">Gönder</button>
                 </form>
             </div>
         </div>
@@ -657,8 +815,9 @@ $products = getProducts();
     <section class="faq-section bg-gradient-1" id="sss">
         <div class="container">
             <div class="section-header reveal reveal-up">
-                <h2>Sıkça Sorulan Sorular</h2>
-                <p>Merak ettiğiniz soruların cevapları</p>
+                <h2><?= e(t('home.faq_title')) ?></h2>
+                <div class="gold-divider" aria-hidden="true"></div>
+                <p><?= e(t('home.faq_subtitle')) ?></p>
             </div>
 
             <div class="faq-list reveal reveal-up reveal-delay-1">
@@ -784,8 +943,8 @@ $products = getProducts();
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-logo">Tatlı Düşler</div>
-                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">El yapımı lezzetler</p>
+                <div class="footer-logo"><?= e(t('home.hero_title')) ?></div>
+                <p class="u-note-box"><?= e(t('home.footer_tagline')) ?></p>
 
                 <div class="footer-social">
                     <a href="#" aria-label="Instagram">
@@ -797,7 +956,7 @@ $products = getProducts();
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 Tatlı Düşler. Tüm hakları saklıdır.</p>
+                <p><?= e(t('home.footer_copyright', ['year' => date('Y')])) ?></p>
             </div>
         </div>
     </footer>
@@ -809,9 +968,9 @@ $products = getProducts();
 
     <!-- Ürün Detay Modal -->
     <div class="product-modal" id="productModal">
-        <div class="modal-overlay" onclick="closeProductModal()"></div>
+        <div class="modal-overlay"></div>
         <div class="modal-content">
-            <button class="modal-close" onclick="closeProductModal()" aria-label="Kapat">
+            <button class="modal-close" aria-label="Kapat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -841,6 +1000,7 @@ $products = getProducts();
     </div>
 
     <!-- JavaScript -->
-    <script src="assets/js/main.js?v=2"></script>
+    <script src="assets/js/main.js?v=3"></script>
+    <script src="assets/js/theme-switcher.js?v=1.0"></script>
 </body>
 </html>

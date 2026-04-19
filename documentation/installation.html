@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Installation Guide - Tatli Dusler Pastane</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #d0d0d0; padding: 10px 12px; text-align: left; font-size: 14px; vertical-align: top; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  .step { background: #fff; border-left: 4px solid #c94f7c; padding: 14px 18px; margin: 18px 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .step h3 { margin-top: 0; color: #c94f7c; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .warn { background: #ffebee; border-left: 4px solid #d32f2f; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .success { background: #e8f5e9; border-left: 4px solid #388e3c; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Installation Guide</h1>
+  <div class="subtitle">From zero to a running instance in roughly thirty minutes.</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html">Home</a>
+  <a href="installation.html" class="active">Installation</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="admin-guide.html">Admin Guide</a>
+  <a href="user-guide.html">User Guide</a>
+  <a href="faq.html">FAQ</a>
+</nav>
+
+<h2>System requirements</h2>
+<p>Please confirm your hosting environment matches the minimums below before uploading the archive. Shared hosting with cPanel is supported as long as shell access or a file manager with extraction is available.</p>
+
+<table>
+  <tr><th>Component</th><th>Minimum</th><th>Recommended</th><th>Notes</th></tr>
+  <tr><td>PHP</td><td>8.1</td><td>8.2 or 8.3</td><td>Required extensions: <code>pdo_mysql</code>, <code>mbstring</code>, <code>json</code>, <code>openssl</code>, <code>gd</code>, <code>fileinfo</code>, <code>intl</code>.</td></tr>
+  <tr><td>MySQL</td><td>8.0</td><td>8.0.36+</td><td>MariaDB 10.6+ is also supported. Use <code>utf8mb4</code> character set.</td></tr>
+  <tr><td>Web server</td><td>Apache 2.4</td><td>Apache 2.4 + mod_rewrite + mod_headers</td><td>Nginx works with the supplied <code>nginx.conf.example</code>.</td></tr>
+  <tr><td>Composer</td><td>2.5</td><td>2.7</td><td>Only required if you want to regenerate the autoload map. A pre-built <code>vendor/</code> is included.</td></tr>
+  <tr><td>Disk</td><td>200 MB</td><td>1 GB</td><td>Uploads and backups grow over time. Plan accordingly.</td></tr>
+  <tr><td>Memory</td><td>128 MB PHP memory_limit</td><td>256 MB</td><td>Reports and image uploads benefit from the higher limit.</td></tr>
+</table>
+
+<div class="screenshot">
+  <img src="screenshots/install-requirements.png" alt="Server requirements checker running in a terminal" />
+  <figcaption>Figure 1. Running <code>php -m</code> and <code>php -v</code> to verify your environment.</figcaption>
+</div>
+
+<h2>Pre-flight checklist</h2>
+<ul>
+  <li>You have an SFTP or SSH account to upload files, or cPanel File Manager access.</li>
+  <li>You have a MySQL user with <code>CREATE</code>, <code>ALTER</code>, <code>INDEX</code>, <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code> on the target database.</li>
+  <li>Your domain name already resolves to the server.</li>
+  <li>You can edit <code>.htaccess</code> or the virtual host configuration.</li>
+  <li>You have a valid TLS certificate (Let's Encrypt is fine). The platform should not be run over plain HTTP in production.</li>
+</ul>
+
+<h2>Step-by-step installation</h2>
+
+<div class="step">
+  <h3>Step 1 - Download and extract</h3>
+  <p>Download the archive from your CodeCanyon account. The download is a single <code>zip</code> file typically named <code>pastane-v1.0.zip</code>. Unzip it locally and review the top-level folders.</p>
+  <pre><code>unzip pastane-v1.0.zip -d pastane
+cd pastane
+ls -la</code></pre>
+  <p>You should see folders such as <code>admin/</code>, <code>api/</code>, <code>assets/</code>, <code>bin/</code>, <code>config/</code>, <code>database/</code>, <code>docs/</code>, <code>documentation/</code>, <code>includes/</code>, <code>menu/</code>, <code>src/</code>, <code>storage/</code>, <code>uploads/</code>, <code>vendor/</code>.</p>
+</div>
+
+<div class="step">
+  <h3>Step 2 - Create the database</h3>
+  <p>Log in to MySQL as a privileged user and execute:</p>
+  <pre><code>CREATE DATABASE pastane_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE USER 'pastane_user'@'localhost' IDENTIFIED BY 'replace-with-strong-password';
+GRANT ALL PRIVILEGES ON pastane_db.* TO 'pastane_user'@'localhost';
+FLUSH PRIVILEGES;</code></pre>
+  <p>Write down the database name, user, and password - you will need them in Step 3.</p>
+</div>
+
+<div class="step">
+  <h3>Step 3 - Configure the environment file</h3>
+  <p>Copy the example file and open it in your favourite editor.</p>
+  <pre><code>cp .env.example .env
+nano .env</code></pre>
+  <p>At minimum you must fill in the following keys. Full reference is in the <a href="configuration.html">Configuration</a> chapter.</p>
+  <pre><code>APP_ENV=production
+APP_URL=https://your-domain.example
+APP_DEBUG=false
+
+DB_HOST=127.0.0.1
+DB_NAME=pastane_db
+DB_USER=pastane_user
+DB_PASS=replace-with-strong-password
+
+JWT_SECRET=generate-a-long-random-string
+METRICS_TOKEN=generate-another-long-random-string</code></pre>
+  <div class="note">
+    <strong>Tip.</strong> Generate strong secrets with <code>php -r "echo bin2hex(random_bytes(32));"</code> or <code>openssl rand -hex 32</code>. Never commit the <code>.env</code> file to source control.
+  </div>
+</div>
+
+<div class="step">
+  <h3>Step 4 - Install or refresh PHP dependencies (optional)</h3>
+  <p>The archive already ships with a production-ready <code>vendor/</code> folder. If you prefer to regenerate it, for example to apply security patches, run:</p>
+  <pre><code>composer install --no-dev --optimize-autoloader</code></pre>
+  <p>For development machines where you want test tooling available:</p>
+  <pre><code>composer install</code></pre>
+</div>
+
+<div class="step">
+  <h3>Step 5 - Run database migrations</h3>
+  <p>The platform uses explicit migrations so that upgrades are predictable. Two options are available.</p>
+  <p><strong>Option A (recommended):</strong> run the migration runner from the command line.</p>
+  <pre><code>php bin/migrate.php</code></pre>
+  <p><strong>Option B:</strong> import the single SQL snapshot that ships with the package. Use this if your host does not permit CLI PHP.</p>
+  <pre><code>mysql -u pastane_user -p pastane_db &lt; database.sql</code></pre>
+  <div class="note">
+    <strong>Note.</strong> Mixing the two options is not recommended. Pick one and stick to it.
+  </div>
+</div>
+
+<div class="step">
+  <h3>Step 6 - Seed demo data (optional)</h3>
+  <p>An idempotent seed script creates five categories, fifteen demo products, ten tables with unique QR tokens, and a single administrator account. Re-running the script is safe; it will not create duplicates.</p>
+  <pre><code>php bin/db-seed.php</code></pre>
+  <p>The script prints the generated administrator password to standard output and also writes it to <code>storage/logs/db-seed.log</code>. Copy it somewhere safe immediately; it is not displayed again.</p>
+</div>
+
+<div class="screenshot">
+  <img src="screenshots/install-seed-output.png" alt="Terminal output of db-seed.php showing created categories and admin password" />
+  <figcaption>Figure 2. Successful seed output with the administrator password.</figcaption>
+</div>
+
+<div class="step">
+  <h3>Step 7 - Web server configuration</h3>
+  <p>On Apache, confirm the following modules are enabled:</p>
+  <pre><code>sudo a2enmod rewrite
+sudo a2enmod headers
+sudo systemctl reload apache2</code></pre>
+  <p>The project ships an <code>.htaccess</code> that hardens headers, redirects HTTP to HTTPS, and sets <code>DirectoryIndex index.php</code>. Make sure <code>AllowOverride All</code> is set for the vhost, otherwise the file is ignored.</p>
+  <p>Typical virtual host snippet:</p>
+  <pre><code>&lt;VirtualHost *:443&gt;
+  ServerName your-domain.example
+  DocumentRoot /var/www/pastane
+
+  &lt;Directory /var/www/pastane&gt;
+    AllowOverride All
+    Require all granted
+  &lt;/Directory&gt;
+
+  SSLEngine on
+  SSLCertificateFile    /etc/letsencrypt/live/your-domain.example/fullchain.pem
+  SSLCertificateKeyFile /etc/letsencrypt/live/your-domain.example/privkey.pem
+&lt;/VirtualHost&gt;</code></pre>
+</div>
+
+<div class="step">
+  <h3>Step 8 - File permissions</h3>
+  <p>The application writes to <code>storage/</code> (logs, cache, sessions, backups) and <code>uploads/</code> (product images). Grant the web server user write access while keeping everything else read-only.</p>
+  <pre><code>sudo chown -R www-data:www-data /var/www/pastane
+sudo find /var/www/pastane -type d -exec chmod 755 {} \;
+sudo find /var/www/pastane -type f -exec chmod 644 {} \;
+sudo chmod -R 775 /var/www/pastane/storage /var/www/pastane/uploads</code></pre>
+  <div class="warn">
+    <strong>Never</strong> run <code>chmod -R 777</code>. It is insecure and unnecessary. If you encounter write errors, verify ownership first (<code>chown</code>), not permissions.
+  </div>
+</div>
+
+<div class="step">
+  <h3>Step 9 - First administrator login</h3>
+  <p>Open your browser and navigate to <code>https://your-domain.example/admin/login.php</code>. Use the credentials printed during Step 6. If you skipped the seed, create a user manually with the SQL below.</p>
+  <pre><code>-- Replace 'choose-a-password' with your chosen password.
+INSERT INTO admin_kullanicilar (kullanici_adi, sifre, rol, aktif)
+VALUES (
+  'admin',
+  -- Hash generated at runtime:
+  -- php -r "echo password_hash('choose-a-password', PASSWORD_BCRYPT, ['cost' =&gt; 12]);"
+  '$2y$12$PLACEHOLDER_PUT_REAL_HASH_HERE',
+  'admin',
+  1
+);</code></pre>
+  <div class="success">
+    <strong>Success.</strong> If the dashboard loads and shows today's (likely empty) statistics, the core installation is complete. Head over to the <a href="configuration.html">Configuration</a> chapter to wire up email, SMS and payment.
+  </div>
+</div>
+
+<div class="screenshot">
+  <img src="screenshots/install-first-login.png" alt="Administrator login screen after fresh installation" />
+  <figcaption>Figure 3. Login screen - change the default password immediately after you log in.</figcaption>
+</div>
+
+<h2>Troubleshooting</h2>
+
+<h3>Symptom: "404 Not Found" on every page except the homepage</h3>
+<p>Apache <code>mod_rewrite</code> is disabled, or <code>AllowOverride</code> is not set to <code>All</code>. Re-read Step 7 and reload Apache. Run <code>a2enmod rewrite</code> and verify with <code>apachectl -M | grep rewrite</code>.</p>
+
+<h3>Symptom: "Access denied for user" during first page load</h3>
+<p>The database credentials in <code>.env</code> are wrong or the user does not have rights to the database. Reconnect with the same credentials from the command line to verify (<code>mysql -u pastane_user -p pastane_db</code>).</p>
+
+<h3>Symptom: "Failed to open stream: Permission denied" in <code>storage/logs/</code></h3>
+<p>The web server user cannot write to <code>storage/</code>. Re-run the <code>chown</code> commands from Step 8. Do not use <code>chmod 777</code>.</p>
+
+<h3>Symptom: CSS and images are missing</h3>
+<p>Most often caused by an incorrect <code>APP_URL</code> or a misconfigured virtual host document root. Verify that <code>https://your-domain.example/assets/css/style.css</code> returns HTTP 200 directly from your browser. If it does not, your document root is pointing at the wrong folder.</p>
+
+<h3>Symptom: "Class not found" errors</h3>
+<p>The Composer autoload map is stale. Run <code>composer dump-autoload -o</code>. If Composer is unavailable on the server, upload a fresh <code>vendor/</code> folder from a machine that has it.</p>
+
+<h3>Symptom: "Too many redirects"</h3>
+<p>Either your reverse proxy is adding an HTTPS redirect while <code>.htaccess</code> also redirects, or <code>APP_URL</code> contains <code>http://</code> while the server serves HTTPS. Fix one or the other. For CDN users, the CDN should forward <code>X-Forwarded-Proto: https</code>.</p>
+
+<h2>Uninstalling</h2>
+<p>If for any reason you wish to remove the platform, drop the database and delete the document root. There are no system-wide files installed outside the archive.</p>
+<pre><code>mysql -u root -p -e "DROP DATABASE pastane_db;"
+sudo rm -rf /var/www/pastane</code></pre>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

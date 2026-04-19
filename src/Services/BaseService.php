@@ -332,4 +332,62 @@ abstract class BaseService
             // Cache temizleme hatası business logic'i engellememeli
         }
     }
+
+    /**
+     * Cache hit/miss sayaçlarını kaydet (Prometheus)
+     *
+     * `\Metrics` sınıfı yoksa sessizce geçer (backward-compat).
+     *
+     * @param string $key     Cache anahtarı
+     * @param bool   $isHit   true = hit, false = miss
+     * @return void
+     */
+    protected function recordCacheMetric(string $key, bool $isHit): void
+    {
+        try {
+            if (class_exists('\Metrics', false)) {
+                \Metrics::inc(
+                    'pastane_cache_operations_total',
+                    [
+                        'key'    => $key,
+                        'result' => $isHit ? 'hit' : 'miss',
+                    ]
+                );
+            }
+        } catch (\Throwable) {
+            // Metrics kaydı ana akışı engellememeli
+        }
+    }
+
+    /**
+     * Cache'den değer çek, yoksa callback'i çalıştır ve cache'le.
+     * Ek olarak hit/miss sayaçlarını Metrics'e kaydeder.
+     *
+     * Cache erişilemezse callback direkt çalıştırılır (graceful degrade).
+     *
+     * @param string   $key      Cache anahtarı
+     * @param callable $callback Cache miss'te çalışacak fonksiyon
+     * @param int|null $ttl      TTL saniye (null = Cache default)
+     * @return mixed
+     */
+    protected function cacheRemember(string $key, callable $callback, ?int $ttl = null): mixed
+    {
+        try {
+            $cache = \Cache::getInstance();
+            $existing = $cache->get($key);
+
+            if ($existing !== null) {
+                $this->recordCacheMetric($key, true);
+                return $existing;
+            }
+
+            $this->recordCacheMetric($key, false);
+            $value = $callback();
+            $cache->set($key, $value, $ttl);
+            return $value;
+        } catch (\Throwable) {
+            // Cache fail olursa doğrudan callback
+            return $callback();
+        }
+    }
 }

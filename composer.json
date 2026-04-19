@@ -35,10 +35,16 @@
             "includes/Logger.php",
             "includes/Cache.php",
             "includes/Migration.php",
-            "includes/HealthCheck.php"
+            "includes/HealthCheck.php",
+            "includes/EmailService.php",
+            "includes/SmsService.php",
+            "includes/Metrics.php",
+            "includes/SvgSanitizer.php"
         ],
         "files": [
-            "includes/helpers.php"
+            "includes/helpers.php",
+            "includes/asset.php",
+            "includes/i18n.php"
         ]
     },
     "autoload-dev": {
@@ -49,9 +55,29 @@
     "scripts": {
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-html coverage",
-        "phpstan": "phpstan analyse src -l 5",
-        "cs": "phpcs --standard=PSR12 src/",
-        "cs-fix": "phpcbf --standard=PSR12 src/"
+        "phpstan": "phpstan analyse --no-progress",
+        "phpcs": "phpcs --standard=PSR12 src/ includes/",
+        "phpcbf": "phpcbf --standard=PSR12 src/ includes/",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "lint": [
+            "@phpcs",
+            "@phpstan",
+            "@cs-check"
+        ],
+        "fix": [
+            "@phpcbf",
+            "@cs-fix"
+        ],
+        "captainhook:install": "captainhook install --ansi -f",
+        "post-install-cmd": [
+            "@php -r \"if (file_exists('vendor/bin/captainhook')) { passthru('vendor/bin/captainhook install -f -s'); }\""
+        ]
+    },
+    "suggest": {
+        "friendsofphp/php-cs-fixer": "PSR-12 + proje kodlama standardı (composer require --dev friendsofphp/php-cs-fixer)",
+        "captainhook/captainhook": "Git pre-commit/commit-msg hook'ları (composer require --dev captainhook/captainhook)",
+        "captainhook/plugin-composer": "CaptainHook composer auto-install entegrasyonu"
     },
     "config": {
         "optimize-autoloader": true,

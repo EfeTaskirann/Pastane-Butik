@@ -13,7 +13,12 @@
     "format": "prettier --write \"assets/**/*.{js,scss,css}\"",
     "watch": "vite build --watch",
     "clean": "rimraf dist",
-    "analyze": "vite-bundle-analyzer"
+    "analyze": "vite-bundle-analyzer",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install --with-deps"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^5.0.0",

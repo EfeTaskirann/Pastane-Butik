@@ -19,7 +19,7 @@ return [
         'cookie' => 'pastane_session',
         'path' => '/',
         'domain' => null,
-        'secure' => env('APP_ENV') === 'production',
+        'secure' => env('APP_ENV', 'production') === 'production',
         'http_only' => true,
         'same_site' => 'Strict',
     ],
@@ -128,7 +128,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'https' => [
-        'force' => env('APP_ENV') === 'production',
+        'force' => env('APP_ENV', 'production') === 'production',
         'hsts' => [
             'enabled' => true,
             'max_age' => 31536000, // 1 year

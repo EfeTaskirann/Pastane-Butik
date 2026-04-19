@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
+require_permission('category.view'); // RBAC — Sprint 1
 
 use Pastane\Exceptions\HttpException;
 
@@ -52,14 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
                 if ($edit_id) {
                     // Güncelle (service slug'ı otomatik oluşturur)
                     $kategoriService->update($edit_id, [
-                        'ad' => $isim,
+                        'isim' => $isim,
                         'sira' => $sira
                     ]);
                     setFlash('success', 'Kategori güncellendi.');
                 } else {
                     // Ekle (service slug'ı otomatik oluşturur)
                     $kategoriService->create([
-                        'ad' => $isim,
+                        'isim' => $isim,
                         'sira' => $sira
                     ]);
                     setFlash('success', 'Kategori eklendi.');
@@ -113,8 +114,8 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 <?php endif; ?>
 
 <!-- Stats -->
-<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-    <div class="stat-card" style="--stat-color: var(--admin-primary);">
+<div class="stats-grid u-grid-auto-180-tight">
+    <div class="stat-card stat-card--primary">
         <div class="stat-icon primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="8" y1="6" x2="21" y2="6"/>
@@ -130,7 +131,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
             <span>Toplam Kategori</span>
         </div>
     </div>
-    <div class="stat-card" style="--stat-color: var(--admin-success);">
+    <div class="stat-card stat-card--success">
         <div class="stat-icon success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
@@ -144,7 +145,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 </div>
 
 <!-- Main Content Grid -->
-<div style="display: grid; grid-template-columns: 1fr 340px; gap: var(--space-6);">
+<div class="u-grid-detail-340">
     <!-- Category List -->
     <div class="card">
         <div class="card-header">
@@ -159,7 +160,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
             </h3>
             <span class="badge badge-neutral"><?= count($categories) ?> kategori</span>
         </div>
-        <div class="card-body" style="padding: 0;">
+        <div class="card-body u-p-0">
             <?php if (empty($categories)): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon">
@@ -180,12 +181,12 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 50px;">#</th>
+                                <th class="u-w-50px">#</th>
                                 <th>Kategori Adı</th>
                                 <th>Slug</th>
-                                <th style="text-align: center;">Ürün</th>
-                                <th style="text-align: center;">Sıra</th>
-                                <th style="width: 120px;">İşlemler</th>
+                                <th class="u-text-center">Ürün</th>
+                                <th class="u-text-center">Sıra</th>
+                                <th class="u-w-120px">İşlemler</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -195,33 +196,33 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                                 <td>
                                     <div class="flex items-center gap-3">
                                         <div class="avatar avatar-sm avatar-accent">
-                                            <?= mb_strtoupper(mb_substr($cat['ad'], 0, 1)) ?>
+                                            <?= mb_strtoupper(mb_substr($cat['isim'], 0, 1)) ?>
                                         </div>
-                                        <span class="cell-primary"><?= e($cat['ad']) ?></span>
+                                        <span class="cell-primary"><?= e($cat['isim']) ?></span>
                                     </div>
                                 </td>
                                 <td>
                                     <code><?= e($cat['slug']) ?></code>
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="u-text-center">
                                     <?php if ($cat['urun_sayisi'] > 0): ?>
                                         <span class="badge badge-success"><?= $cat['urun_sayisi'] ?></span>
                                     <?php else: ?>
                                         <span class="badge badge-neutral">0</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="u-text-center">
                                     <span class="badge badge-primary"><?= $cat['sira'] ?></span>
                                 </td>
                                 <td>
                                     <div class="actions">
-                                        <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-ghost btn-icon" data-tooltip="Duzenle" aria-label="<?= e($cat['ad']) ?> kategorisini düzenle">
+                                        <a href="?edit=<?= $cat['id'] ?>" class="btn btn-sm btn-ghost btn-icon" data-tooltip="Duzenle" aria-label="<?= e($cat['isim']) ?> kategorisini düzenle">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                             </svg>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-ghost btn-icon text-danger" data-tooltip="Sil" aria-label="<?= e($cat['ad']) ?> kategorisini sil" data-id="<?= $cat['id'] ?>" data-name="<?= e($cat['ad']) ?>" onclick="deleteCategory(this.dataset.id, this.dataset.name)">
+                                        <button type="button" class="btn btn-sm btn-ghost btn-icon text-danger" data-tooltip="Sil" aria-label="<?= e($cat['isim']) ?> kategorisini sil" data-action="delete-category" data-id="<?= $cat['id'] ?>" data-name="<?= e($cat['isim']) ?>">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <polyline points="3 6 5 6 21 6"/>
                                                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -241,7 +242,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
     </div>
 
     <!-- Category Form -->
-    <div class="card" style="height: fit-content; position: sticky; top: calc(var(--space-8) + 60px);">
+    <div class="card u-h-fit u-position-sticky-top">
         <div class="card-header">
             <h3>
                 <?php if ($editCategory): ?>
@@ -277,7 +278,8 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                            class="form-control"
                            required
                            placeholder="Örnek: Pastalar"
-                           value="<?= e($_POST['isim'] ?? ($editCategory['ad'] ?? '')) ?>">
+                           data-validate="required|min:2|max:60"
+                           value="<?= e($_POST['isim'] ?? ($editCategory['isim'] ?? '')) ?>">
                 </div>
 
                 <div class="form-group">
@@ -288,6 +290,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
                            class="form-control"
                            min="0"
                            placeholder="0"
+                           data-validate="numeric"
                            value="<?= e($_POST['sira'] ?? ($editCategory['sira'] ?? '0')) ?>">
                     <span class="form-hint">Küçük numara önce gösterilir (0 = ilk sıra)</span>
                 </div>
@@ -326,7 +329,7 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 </div>
 
 <!-- Delete Form (Hidden) -->
-<form id="deleteForm" method="POST" style="display: none;">
+<form id="deleteForm" method="POST" class="u-hidden">
     <?= csrfTokenField() ?>
     <input type="hidden" name="delete_id" id="deleteId">
 </form>
@@ -336,14 +339,14 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
     <div class="modal modal-sm">
         <div class="modal-header">
             <h3>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="u-text-admin-danger">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 Kategori Sil
             </h3>
-            <button class="modal-close" onclick="closeDeleteModal()" aria-label="Kapat">
+            <button type="button" class="modal-close" data-action="close-delete-modal" aria-label="Kapat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -351,16 +354,16 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
             </button>
         </div>
         <div class="modal-body">
-            <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
-                <strong id="deleteCategoryName" style="color: var(--admin-text);"></strong> kategorisini silmek istediğinize emin misiniz?
+            <p class="u-text-center u-text-admin-secondary u-m-0">
+                <strong id="deleteCategoryName" class="u-text-admin-text"></strong> kategorisini silmek istediğinize emin misiniz?
             </p>
-            <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
+            <p class="u-form-error-text">
                 Bu işlem geri alınamaz.
             </p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
-            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+            <button type="button" class="btn btn-secondary" data-action="close-delete-modal">İptal</button>
+            <button type="button" class="btn btn-danger" data-action="confirm-delete">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -372,37 +375,60 @@ $totalProducts = array_sum(array_column($categories, 'urun_sayisi'));
 </div>
 
 <script nonce="<?= getCspNonce() ?>">
-let deleteId = null;
+(function() {
+    'use strict';
+    let deleteId = null;
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteCategoryName = document.getElementById('deleteCategoryName');
+    const deleteIdInput = document.getElementById('deleteId');
+    const deleteForm = document.getElementById('deleteForm');
 
-function deleteCategory(id, name) {
-    deleteId = id;
-    document.getElementById('deleteCategoryName').textContent = name;
-    document.getElementById('deleteModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    document.body.style.overflow = '';
-    deleteId = null;
-}
-
-function confirmDelete() {
-    if (deleteId) {
-        document.getElementById('deleteId').value = deleteId;
-        document.getElementById('deleteForm').submit();
+    function openDeleteModal(id, name) {
+        deleteId = id;
+        if (deleteCategoryName) deleteCategoryName.textContent = name;
+        if (deleteModal) deleteModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-}
 
-// Close modal on overlay click
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
-});
+    function closeDeleteModal() {
+        if (deleteModal) deleteModal.classList.remove('active');
+        document.body.style.overflow = '';
+        deleteId = null;
+    }
 
-// Close modal on ESC key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDeleteModal();
-});
+    function confirmDelete() {
+        if (deleteId && deleteIdInput && deleteForm) {
+            deleteIdInput.value = deleteId;
+            deleteForm.submit();
+        }
+    }
+
+    // Tüm data-action tabanlı event delegation (CSP uyumlu)
+    document.addEventListener('click', function(e) {
+        const trigger = e.target.closest('[data-action]');
+        if (!trigger) return;
+        const action = trigger.dataset.action;
+        if (action === 'delete-category') {
+            openDeleteModal(trigger.dataset.id, trigger.dataset.name);
+        } else if (action === 'close-delete-modal') {
+            closeDeleteModal();
+        } else if (action === 'confirm-delete') {
+            confirmDelete();
+        }
+    });
+
+    // Overlay tıklamasında modal kapat
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    }
+
+    // ESC tuşu ile modal kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDeleteModal();
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

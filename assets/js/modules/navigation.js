@@ -11,6 +11,9 @@ export function initMobileMenu() {
 
   if (!menuToggle || !mobileMenu) return;
 
+  // Başlangıç aria durumu
+  menuToggle.setAttribute('aria-expanded', 'false');
+
   // Toggle menu
   menuToggle.addEventListener('click', () => {
     const isOpen = mobileMenu.classList.contains('is-open');
@@ -40,6 +43,19 @@ export function initMobileMenu() {
       closeMenu();
     }
   });
+
+  // Viewport desktop'a döndüğünde menüyü kapat (cihaz rotasyonu / pencere büyütme)
+  const desktopMq = window.matchMedia('(min-width: 992px)');
+  const onDesktopChange = (e) => {
+    if (e.matches && mobileMenu.classList.contains('is-open')) {
+      closeMenu();
+    }
+  };
+  if (typeof desktopMq.addEventListener === 'function') {
+    desktopMq.addEventListener('change', onDesktopChange);
+  } else if (typeof desktopMq.addListener === 'function') {
+    desktopMq.addListener(onDesktopChange);
+  }
 
   function openMenu() {
     mobileMenu.classList.add('is-open');

@@ -9,13 +9,29 @@ export function initLazyLoading() {
     // Native lazy loading supported
     const images = document.querySelectorAll('img[data-src]');
     images.forEach((img) => {
-      img.src = img.dataset.src;
+      attachErrorHandler(img);
       img.loading = 'lazy';
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
     });
   } else {
     // Fallback to Intersection Observer
     initIntersectionObserver();
   }
+}
+
+/**
+ * Kırık görsellerde gürültüsüz düşüş: hata olursa gizle ve sınıf ekle
+ */
+function attachErrorHandler(img) {
+  img.addEventListener(
+    'error',
+    () => {
+      img.classList.add('is-error');
+      img.style.display = 'none';
+    },
+    { once: true }
+  );
 }
 
 /**
@@ -59,14 +75,16 @@ function loadImage(img) {
   const src = img.dataset.src;
   const srcset = img.dataset.srcset;
 
-  if (src) {
-    img.src = src;
-    img.removeAttribute('data-src');
-  }
+  attachErrorHandler(img);
 
   if (srcset) {
     img.srcset = srcset;
     img.removeAttribute('data-srcset');
+  }
+
+  if (src) {
+    img.src = src;
+    img.removeAttribute('data-src');
   }
 
   img.classList.add('is-loaded');

@@ -8,19 +8,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.getElementById('overlay');
 
+    function setSidebarOpen(isOpen) {
+        if (!sidebar) return;
+        if (isOpen) {
+            sidebar.classList.add('open');
+            if (overlay) overlay.classList.add('active');
+            if (menuToggle) menuToggle.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        } else {
+            sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+    }
+
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
+            const isOpen = sidebar.classList.contains('open');
+            setSidebarOpen(!isOpen);
         });
     }
 
     if (overlay) {
         overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+            setSidebarOpen(false);
+            // Fokusu geri tasi (WCAG 2.4.3 Focus Order)
+            if (menuToggle) menuToggle.focus();
         });
     }
+
+    // WCAG: Escape ile sidebar kapat (klavye navigasyonu)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
+            setSidebarOpen(false);
+            if (menuToggle) menuToggle.focus();
+        }
+    });
 
     // ========== AUTO-HIDE ALERTS ==========
     const alerts = document.querySelectorAll('.alert');
@@ -101,15 +125,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ========== NOTIFICATION FUNCTION ==========
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.className = `alert alert-${type}`;
+        notification.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        notification.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+        const animIn = prefersReducedMotion.matches ? 'none' : 'slideIn 0.3s ease';
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
+            z-index: 1080;
+            animation: ${animIn};
             max-width: 350px;
         `;
         notification.textContent = message;
@@ -117,8 +146,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(notification);
 
         setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+            if (!prefersReducedMotion.matches) {
+                notification.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            } else {
+                notification.remove();
+            }
         }, 4000);
     }
 
@@ -171,5 +204,26 @@ document.addEventListener('DOMContentLoaded', function() {
         wrapper.className = 'table-wrapper';
         table.parentNode.insertBefore(wrapper, table);
         wrapper.appendChild(table);
+    });
+
+    // ========== SIDEBAR NAV GROUP (acilir-kapanir alt menu) ==========
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-action="toggle-nav-group"]');
+        if (!btn) return;
+        e.preventDefault();
+        var target = btn.getAttribute('data-target');
+        if (!target) return;
+
+        var group = btn.closest('.nav-group');
+        var items = document.getElementById('nav-group-' + target);
+        if (!group || !items) return;
+
+        var isOpen = group.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (isOpen) {
+            items.removeAttribute('hidden');
+        } else {
+            items.setAttribute('hidden', '');
+        }
     });
 });

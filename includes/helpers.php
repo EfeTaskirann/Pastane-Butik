@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Global Helper Functions
  *
@@ -309,7 +311,7 @@ if (!function_exists('money')) {
      */
     function money(float|int|string $amount, string $currency = '₺'): string
     {
-        return $currency . number_format((float)$amount, 2, ',', '.');
+        return number_format((float)$amount, 2, ',', '.') . ' ' . $currency;
     }
 }
 
@@ -616,5 +618,161 @@ if (!function_exists('siparis_service')) {
     function siparis_service(): \Pastane\Services\SiparisService
     {
         return resolve(\Pastane\Services\SiparisService::class);
+    }
+}
+
+// ============================================
+// QR MENU SERVICE HELPERS
+// ============================================
+
+if (!function_exists('masa_service')) {
+    /**
+     * Get MasaService instance
+     *
+     * @return \Pastane\Services\MasaService
+     */
+    function masa_service(): \Pastane\Services\MasaService
+    {
+        return resolve(\Pastane\Services\MasaService::class);
+    }
+}
+
+if (!function_exists('masa_oturum_service')) {
+    /**
+     * Get MasaOturumService instance
+     *
+     * @return \Pastane\Services\MasaOturumService
+     */
+    function masa_oturum_service(): \Pastane\Services\MasaOturumService
+    {
+        return resolve(\Pastane\Services\MasaOturumService::class);
+    }
+}
+
+if (!function_exists('masa_siparis_service')) {
+    /**
+     * Get MasaSiparisService instance
+     *
+     * @return \Pastane\Services\MasaSiparisService
+     */
+    function masa_siparis_service(): \Pastane\Services\MasaSiparisService
+    {
+        return resolve(\Pastane\Services\MasaSiparisService::class);
+    }
+}
+
+if (!function_exists('qr_kod_service')) {
+    /**
+     * Get QrKodService instance
+     *
+     * @return \Pastane\Services\QrKodService
+     */
+    function qr_kod_service(): \Pastane\Services\QrKodService
+    {
+        return resolve(\Pastane\Services\QrKodService::class);
+    }
+}
+
+// ============================================
+// ODEME HELPERS
+// ============================================
+
+if (!function_exists('odeme_service')) {
+    /**
+     * Get OdemeService instance
+     *
+     * @return \Pastane\Services\OdemeService
+     */
+    function odeme_service(): \Pastane\Services\OdemeService
+    {
+        return resolve(\Pastane\Services\OdemeService::class);
+    }
+}
+
+// ============================================
+// TEMA HELPERS
+// ============================================
+
+if (!function_exists('tema_service')) {
+    /**
+     * TemaService singleton instance
+     *
+     * @return \Pastane\Services\TemaService
+     */
+    function tema_service(): \Pastane\Services\TemaService
+    {
+        static $instance = null;
+        if ($instance === null) {
+            $instance = new \Pastane\Services\TemaService();
+        }
+        return $instance;
+    }
+}
+
+if (!function_exists('get_active_theme')) {
+    /**
+     * Aktif temayı getir
+     *
+     * Tablo yoksa veya hata olursa null döner (graceful degradation).
+     *
+     * @return array|null
+     */
+    function get_active_theme(): ?array
+    {
+        try {
+            return tema_service()->getActive();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_theme_body_attr')) {
+    /**
+     * Aktif tema için body data attribute'ü
+     *
+     * @return string data-theme="slug" veya boş string
+     */
+    function get_theme_body_attr(): string
+    {
+        $theme = get_active_theme();
+        if (!$theme) {
+            return '';
+        }
+        return ' data-theme="' . e($theme['slug']) . '"';
+    }
+}
+
+if (!function_exists('render_theme_assets')) {
+    /**
+     * Aktif tema CSS/JS asset taglarını render et
+     *
+     * @return string HTML link ve script tagları
+     */
+    function render_theme_assets(): string
+    {
+        $theme = get_active_theme();
+        if (!$theme) {
+            return '';
+        }
+
+        $html = '';
+        $basePath = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__);
+
+        if (!empty($theme['css_dosyasi'])) {
+            $cssFile = $basePath . '/assets/css/themes/' . $theme['css_dosyasi'];
+            $version = file_exists($cssFile) ? filemtime($cssFile) : '1';
+            $cssPath = 'assets/css/themes/' . e($theme['css_dosyasi']);
+            $html .= '<link rel="stylesheet" href="' . $cssPath . '?v=' . $version . '">' . "\n";
+        }
+
+        if (!empty($theme['js_dosyasi'])) {
+            $jsFile = $basePath . '/assets/js/themes/' . $theme['js_dosyasi'];
+            $version = file_exists($jsFile) ? filemtime($jsFile) : '1';
+            $jsPath = 'assets/js/themes/' . e($theme['js_dosyasi']);
+            $html .= '<script src="' . $jsPath . '?v=' . $version . '" defer></script>' . "\n";
+        }
+
+        return $html;
     }
 }

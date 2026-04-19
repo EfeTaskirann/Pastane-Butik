@@ -13,7 +13,9 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        // console.log/warn/info/debug kaldırılır. console.error/assert korunur
+        // (hata izleme + Sentry entegrasyonu için).
+        pure_funcs: ['console.log', 'console.warn', 'console.info', 'console.debug'],
         drop_debugger: true,
       },
     },

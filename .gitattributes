@@ -1,0 +1,132 @@
+# -----------------------------------------------------------------------------
+# Line ending normalization — Windows/Linux ekipler için kritik.
+# PSR-12 "Line endings" kuralı CRLF kabul etmiyor, dolayısıyla CI'da yüzlerce
+# false positive üretmemek için kaynak dosyalar zorla LF'ye çevriliyor.
+# -----------------------------------------------------------------------------
+
+# Otomatik algılama — text dosyaları LF olarak normalize et
+* text=auto eol=lf
+
+# -----------------------------------------------------------------------------
+# Source code — her koşulda LF
+# -----------------------------------------------------------------------------
+*.php       text eol=lf diff=php
+*.js        text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.jsx       text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.vue       text eol=lf
+*.scss      text eol=lf
+*.sass      text eol=lf
+*.css       text eol=lf
+*.less      text eol=lf
+*.html      text eol=lf diff=html
+*.htm       text eol=lf
+*.twig      text eol=lf
+*.blade.php text eol=lf
+
+# -----------------------------------------------------------------------------
+# Data & config files — LF
+# -----------------------------------------------------------------------------
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.xml       text eol=lf
+*.sql       text eol=lf
+*.env       text eol=lf
+*.md        text eol=lf
+*.ini       text eol=lf
+*.conf      text eol=lf
+
+# -----------------------------------------------------------------------------
+# Shell / CI scripts — LF
+# -----------------------------------------------------------------------------
+*.sh        text eol=lf
+Makefile    text eol=lf
+makefile    text eol=lf
+Dockerfile  text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+.htaccess   text eol=lf
+
+# -----------------------------------------------------------------------------
+# Windows-specific — CRLF zorunlu
+# -----------------------------------------------------------------------------
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# -----------------------------------------------------------------------------
+# Binary — diff/merge devre dışı
+# -----------------------------------------------------------------------------
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.svg       text eol=lf
+*.pdf       binary
+*.zip       binary
+*.gz        binary
+*.tar       binary
+*.rar       binary
+*.7z        binary
+*.mp4       binary
+*.mp3       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+*.phar      binary
+
+# -----------------------------------------------------------------------------
+# GitHub export-ignore — arşive / CodeCanyon ZIP'ine dahil edilmeyecekler
+# (P1-12)
+# -----------------------------------------------------------------------------
+/node_modules/      export-ignore
+/vendor/            export-ignore
+/.github/           export-ignore
+/.claude/           export-ignore
+/tests/             export-ignore
+/docs/              export-ignore
+/tasks/             export-ignore
+/.agent-logs/       export-ignore
+/screenshots/       export-ignore
+/coverage/          export-ignore
+/dist/              export-ignore
+/build/             export-ignore
+/marketing/         export-ignore
+/.phpunit.result.cache export-ignore
+
+# Dev/CI config
+.gitattributes      export-ignore
+.gitignore          export-ignore
+.editorconfig       export-ignore
+CLAUDE.md           export-ignore
+phpunit.xml         export-ignore
+phpstan.neon        export-ignore
+phpcs.xml           export-ignore
+.php-cs-fixer.dist.php export-ignore
+.php-cs-fixer.cache export-ignore
+captainhook.json    export-ignore
+playwright.config.ts export-ignore
+package-lock.json   export-ignore
+composer.lock       export-ignore
+Makefile            export-ignore
+
+# Env
+.env                export-ignore
+.env.staging.example export-ignore
+
+# Docker-dev
+docker-compose.yml  export-ignore
+docker-compose.*.yml export-ignore
+Dockerfile          export-ignore
+
+# Sourcemap / diagnostic
+/assets/dist/*.map  export-ignore

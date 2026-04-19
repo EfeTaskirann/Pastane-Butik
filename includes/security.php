@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Güvenlik Fonksiyonları
  *
@@ -430,11 +432,20 @@ function secureUploadImage($file, $folder = 'products') {
     $uploadPath = UPLOAD_PATH . $filename;
 
     // Dosyayı taşı
-    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-        return ['success' => true, 'filename' => $filename];
+    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        return ['success' => false, 'error' => 'Yükleme başarısız'];
     }
 
-    return ['success' => false, 'error' => 'Yükleme başarısız'];
+    // SVG ise sanitize et (P3-22). ALLOWED_EXTENSIONS SVG içermese de
+    // defansif: ileride etkinleştirilirse guardrail hazır.
+    if ($extension === 'svg' && class_exists('SvgSanitizer')) {
+        if (!\SvgSanitizer::sanitizeFile($uploadPath, null, ['strict' => false])) {
+            @unlink($uploadPath);
+            return ['success' => false, 'error' => 'SVG icerigi guvenlik taramasini gecemedi'];
+        }
+    }
+
+    return ['success' => true, 'filename' => $filename];
 }
 
 /**

@@ -1,0 +1,580 @@
+/**
+ * Utilities CSS
+ * --------------
+ * Atomik yardımcı sınıflar — inline `style="..."` attribute'larını yerine
+ * koymak için oluşturuldu. Public + admin sayfaları paylaşır.
+ *
+ * Eklenme: 2026-04-20 (P0-03 inline-style temizliği)
+ * Notlar:
+ *   - Renkler için doğrudan hex tanımlamak yerine CSS variables kullanıldı
+ *     → dark mode otomatik uyumlu.
+ *   - Bir utility class'ın semantik versiyonu zaten mevcutsa (örn. `.btn`,
+ *     `.table`) bunu bozmaz; yalnızca eksik olan atomik değerleri tanımlar.
+ */
+
+/* =====================================================================
+   Renk değişkenleri (utilities-only fallback'ler)
+   Dark mode için her iki tema da override eder.
+   ===================================================================== */
+:root {
+  --u-color-muted: #6B7280;
+  --u-color-muted-2: #888888;
+  --u-color-muted-3: #999999;
+  --u-color-text-soft: #666666;
+  --u-color-success: #4CAF50;
+  --u-color-danger: #c62828;
+  --u-bg-soft: #f8f9fa;
+  --u-bg-light: #f8f8f8;
+  --u-bg-info-soft: #eef7ff;
+  --u-bg-qr-green: #E8F5E9;
+  --u-bg-qr-blue: #E3F2FD;
+  --u-bg-qr-orange: #FFF3E0;
+  --u-bg-qr-purple: #F3E5F5;
+  --u-bg-qr-red: #FFEBEE;
+  --u-bg-qr-pink: #F5E1E9;
+  --u-border-soft: #dddddd;
+  --u-border-soft-2: #f3cfc6;
+  --u-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html[data-theme="dark"] {
+  --u-color-muted: #9CA3AF;
+  --u-color-muted-2: #A0A0A0;
+  --u-color-muted-3: #B0B0B0;
+  --u-color-text-soft: #B5B5B5;
+  --u-bg-soft: #1F2937;
+  --u-bg-light: #111827;
+  --u-bg-info-soft: rgba(59, 130, 246, 0.12);
+  --u-bg-qr-green: rgba(76, 175, 80, 0.15);
+  --u-bg-qr-blue: rgba(33, 150, 243, 0.15);
+  --u-bg-qr-orange: rgba(255, 152, 0, 0.15);
+  --u-bg-qr-purple: rgba(156, 39, 176, 0.15);
+  --u-bg-qr-red: rgba(244, 67, 54, 0.15);
+  --u-bg-qr-pink: rgba(233, 30, 99, 0.15);
+  --u-border-soft: #374151;
+  --u-border-soft-2: #4B5563;
+}
+
+/* =====================================================================
+   Display
+   ===================================================================== */
+.u-hidden,
+.u-d-none { display: none !important; }
+.u-d-block { display: block; }
+.u-d-inline { display: inline; }
+.u-d-inline-block { display: inline-block; }
+.u-d-flex { display: flex; }
+.u-d-grid { display: grid; }
+
+/* Flex helpers */
+.u-flex-column { flex-direction: column; }
+.u-flex-wrap { flex-wrap: wrap; }
+.u-align-center { align-items: center; }
+.u-align-end { align-items: flex-end; }
+.u-align-self-center { align-self: center; }
+.u-justify-center { justify-content: center; }
+.u-justify-between { justify-content: space-between; }
+.u-flex-1 { flex: 1; }
+.u-flex-shrink-0 { flex-shrink: 0; }
+
+/* Gap */
+.u-gap-1 { gap: 0.25rem; }
+.u-gap-2 { gap: 0.5rem; }
+.u-gap-3 { gap: 0.75rem; }
+.u-gap-4 { gap: 1rem; }
+.u-gap-5 { gap: 1.5rem; }
+.u-gap-6 { gap: 2rem; }
+
+/* =====================================================================
+   Spacing — margin
+   ===================================================================== */
+.u-m-0 { margin: 0; }
+.u-mt-0 { margin-top: 0; }
+.u-mt-1 { margin-top: 0.25rem; }
+.u-mt-2 { margin-top: 0.5rem; }
+.u-mt-3 { margin-top: 0.75rem; }
+.u-mt-4 { margin-top: 1rem; }
+.u-mt-5 { margin-top: 1.5rem; }
+.u-mt-6 { margin-top: 2rem; }
+.u-mt-10px { margin-top: 10px; }
+.u-mt-12px { margin-top: 12px; }
+.u-mt-16px { margin-top: 16px; }
+.u-mt-20px { margin-top: 20px; }
+.u-mt-8px { margin-top: 8px; }
+
+.u-mb-0 { margin-bottom: 0; }
+.u-mb-1 { margin-bottom: 0.25rem; }
+.u-mb-2 { margin-bottom: 0.5rem; }
+.u-mb-3 { margin-bottom: 0.75rem; }
+.u-mb-4 { margin-bottom: 1rem; }
+.u-mb-5 { margin-bottom: 1.5rem; }
+.u-mb-6 { margin-bottom: 2rem; }
+
+.u-ml-1 { margin-left: 0.25rem; }
+.u-ml-2 { margin-left: 0.5rem; }
+.u-mr-1 { margin-right: 0.25rem; }
+.u-mr-2 { margin-right: 0.5rem; }
+.u-mr-3 { margin-right: 0.75rem; }
+
+.u-mx-auto { margin-left: auto; margin-right: auto; }
+
+/* =====================================================================
+   Spacing — padding
+   ===================================================================== */
+.u-p-0 { padding: 0; }
+.u-p-1 { padding: 0.25rem; }
+.u-p-2 { padding: 0.5rem; }
+.u-p-3 { padding: 0.75rem; }
+.u-p-4 { padding: 1rem; }
+.u-p-5 { padding: 1.5rem; }
+.u-p-6 { padding: 2rem; }
+.u-p-8 { padding: 2.5rem 1rem; }
+.u-p-0-8 { padding: 0 8px; }
+
+/* =====================================================================
+   Typography
+   ===================================================================== */
+.u-text-center { text-align: center; }
+.u-text-right { text-align: right; }
+.u-text-left { text-align: left; }
+.u-font-mono { font-family: var(--u-font-mono); }
+.u-font-medium { font-weight: 500; }
+.u-font-semibold { font-weight: 600; }
+.u-font-bold { font-weight: 700; }
+
+.u-text-xs { font-size: var(--text-xs, 0.75rem); }
+.u-text-sm { font-size: var(--text-sm, 0.875rem); }
+.u-text-lg { font-size: 1.1rem; }
+.u-text-xl { font-size: 1.2rem; }
+.u-text-2xl { font-size: 2rem; }
+.u-text-tiny { font-size: 0.7rem; }
+.u-text-13 { font-size: 13px; }
+.u-text-12 { font-size: 12px; }
+.u-text-sm-em { font-size: 0.6em; }
+
+.u-text-muted { color: var(--u-color-muted); }
+.u-text-muted-2 { color: var(--u-color-muted-2); }
+.u-text-muted-3 { color: var(--u-color-muted-3); }
+.u-text-soft { color: var(--u-color-text-soft); }
+.u-text-success { color: var(--u-color-success); }
+.u-text-danger { color: var(--u-color-danger); }
+.u-text-primary { color: var(--admin-primary); }
+.u-text-warning { color: var(--admin-warning); }
+.u-text-admin-danger { color: var(--admin-danger); }
+.u-text-admin-success { color: var(--admin-success); }
+.u-text-admin-primary { color: var(--admin-primary); }
+.u-text-admin-text { color: var(--admin-text); }
+.u-text-admin-light { color: var(--admin-text-light); }
+.u-text-admin-secondary { color: var(--admin-text-secondary); }
+
+/* =====================================================================
+   Backgrounds
+   ===================================================================== */
+.u-bg-soft { background: var(--u-bg-soft); }
+.u-bg-light { background: var(--u-bg-light); }
+.u-bg-info-soft { background: var(--u-bg-info-soft); }
+.u-bg-qr-green { background: var(--u-bg-qr-green); }
+.u-bg-qr-blue { background: var(--u-bg-qr-blue); }
+.u-bg-qr-orange { background: var(--u-bg-qr-orange); }
+.u-bg-qr-purple { background: var(--u-bg-qr-purple); }
+.u-bg-qr-red { background: var(--u-bg-qr-red); }
+.u-bg-qr-pink { background: var(--u-bg-qr-pink); }
+.u-bg-white { background: #ffffff; }
+.u-bg-none { background: none; }
+.u-bg-code {
+  background: #1e1e1e;
+  color: #e2e2e2;
+}
+
+/* =====================================================================
+   Borders & radius
+   ===================================================================== */
+.u-border-0 { border: none; }
+.u-border-soft { border: 1px solid var(--u-border-soft); }
+.u-border-bottom-soft { border-bottom: 1px solid var(--u-border-soft-2); }
+.u-rounded { border-radius: 6px; }
+.u-rounded-lg { border-radius: 8px; }
+.u-rounded-circle { border-radius: 50%; }
+
+/* =====================================================================
+   Width / height
+   ===================================================================== */
+.u-w-100 { width: 100%; }
+.u-w-auto { width: auto; }
+.u-w-50px { width: 50px; }
+.u-w-60px { width: 60px; }
+.u-w-70px { width: 70px; }
+.u-w-80px { width: 80px; }
+.u-w-120px { width: 120px; }
+.u-w-140px { width: 140px; }
+.u-w-150px { width: 150px; }
+.u-w-250px { width: 250px; }
+.u-w-420px { width: 420px; }
+
+.u-max-w-150 { max-width: 150px; }
+.u-max-w-250 { max-width: 250px; }
+.u-max-w-420 { max-width: 420px; }
+
+.u-icon-14 { width: 14px; height: 14px; flex-shrink: 0; }
+.u-icon-16 { width: 16px; height: 16px; flex-shrink: 0; }
+.u-icon-20 { width: 20px; height: 20px; flex-shrink: 0; }
+
+.u-h-fit { height: fit-content; }
+.u-max-h-400 { max-height: 400px; overflow: auto; }
+.u-overflow-x-auto { overflow-x: auto; }
+
+/* =====================================================================
+   Position
+   ===================================================================== */
+.u-position-relative { position: relative; }
+.u-position-absolute { position: absolute; }
+.u-position-sticky-top { position: sticky; top: calc(var(--space-8, 2rem) + 60px); }
+
+.u-vertical-middle { vertical-align: middle; }
+
+/* =====================================================================
+   Cursor & misc
+   ===================================================================== */
+.u-cursor-pointer { cursor: pointer; }
+.u-opacity-40 { opacity: 0.4; }
+
+/* =====================================================================
+   Grid helpers (genel layout pattern'leri)
+   ===================================================================== */
+.u-grid-col-full { grid-column: 1 / -1; }
+.u-grid-empty-center {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+}
+
+.u-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.u-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.u-grid-auto-180 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+.u-grid-auto-180-tight {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.u-grid-auto-400 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+.u-grid-detail-220 {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 240px;
+  gap: 0.75rem;
+  align-items: center;
+}
+.u-grid-detail-340 {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-6, 1.5rem);
+}
+
+/* =====================================================================
+   Flex containers (yaygın inline flex pattern'leri)
+   ===================================================================== */
+.u-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.u-flex-row-gap-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.u-flex-row-gap-4 {
+  display: flex;
+  gap: 1rem;
+}
+.u-flex-row-gap-2-wrap {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.u-flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.u-flex-end-gap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+/* =====================================================================
+   Komposit sınıflar (birden fazla inline style için bileşik class)
+   ===================================================================== */
+.u-page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.u-table-footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--admin-border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.u-toolbar-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--admin-border, #e5e7eb);
+  background: var(--admin-surface, #fafafa);
+}
+.u-info-banner {
+  background: var(--u-bg-info-soft);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 3px solid var(--admin-primary, #3b82f6);
+}
+.u-soft-card {
+  background: var(--u-bg-soft);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+.u-soft-card-mt {
+  background: var(--u-bg-soft);
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+.u-empty-cell {
+  text-align: center;
+  color: var(--u-color-muted-3);
+  padding: 2rem;
+}
+.u-empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--admin-text-secondary);
+}
+.u-icon-inline {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+.u-icon-inline-sm {
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+.u-icon-img-preview {
+  max-width: 150px;
+  border-radius: 8px;
+}
+.u-code-block {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--u-bg-light);
+  border: 1px solid var(--u-border-soft);
+  border-radius: 4px;
+  font-family: var(--u-font-mono);
+  font-size: 13px;
+  overflow-x: auto;
+}
+.u-log-block {
+  max-height: 400px;
+  overflow: auto;
+  background: #1e1e1e;
+  color: #e2e2e2;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.u-form-label-sm {
+  display: block;
+  font-size: var(--text-sm, 0.875rem);
+  margin-bottom: 0.25rem;
+  color: var(--admin-text-secondary);
+}
+.u-form-hint {
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--admin-text-secondary);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.u-form-help {
+  color: var(--admin-text-light);
+  display: block;
+  margin-bottom: 1rem;
+}
+.u-form-error-text {
+  text-align: center;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--admin-danger);
+  margin-top: var(--space-3, 0.75rem);
+  margin-bottom: 0;
+}
+.u-select-minimal {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--u-border-soft);
+  margin-right: 0.5rem;
+}
+.u-link-btn-reset {
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+.u-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.u-check-row-danger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--admin-danger);
+}
+.u-badge-link-success {
+  display: none;
+  margin-left: 0.5rem;
+  color: var(--u-color-success);
+}
+.u-edit-icon {
+  font-size: 1.1rem;
+  color: var(--admin-primary);
+  margin-left: 0.5rem;
+}
+.u-nowrap-center-80 {
+  width: 80px;
+  text-align: center;
+}
+.u-tr-header-center {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.u-mt-hint {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+}
+.u-list-divider {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--u-border-soft-2);
+}
+.u-note-box {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.u-iframe-preview {
+  height: 500px;
+  border: 1px solid var(--border-color, #ccc);
+}
+
+/* =====================================================================
+   Stat-card accent renk varyantları
+   stat-card.css içinde `--stat-color` değişkenine göre stiller var;
+   bu modifier class'lar inline style yerine tercih edilir.
+   ===================================================================== */
+.stat-card--primary { --stat-color: var(--admin-primary); }
+.stat-card--success { --stat-color: var(--admin-success); }
+.stat-card--warning { --stat-color: var(--admin-warning); }
+.stat-card--info    { --stat-color: var(--admin-info); }
+.stat-card--danger  { --stat-color: var(--admin-danger); }
+
+/* =====================================================================
+   Kategori badge & renk noktası (dinamik PHP rengi için custom property)
+   ===================================================================== */
+.kategori-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--u-cat-bg, #eee20);
+  font-size: 0.85rem;
+  color: var(--admin-text, #333);
+}
+.kategori-renk {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--u-cat-dot, #ccc);
+  flex-shrink: 0;
+}
+
+/* =====================================================================
+   Tema preview gradient + renk noktası (admin/temalar.php)
+   ===================================================================== */
+.tema-preview {
+  background: var(--u-tema-gradient, linear-gradient(135deg, #E8EFF5, #B8CCE0));
+}
+.tema-renk-noktasi {
+  background: var(--u-tema-renk, #ccc);
+}
+
+/* =====================================================================
+   Tema preview particle pozisyonları (tema kartlarındaki dekoratif konfeti)
+   Kış teması için kar taneleri, yaz teması için meyveler gibi özel karakter
+   span'ları — her birinin sabit pozisyon + animation-delay'i vardır.
+   ===================================================================== */
+.tema-particle {
+  position: absolute;
+}
+.tema-particle--p1 { left: 15%; top: 20%; font-size: 1.2rem; animation-delay: 0s; }
+.tema-particle--p2 { left: 70%; top: 35%; font-size: 0.8rem; animation-delay: 1s; }
+.tema-particle--p3 { left: 40%; top: 70%; font-size: 1rem; animation-delay: 2s; }
+.tema-particle--p4 { left: 85%; top: 15%; font-size: 0.9rem; animation-delay: 0.5s; }
+.tema-particle--p5 { left: 25%; top: 85%; font-size: 0.7rem; animation-delay: 1.5s; }
+.tema-particle--y1 { left: 10%; top: 25%; font-size: 1.2rem; animation-delay: 0s; }
+.tema-particle--y2 { left: 65%; top: 40%; font-size: 1rem; animation-delay: 1s; }
+.tema-particle--y3 { left: 35%; top: 65%; font-size: 1.1rem; animation-delay: 2s; }
+.tema-particle--y4 { left: 80%; top: 20%; font-size: 0.9rem; animation-delay: 0.5s; }
+.tema-particle--y5 { left: 20%; top: 80%; font-size: 1rem; animation-delay: 1.5s; }
+
+/* =====================================================================
+   Cupcake SVG — gözbebeklerinin animation origin'i
+   ===================================================================== */
+.cup-eyes {
+  transform-origin: 160px 260px;
+}
+
+/* =====================================================================
+   Hero decoration konumları (index.php'deki süsler)
+   ===================================================================== */
+.u-decor-blob-right { top: 10%; right: -100px; }
+.u-decor-circle-left { bottom: 20%; left: -150px; }
+.u-sparkle-1 { top: 15%; left: 10%; animation-delay: 0s; }
+.u-sparkle-2 { top: 25%; right: 15%; animation-delay: 1s; }
+.u-sparkle-3 { bottom: 30%; left: 8%; animation-delay: 2s; }
+.u-sparkle-4 { bottom: 25%; right: 12%; animation-delay: 1.5s; }
+
+/* =====================================================================
+   Progress bar (inline genişlik veren kullanımlar için)
+   ===================================================================== */
+.u-progress-fill {
+  height: 100%;
+  background: var(--admin-primary);
+  width: var(--u-progress, 0%);
+}
+.u-progress-fill--colored {
+  height: 100%;
+  background: var(--u-progress-color, var(--admin-primary));
+  width: var(--u-progress, 0%);
+}

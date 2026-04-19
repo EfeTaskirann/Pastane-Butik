@@ -1,0 +1,1044 @@
+/* =============================================
+   DARK MODE — Pastane
+   Strateji:
+   1. `html[data-theme="dark"]` manuel toggle (localStorage)
+   2. `prefers-color-scheme: dark` sistem tercihi (fallback)
+   3. Hem public site hem admin panel variable'lari override eder
+   4. Yeni :root yapmaz — mevcut variable'lar tanim dusunmez
+   ============================================= */
+
+/* ---------- Manuel Toggle (data-theme="dark") ---------- */
+html[data-theme="dark"] {
+    /* ---- Public Site (style.css variables) ---- */
+    --pembe-soft: #2A1F28;       /* koyu bordo-pembe (bg accent) */
+    --pembe-accent: #4A3440;     /* orta pembe-gri */
+    --pembe-medium: #6B4A5C;
+    --krem: #16141A;             /* ana koyu bg */
+    --krem-dark: #1F1D23;
+    --kahve: #D4B896;            /* altinlasmis text (yuksek kontrast) */
+    --kahve-light: #B89C7A;
+    --beyaz: #1F1D23;            /* "beyaz" koyu varyant — icerik kart bg */
+    --kirmizi-soft: #7A4040;
+    --yesil-soft: #4A6B4A;
+
+    /* Metin renkleri — dark bg'de AA uyumlu */
+    --text-primary: #F5EDE8;     /* krem/kahve uzerinde yuksek kontrast */
+    --text-secondary: #D4C5BA;   /* AA normal (krem) */
+    --text-light: #A69B94;       /* dekoratif */
+
+    /* Altin dark varyant */
+    --gold-primary: #E8D5B5;
+    --gold-light: #D4B896;
+    --gold-shimmer: linear-gradient(135deg, #D4B896, #F5E6C8, #D4B896);
+
+    /* Shadow daha belirgin (koyu bg'de soft shadow gorunmez) */
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5);
+
+    /* Glassmorphism karanlik */
+    --glass-bg: rgba(30, 28, 33, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 12px;
+
+    /* ---- Admin Panel (admin.css variables) ---- */
+    --admin-primary: #D4B896;
+    --admin-primary-light: #B89C7A;
+    --admin-primary-dark: #A0885E;
+    --admin-primary-50: rgba(212, 184, 150, 0.08);
+    --admin-primary-100: rgba(212, 184, 150, 0.15);
+    --admin-primary-200: rgba(212, 184, 150, 0.25);
+
+    --admin-accent: #4A3440;
+    --admin-accent-light: #2A1F28;
+    --admin-accent-dark: #6B4A5C;
+
+    /* Semantic dark variants (visibility korunur) */
+    --admin-success: #34D399;
+    --admin-success-light: #064E3B;
+    --admin-success-dark: #A7F3D0;
+
+    --admin-danger: #F87171;
+    --admin-danger-light: #7F1D1D;
+    --admin-danger-dark: #FECACA;
+
+    --admin-warning: #FBBF24;
+    --admin-warning-light: #78350F;
+    --admin-warning-dark: #FDE68A;
+
+    --admin-info: #60A5FA;
+    --admin-info-light: #1E3A8A;
+    --admin-info-dark: #BFDBFE;
+
+    --admin-orange: #FB923C;
+    --admin-orange-light: #7C2D12;
+    --admin-orange-dark: #FED7AA;
+
+    /* Neutral */
+    --admin-bg: #0F0E14;
+    --admin-sidebar: #0A0910;
+    --admin-sidebar-hover: #1F1D29;
+    --admin-text: #F5EDE8;
+    --admin-text-secondary: #B8ADA3;
+    --admin-text-light: #8B8078;
+    --admin-text-muted: #8A7F76;  /* WCAG AA — #5A524B idi (2.55:1 fail), #8A7F76 (4.55:1 pass) */
+    --admin-border: #2A2730;
+    --admin-border-light: #1F1D23;
+    --admin-card: #16141A;
+
+    /* Shadow — dark bg */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.35);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.35);
+    --shadow-primary: 0 4px 14px rgba(212, 184, 150, 0.35);
+    --shadow-success: 0 4px 14px rgba(52, 211, 153, 0.25);
+    --shadow-danger: 0 4px 14px rgba(248, 113, 113, 0.25);
+}
+
+/* ---------- Public site background adjust (dark mode) ---------- */
+html[data-theme="dark"] body {
+    background: var(--krem);
+    color: var(--text-primary);
+}
+
+/* Hero degrade dark varyant */
+html[data-theme="dark"] .hero {
+    background:
+        radial-gradient(ellipse 120% 80% at 20% 10%, rgba(74, 52, 64, 0.4) 0%, transparent 60%),
+        radial-gradient(ellipse 100% 60% at 80% 90%, rgba(107, 74, 92, 0.3) 0%, transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(42, 31, 40, 0.5) 0%, transparent 70%),
+        linear-gradient(180deg, var(--krem-dark) 0%, var(--krem) 100%);
+}
+
+/* Urun kartlari + modal dark bg — element-bazli color override.
+   Wildcard `*` yerine spesifik secicilerle: tema CSS'leri sonra yuklendigi icin
+   (theme-summer.css/theme-winter.css dark.css'ten sonra yuklenir) bu kurallarin
+   html[data-theme="dark"] zincirli iki-attribute specificity'sine ihtiyaci var.
+   Asagidaki combo blocklari da (yaz+dark, kis+dark) bu kurallari ezen
+   daha yuksek specificity ile uygular. */
+html[data-theme="dark"] .product-card,
+html[data-theme="dark"] .modal-content {
+    background: var(--beyaz);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
+}
+
+html[data-theme="dark"] .product-image {
+    background: var(--krem-dark);
+}
+
+html[data-theme="dark"] .product-card .product-name,
+html[data-theme="dark"] .modal-content .modal-title {
+    color: var(--gold-primary);
+}
+
+html[data-theme="dark"] .product-card .product-category,
+html[data-theme="dark"] .modal-content .modal-category {
+    color: var(--kahve-light);
+}
+
+html[data-theme="dark"] .product-card .product-description,
+html[data-theme="dark"] .modal-content .modal-description {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .product-card .product-price,
+html[data-theme="dark"] .product-card .portion-price,
+html[data-theme="dark"] .modal-content .single-price,
+html[data-theme="dark"] .modal-content .price-item .amount {
+    color: var(--gold-primary);
+}
+
+html[data-theme="dark"] .modal-content .price-title {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .modal-content .price-item {
+    background: rgba(232, 213, 181, 0.05);
+    border-color: var(--glass-border);
+}
+html[data-theme="dark"] .modal-content .price-item .portion {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .product-card .product-order-btn,
+html[data-theme="dark"] .modal-content .modal-order-btn {
+    background: var(--pembe-accent);
+    color: var(--gold-primary);
+    border-color: transparent;
+}
+
+html[data-theme="dark"] .product-card .product-order-btn:hover,
+html[data-theme="dark"] .modal-content .modal-order-btn:hover {
+    background: var(--pembe-medium);
+    color: var(--krem);
+}
+
+/* Form input'lar dark */
+html[data-theme="dark"] .form-group input,
+html[data-theme="dark"] .form-group textarea {
+    background: var(--krem-dark);
+    color: var(--text-primary);
+    border-color: var(--pembe-accent);
+}
+
+/* Altin divider dark mode'da parliyor */
+html[data-theme="dark"] .hero-gold-divider {
+    filter: brightness(1.2);
+}
+
+/* Scroll progress bar */
+html[data-theme="dark"] .scroll-progress {
+    background: linear-gradient(90deg, var(--gold-primary), var(--kahve));
+}
+
+/* ---------- Admin panel dark-specific overrides ---------- */
+html[data-theme="dark"] body {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .admin-card {
+    background: var(--admin-card);
+    border-color: var(--admin-border);
+}
+
+html[data-theme="dark"] .topbar {
+    background: var(--admin-card);
+    border-bottom-color: var(--admin-border);
+}
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    border-color: var(--admin-border);
+}
+
+/* Status badge'ler dark'ta yeterince contrast alsin */
+html[data-theme="dark"] .status {
+    filter: brightness(1.1);
+}
+
+/* Code block */
+html[data-theme="dark"] code {
+    background: var(--admin-border);
+    color: var(--admin-primary);
+}
+
+/* Tablo zebra */
+html[data-theme="dark"] table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+html[data-theme="dark"] table tr:hover {
+    background: rgba(212, 184, 150, 0.05);
+}
+
+/* ---------- Images/logo filter (dark mode icin isik) ---------- */
+/* Eger logo koyu renkli SVG'ler kullaniyorsa invert yap — dikkatli uygula */
+html[data-theme="dark"] .theme-invert-dark {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* Hero pasta SVG — yeni 4-katli tasarim (Claude Design Pasta.html). Tier-*, cream-*,
+   berry-*, dot-*, contact tokenlari html[data-theme="dark"] scope'unda sarap/mor
+   paletine kayar. Eski ellipse[cx="200"] spesifik overrides kaldirildi (yeni SVG
+   viewBox 644x500, farkli koordinatlar). */
+html[data-theme="dark"] {
+    --tier-light: #7A5366;       /* sarap pembesi */
+    --tier-mid:   #5D3A4C;       /* koyu sarap */
+    --tier-dark:  #3A2030;       /* gece murdum */
+    --tier-base:  #4A2E3E;       /* kaide */
+    --cream:      #F1DDE4;       /* krem pembemsi */
+    --cream-shade:#B89AA4;       /* krema gradient alt */
+    --berry:      #C9666A;       /* cilek */
+    --berry-dark: #7A3334;
+    --leaf:       #8FA872;       /* yaprak */
+    --dot-pink:   #E89AA3;
+    --dot-green:  #B8D199;
+    --sparkle:    #FFE9EF;
+    --contact:    rgba(0, 0, 0, 0.45);
+
+    /* Cupcake dark palet — Claude Design prototipindeki sarap/mor */
+    --cup-stroke:       #1B0F16;
+    --cup-wrap:         #EF6F8E;
+    --cup-wrap-dark:    #B4385A;
+    --cup-wrap-edge:    #FF9AB0;
+    --cup-wrap-shadow:  #7D1F3C;
+    --cup-cake:         #8A5A3C;
+    --cup-cake-shade:   #4E2F1C;
+    --cup-frost:        #FFC9D4;
+    --cup-frost-mid:    #F29FB4;
+    --cup-sprinkle:     #FF3D5A;
+    --cup-cherry:       #FF3F4A;
+    --cup-cherry-shade: #7A0E14;
+    --cup-cherry-light: #FFB0B6;
+    --cup-leaf:         #6AA246;
+    --cup-cheek:        #FF9FB2;
+    --cup-shadow:       rgba(0, 0, 0, 0.7);
+}
+
+/* Product card gorselinde transparent gradient dark varyanti */
+html[data-theme="dark"] .product-image-wrapper::after {
+    background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.6) 100%);
+}
+
+/* =============================================
+   PUBLIC SITE — GENEL SECTION + BILEŞEN DARK OVERRIDE
+   CSS variable tabanli olmayan (hex-hardcoded) veya ayri bg tanimli
+   bolumler icin — aksi halde yaz/kis tema CSS'leri sabit hex ile
+   arkaplani aydinlik birakir.
+   ============================================= */
+
+/* Gradient section'lar — variable kullanimi degisken override ile zaten cevrilir,
+   ama theme-summer/winter CSS'leri bu class'lari sabit hex ile yeniden tanimliyor.
+   Combo selector'larda (body[data-theme="yaz|kis"]) override ediyoruz. */
+html[data-theme="dark"] .bg-gradient-1 {
+    background: linear-gradient(180deg, var(--krem-dark) 0%, var(--krem) 100%);
+}
+html[data-theme="dark"] .bg-gradient-2 {
+    background: linear-gradient(180deg, var(--krem) 0%, var(--krem-dark) 50%, var(--pembe-soft) 100%);
+}
+html[data-theme="dark"] .bg-gradient-3 {
+    background: linear-gradient(180deg, var(--pembe-soft) 0%, var(--pembe-accent) 100%);
+}
+
+/* Dekoratif section texture — koyu bg'de neredeyse gorunmez olmali */
+html[data-theme="dark"] .section-texture {
+    opacity: 0.12;
+    mix-blend-mode: screen;
+}
+
+/* About / contact / calendar / faq / delivery bilesenleri — text kontrast */
+html[data-theme="dark"] .about,
+html[data-theme="dark"] .about-text h2,
+html[data-theme="dark"] .contact-info h2,
+html[data-theme="dark"] .section-header h2 {
+    color: var(--gold-primary);
+}
+
+html[data-theme="dark"] .about-text p,
+html[data-theme="dark"] .section-header p,
+html[data-theme="dark"] .contact-info p {
+    color: var(--text-secondary);
+}
+
+/* Teslimat kartlari — beyaz kart yerine koyu kart */
+html[data-theme="dark"] .delivery-card {
+    background: var(--krem-dark);
+    border-color: var(--glass-border);
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .delivery-card h3,
+html[data-theme="dark"] .delivery-card .delivery-price {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] .delivery-card p,
+html[data-theme="dark"] .delivery-card .delivery-desc {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .delivery-card-icon {
+    color: var(--gold-primary);
+}
+
+/* Sadakat bilgisi kartlari */
+html[data-theme="dark"] .loyalty-info,
+html[data-theme="dark"] .loyalty-item {
+    background: var(--krem-dark);
+    border-color: var(--glass-border);
+}
+html[data-theme="dark"] .loyalty-text strong {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] .loyalty-text span {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .loyalty-icon {
+    color: var(--gold-primary);
+}
+
+/* Iletisim detaylari */
+html[data-theme="dark"] .contact-item,
+html[data-theme="dark"] .contact-item span {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .contact-item svg {
+    color: var(--gold-primary);
+}
+
+/* FAQ bolumu — accordion */
+html[data-theme="dark"] .faq-item {
+    background: var(--krem-dark);
+    border-color: var(--glass-border);
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .faq-question {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] .faq-question:hover {
+    background: rgba(212, 184, 150, 0.05);
+}
+html[data-theme="dark"] .faq-answer,
+html[data-theme="dark"] .faq-answer p,
+html[data-theme="dark"] .faq-answer li {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .faq-answer strong {
+    color: var(--gold-primary);
+}
+
+/* Takvim bolumu — legend + genel */
+html[data-theme="dark"] .calendar-legend,
+html[data-theme="dark"] .calendar-legend .legend-item,
+html[data-theme="dark"] .calendar-info,
+html[data-theme="dark"] .calendar-info p {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .calendar-info strong {
+    color: var(--gold-primary);
+}
+
+/* Takvim gunleri — style.css'te sabit pastel hex'ler, dark'ta koyu muted ton */
+html[data-theme="dark"] .calendar-day.bos,
+html[data-theme="dark"] .calendar-days-grid .calendar-day.bos,
+html[data-theme="dark"] .legend-dot.bos {
+    background: #2F4A3A;   /* koyu nane */
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .calendar-day.uygun,
+html[data-theme="dark"] .calendar-days-grid .calendar-day.uygun,
+html[data-theme="dark"] .legend-dot.uygun {
+    background: #2E4258;   /* koyu arduvaz mavi */
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .calendar-day.yogun,
+html[data-theme="dark"] .calendar-days-grid .calendar-day.yogun,
+html[data-theme="dark"] .legend-dot.yogun {
+    background: #5C4A2E;   /* koyu altin toprak */
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .calendar-day.dolu,
+html[data-theme="dark"] .calendar-days-grid .calendar-day.dolu,
+html[data-theme="dark"] .legend-dot.dolu {
+    background: #5C3A3A;   /* koyu bordo */
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .calendar-day .day-number,
+html[data-theme="dark"] .calendar-days-grid .calendar-day .day-number {
+    color: var(--text-primary);
+}
+html[data-theme="dark"] .calendar-day .day-name,
+html[data-theme="dark"] .calendar-days-grid .calendar-day .day-name {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .calendar-day .day-status {
+    background: var(--krem-dark);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+html[data-theme="dark"] .calendar-days-grid .calendar-day.bugun {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px rgba(232, 213, 181, 0.25);
+}
+html[data-theme="dark"] .calendar-month-header,
+html[data-theme="dark"] .calendar-weekdays {
+    color: var(--text-secondary);
+}
+
+/* Footer — variable yerine sabit dark gradient (temasiz varyant) */
+html[data-theme="dark"] footer,
+html[data-theme="dark"] .footer {
+    background: linear-gradient(135deg, #16141A 0%, #0A090F 100%);
+    color: var(--text-primary);
+}
+html[data-theme="dark"] footer .footer-logo,
+html[data-theme="dark"] .footer .footer-logo {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] footer p,
+html[data-theme="dark"] .footer p,
+html[data-theme="dark"] .footer-bottom p {
+    color: var(--text-secondary);
+}
+
+/* Scroll indicator + promosyon banner */
+html[data-theme="dark"] .scroll-indicator {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] .promo-banner {
+    background: linear-gradient(135deg, var(--pembe-accent) 0%, var(--pembe-medium) 100%);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
+}
+html[data-theme="dark"] .promo-badge {
+    background: var(--gold-primary);
+    color: var(--krem);
+}
+
+/* Iletisim formu label'i */
+html[data-theme="dark"] .contact-form label,
+html[data-theme="dark"] .form-group label {
+    color: var(--text-secondary);
+}
+
+/* =============================================
+   YAZ + DARK — "Gun Batimi Sahili" Paleti
+   Siyah yerine: indigo gok -> murdum ufuk -> mercan-altin horizon.
+   Sicak, huzurlu, sahil aksami hissi. Combo selector ile
+   html[data-theme=dark] body[data-theme=yaz] — specificity yeterli.
+   ============================================= */
+html[data-theme="dark"] body[data-theme="yaz"] {
+    --pembe-soft: #3A1E2E;        /* koyu mercan-murdum ufku */
+    --pembe-accent: #5C2E3D;      /* orta vadalesi */
+    --pembe-medium: #8B4A5C;      /* mercan gun batimi */
+    --krem: #1A0F2E;              /* derin indigo gece */
+    --krem-dark: #0F0823;         /* daha derin */
+    --kahve: #F4B860;             /* sicak altin gun batimi */
+    --kahve-light: #E09260;       /* mercan altin */
+    --beyaz: #2B1B3D;             /* kart bg — derin murdum */
+    --kirmizi-soft: #7A3545;
+    --yesil-soft: #4A6B5C;
+
+    --text-primary: #FFE4C4;      /* altin ufuk */
+    --text-secondary: #F4C490;    /* sicak sari */
+    --text-light: #D4A478;
+
+    --gold-primary: #FFD484;
+    --gold-light: #F4B860;
+    --gold-shimmer: linear-gradient(135deg, #F4B860, #FFD484, #FF8A65);
+
+    /* Sunset tokenlar — yaz tokenlarini gun batimi palete cevir */
+    --summer-sunshine: #FFD484;
+    --summer-coral: #FF7043;
+    --summer-mint: #5FB29A;
+    --summer-sky: #4A2E5C;
+    --summer-lemon: #FFCC80;
+    --summer-strawberry: #FF5A7A;
+    --summer-peach: #FFAB70;
+
+    --shadow-soft: 0 4px 24px rgba(255, 112, 67, 0.15);
+    --shadow-hover: 0 8px 40px rgba(255, 112, 67, 0.25);
+
+    --glass-bg: rgba(43, 27, 61, 0.55);
+    --glass-border: rgba(255, 212, 132, 0.18);
+    --glass-blur: 14px;
+
+    /* Pasta (cake) SVG yaz+dark palet — sicak terracotta gun batimi */
+    --tier-light: #8B4A3C;       /* yanmis terracotta */
+    --tier-mid:   #6B3828;       /* koyu terracotta */
+    --tier-dark:  #3E1D14;       /* neredeyse kahve */
+    --tier-base:  #5C2E24;
+    --cream:      #FFE4C4;       /* gun batimi altini */
+    --cream-shade:#D4A478;
+    --berry:      #FF7043;       /* sicak mercan */
+    --berry-dark: #A03820;
+    --leaf:       #D4A060;       /* altin sonbahar */
+    --dot-pink:   #FFB07A;
+    --dot-green:  #C99A5A;
+    --sparkle:    #FFD484;
+    --contact:    rgba(0, 0, 0, 0.55);
+
+    /* Cupcake yaz+dark palet — gun batimi mercani + altin mafin */
+    --cup-stroke:       #1A0F18;
+    --cup-wrap:         #FF7B5C;    /* batmakta olan mercan */
+    --cup-wrap-dark:    #B84A30;
+    --cup-wrap-edge:    #FFA580;
+    --cup-wrap-shadow:  #6B2818;
+    --cup-cake:         #7A4A28;    /* koyu vanilya */
+    --cup-cake-shade:   #3E2010;
+    --cup-frost:        #FFD085;    /* altin gun batimi swirl */
+    --cup-frost-mid:    #E0A560;
+    --cup-sprinkle:     #FF5B3A;
+    --cup-cherry:       #E84038;
+    --cup-cherry-shade: #6B0E10;
+    --cup-cherry-light: #FFAB95;
+    --cup-leaf:         #C99A5A;    /* altin yaprak */
+    --cup-cheek:        #FFAB85;
+    --cup-shadow:       rgba(0, 0, 0, 0.6);
+}
+
+/* Hero — alcak gunes, altin-mercan ufuk, murdum gok.
+   Top radial karartma overlay kaldirildi: body --krem (#1A0F2E) ile hero top
+   ayni renk olsun ki gorunur "siyah bant" olusmasin. Linear start #1A0F2E. */
+html[data-theme="dark"] body[data-theme="yaz"] .hero {
+    background:
+        radial-gradient(ellipse 150% 55% at 50% 98%, rgba(255, 112, 67, 0.40) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 40% at 50% 100%, rgba(255, 212, 132, 0.28) 0%, transparent 65%),
+        linear-gradient(180deg, #1A0F2E 0%, #2B1B3D 35%, #3A1E2E 65%, #5C2E3D 88%, #8B4A5C 100%);
+}
+
+/* Batmakta olan gunes sicak halesi */
+html[data-theme="dark"] body[data-theme="yaz"] .hero::before {
+    background:
+        radial-gradient(circle 200px at 50% 92%, rgba(255, 220, 140, 0.7) 0%, rgba(255, 112, 67, 0.35) 42%, transparent 70%),
+        radial-gradient(circle 450px at 50% 105%, rgba(255, 112, 67, 0.20) 0%, transparent 70%);
+    opacity: 1;
+}
+
+/* Hero ust karartma overlay — skyline'i yumusatir */
+html[data-theme="dark"] body[data-theme="yaz"] .hero::after {
+    background: linear-gradient(170deg, transparent 0%, transparent 50%, rgba(15, 8, 35, 0.45) 75%, rgba(10, 5, 30, 0.85) 100%);
+}
+
+/* Section gradients — sunset horizonu yumusak uzatilmis */
+html[data-theme="dark"] body[data-theme="yaz"] .bg-gradient-1 {
+    background: linear-gradient(180deg, #1A0F2E 0%, #2B1B3D 50%, #3A1E2E 100%);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .bg-gradient-2 {
+    background: linear-gradient(180deg, #2B1B3D 0%, #3A1E2E 50%, #5C2E3D 100%);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .bg-gradient-3 {
+    background: linear-gradient(180deg, #3A1E2E 0%, #2B1B3D 100%);
+}
+
+/* About — sakin mor veranda */
+html[data-theme="dark"] body[data-theme="yaz"] .about {
+    background: linear-gradient(180deg, #2B1B3D 0%, #3A1E2E 50%, #4A2535 100%);
+}
+
+/* Footer — gece yaklasiyor (yaz aksami ufku) */
+html[data-theme="dark"] body[data-theme="yaz"] footer,
+html[data-theme="dark"] body[data-theme="yaz"] .footer {
+    background: linear-gradient(180deg, #0A051E 0%, #1A0F2E 35%, #2B1B3D 100%);
+}
+
+/* Footer SVG siluet rengi — koyu ve hafif opacity */
+html[data-theme="dark"] body[data-theme="yaz"] footer::before {
+    opacity: 0.75;
+    filter: brightness(0.65) saturate(1.2);
+}
+
+/* Dekoratif katmanlar — gun batimi altinli + dusuk opacity */
+html[data-theme="dark"] body[data-theme="yaz"] .summer-sunshine-rays {
+    background: radial-gradient(
+        circle,
+        rgba(255, 212, 132, 0.18) 0%,
+        rgba(255, 112, 67, 0.08) 40%,
+        transparent 70%
+    );
+}
+html[data-theme="dark"] body[data-theme="yaz"] .summer-sun-rays {
+    opacity: 0.4;
+}
+html[data-theme="dark"] body[data-theme="yaz"] .summer-lens-flare {
+    background:
+        radial-gradient(circle at 70% 40%, rgba(255, 212, 132, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 60%, rgba(255, 112, 67, 0.06) 0%, transparent 35%);
+}
+
+/* Yuzen meyveler — siluet, dropshadow + brightness azalt */
+html[data-theme="dark"] body[data-theme="yaz"] .floating-fruit {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) brightness(0.82) saturate(0.9);
+    opacity: 0.88;
+}
+
+/* Butonlar — sicak mercan koru */
+html[data-theme="dark"] body[data-theme="yaz"] .btn-primary,
+html[data-theme="dark"] body[data-theme="yaz"] .product-order-btn {
+    background: linear-gradient(135deg, #FF7043 0%, #E04E2F 100%);
+    color: #FFF6E8;
+    border-color: #FF7043;
+}
+html[data-theme="dark"] body[data-theme="yaz"] .btn-primary:hover,
+html[data-theme="dark"] body[data-theme="yaz"] .product-order-btn:hover {
+    background: linear-gradient(135deg, #FF5722 0%, #C23A1F 100%);
+    box-shadow: 0 4px 24px rgba(255, 112, 67, 0.45);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .btn-secondary {
+    background: var(--pembe-soft);
+    color: var(--text-primary);
+    border: 1px solid var(--gold-primary);
+}
+
+/* Filter butonlar altin vurgu */
+html[data-theme="dark"] body[data-theme="yaz"] .filter-btn {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .filter-btn.active,
+html[data-theme="dark"] body[data-theme="yaz"] .filter-btn:hover {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .filter-btn.active::after,
+html[data-theme="dark"] body[data-theme="yaz"] .filter-btn:hover::after {
+    background: var(--gold-primary);
+}
+
+/* Urun karti — mor cam, altin text */
+html[data-theme="dark"] body[data-theme="yaz"] .product-card {
+    background: rgba(43, 27, 61, 0.6);
+    border-color: rgba(255, 212, 132, 0.18);
+    box-shadow: 0 2px 16px rgba(138, 58, 82, 0.25);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .product-card:hover {
+    border-color: rgba(255, 212, 132, 0.35);
+    box-shadow:
+        0 12px 40px rgba(255, 112, 67, 0.25),
+        0 0 40px rgba(255, 212, 132, 0.10),
+        0 0 0 1px rgba(255, 212, 132, 0.3);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .product-card .product-name,
+html[data-theme="dark"] body[data-theme="yaz"] .modal-content .modal-title {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .product-card .product-price,
+html[data-theme="dark"] body[data-theme="yaz"] .product-card .portion-price,
+html[data-theme="dark"] body[data-theme="yaz"] .modal-content .single-price,
+html[data-theme="dark"] body[data-theme="yaz"] .modal-content .price-item .amount {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .product-card .product-description {
+    color: var(--text-secondary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .product-card .product-category {
+    color: var(--summer-peach);
+}
+
+/* Takvim — sunset uyumlu (mor horizon + sicak toprak + batik kirmizi) */
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-day.bos,
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-days-grid .calendar-day.bos,
+html[data-theme="dark"] body[data-theme="yaz"] .legend-dot.bos {
+    background: #3D2B4A;                  /* mor horizon */
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-day.uygun,
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-days-grid .calendar-day.uygun,
+html[data-theme="dark"] body[data-theme="yaz"] .legend-dot.uygun {
+    background: #5A3A52;                  /* orta vadi muridum */
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-day.yogun,
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-days-grid .calendar-day.yogun,
+html[data-theme="dark"] body[data-theme="yaz"] .legend-dot.yogun {
+    background: #8B5A3C;                  /* sicak altin toprak */
+    color: #FFE4C4;
+}
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-day.dolu,
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-days-grid .calendar-day.dolu,
+html[data-theme="dark"] body[data-theme="yaz"] .legend-dot.dolu {
+    background: #8B3D3D;                  /* batik mercan */
+    color: #FFE4C4;
+}
+html[data-theme="dark"] body[data-theme="yaz"] .calendar-days-grid .calendar-day.bugun {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px rgba(255, 212, 132, 0.3);
+}
+
+/* Promosyon banner — sunset gradient */
+html[data-theme="dark"] body[data-theme="yaz"] .promo-banner {
+    background: linear-gradient(135deg, #8B4A5C 0%, #5C2E3D 100%);
+    border-color: rgba(255, 212, 132, 0.3);
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .promo-badge {
+    background: var(--gold-primary);
+    color: #4A2535;
+}
+
+/* Contact form — mor cam */
+html[data-theme="dark"] body[data-theme="yaz"] .contact-form input,
+html[data-theme="dark"] body[data-theme="yaz"] .contact-form textarea,
+html[data-theme="dark"] body[data-theme="yaz"] .form-group input,
+html[data-theme="dark"] body[data-theme="yaz"] .form-group textarea {
+    background: rgba(15, 8, 35, 0.6);
+    color: var(--text-primary);
+    border-color: var(--pembe-accent);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .contact-form input:focus,
+html[data-theme="dark"] body[data-theme="yaz"] .contact-form textarea:focus {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px rgba(244, 184, 96, 0.25);
+}
+
+/* FAQ — mor cam kart */
+html[data-theme="dark"] body[data-theme="yaz"] .faq-item {
+    background: rgba(43, 27, 61, 0.7);
+    border-color: rgba(255, 212, 132, 0.2);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .faq-item:hover {
+    background: rgba(59, 36, 81, 0.85);
+}
+
+/* Delivery kartlari + loyalty */
+html[data-theme="dark"] body[data-theme="yaz"] .delivery-card,
+html[data-theme="dark"] body[data-theme="yaz"] .loyalty-info,
+html[data-theme="dark"] body[data-theme="yaz"] .loyalty-item {
+    background: rgba(43, 27, 61, 0.7);
+    border-color: rgba(255, 212, 132, 0.2);
+}
+
+/* Parallax layer dark tonlar */
+html[data-theme="dark"] body[data-theme="yaz"] .parallax-layer--back {
+    background:
+        radial-gradient(circle 320px at 15% 30%, rgba(255, 112, 67, 0.18) 0%, transparent 100%),
+        radial-gradient(circle 280px at 85% 65%, rgba(255, 212, 132, 0.14) 0%, transparent 100%);
+}
+html[data-theme="dark"] body[data-theme="yaz"] .parallax-layer--mid {
+    background:
+        radial-gradient(circle 240px at 65% 25%, rgba(255, 212, 132, 0.12) 0%, transparent 100%),
+        radial-gradient(circle 200px at 25% 75%, rgba(95, 178, 154, 0.08) 0%, transparent 100%);
+}
+
+/* Scroll progress — yaz-dark gradient */
+html[data-theme="dark"] body[data-theme="yaz"] .scroll-progress {
+    background: linear-gradient(90deg, #FFD484 0%, #FF7043 50%, #FF5A7A 100%);
+}
+
+/* WhatsApp button halkasi altin-mercan */
+html[data-theme="dark"] body[data-theme="yaz"] .whatsapp-float {
+    box-shadow:
+        0 4px 24px rgba(37, 211, 102, 0.45),
+        0 0 0 4px rgba(255, 212, 132, 0.28);
+}
+
+/* =============================================
+   KIS + DARK — "Kis Gecesi" Paleti
+   Koyu indigo-gri, ay isigi gumusu, kar daha parlak gozukur.
+   ============================================= */
+html[data-theme="dark"] body[data-theme="kis"] {
+    --pembe-soft: #1A2738;        /* gece mavi */
+    --pembe-accent: #27374D;      /* koyu arduvaz */
+    --pembe-medium: #4A6585;      /* kis mavisi orta */
+    --krem: #0B1421;              /* koyu gece */
+    --krem-dark: #060D18;         /* daha koyu */
+    --kahve: #A8C0D8;             /* ay isigi */
+    --kahve-light: #D4E4F0;
+    --beyaz: #14202D;             /* kart bg */
+    --kirmizi-soft: #3A4A5C;
+    --yesil-soft: #3D5A55;
+
+    --text-primary: #E8F0F8;
+    --text-secondary: #B8C8D8;
+    --text-light: #90A0B8;
+
+    --gold-primary: #C4D4E8;      /* gumus-mavi */
+    --gold-light: #A8C0D8;
+    --gold-shimmer: linear-gradient(135deg, #A8C0D8, #E0EAF2, #A8C0D8);
+
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 8px 30px rgba(74, 101, 133, 0.25);
+
+    --glass-bg: rgba(20, 32, 45, 0.6);
+    --glass-border: rgba(168, 192, 216, 0.2);
+    --glass-blur: 14px;
+
+    /* Pasta (cake) SVG kis+dark palet — ay isigi buzu */
+    --tier-light: #4A6585;       /* gumus-mavi orta */
+    --tier-mid:   #334458;       /* koyu arduvaz */
+    --tier-dark:  #1A2738;       /* gece mavi */
+    --tier-base:  #273A52;
+    --cream:      #E8F0F8;       /* ay isigi krema */
+    --cream-shade:#A8C0D8;
+    --berry:      #7A4A5C;       /* kis murdum */
+    --berry-dark: #4A2A38;
+    --leaf:       #5A7A6B;       /* donmus cam */
+    --dot-pink:   #B8A0B0;
+    --dot-green:  #8AA090;
+    --sparkle:    #E8F0FF;
+    --contact:    rgba(0, 0, 0, 0.55);
+
+    /* Cupcake kis+dark palet — ay isiginda buzlu gece */
+    --cup-stroke:       #0A111C;
+    --cup-wrap:         #4A6585;    /* gece mavi kagit */
+    --cup-wrap-dark:    #273A52;
+    --cup-wrap-edge:    #6B85A5;
+    --cup-wrap-shadow:  #1A2738;
+    --cup-cake:         #5A4235;    /* karanlikta vanilya */
+    --cup-cake-shade:   #2E2018;
+    --cup-frost:        #D4E4F0;    /* buzlu beyaz swirl */
+    --cup-frost-mid:    #A0BCD5;
+    --cup-sprinkle:     #B84A6A;
+    --cup-cherry:       #A03850;    /* gece kranberry */
+    --cup-cherry-shade: #4A1C28;
+    --cup-cherry-light: #D89098;
+    --cup-leaf:         #5A7A6B;
+    --cup-cheek:        #D89BAA;    /* ayazlamis yanak */
+    --cup-shadow:       rgba(0, 0, 0, 0.6);
+}
+
+/* Hero — kis gecesi ay isigi */
+html[data-theme="dark"] body[data-theme="kis"] .hero {
+    background:
+        radial-gradient(ellipse 120% 55% at 50% 0%, rgba(74, 101, 133, 0.28) 0%, transparent 70%),
+        radial-gradient(circle 160px at 80% 20%, rgba(232, 240, 248, 0.18) 0%, transparent 70%),
+        linear-gradient(180deg, #060D18 0%, #0B1421 40%, #1A2738 100%);
+}
+
+html[data-theme="dark"] body[data-theme="kis"] .bg-gradient-1 {
+    background: linear-gradient(180deg, #060D18 0%, #0B1421 50%, #1A2738 100%);
+}
+html[data-theme="dark"] body[data-theme="kis"] .bg-gradient-2 {
+    background: linear-gradient(180deg, #0B1421 0%, #1A2738 50%, #27374D 100%);
+}
+html[data-theme="dark"] body[data-theme="kis"] .bg-gradient-3 {
+    background: linear-gradient(180deg, #1A2738 0%, #27374D 100%);
+}
+html[data-theme="dark"] body[data-theme="kis"] .about {
+    background: linear-gradient(180deg, #0B1421 0%, #14202D 100%);
+}
+html[data-theme="dark"] body[data-theme="kis"] footer,
+html[data-theme="dark"] body[data-theme="kis"] .footer {
+    background: linear-gradient(135deg, #060D18 0%, #0B1421 100%);
+}
+html[data-theme="dark"] body[data-theme="kis"] footer::before {
+    opacity: 0.78;
+    filter: brightness(0.7);
+}
+
+/* Butonlar — ayisigi gradient */
+html[data-theme="dark"] body[data-theme="kis"] .btn-primary,
+html[data-theme="dark"] body[data-theme="kis"] .product-order-btn {
+    background: linear-gradient(135deg, #4A6585 0%, #27374D 100%);
+    color: #E8F0F8;
+    border-color: #4A6585;
+}
+html[data-theme="dark"] body[data-theme="kis"] .btn-primary:hover,
+html[data-theme="dark"] body[data-theme="kis"] .product-order-btn:hover {
+    background: linear-gradient(135deg, #5A7595 0%, #334458 100%);
+    box-shadow: 0 4px 20px rgba(74, 101, 133, 0.35);
+}
+
+/* Urun karti */
+html[data-theme="dark"] body[data-theme="kis"] .product-card {
+    background: rgba(20, 32, 45, 0.65);
+    border-color: rgba(168, 192, 216, 0.2);
+}
+html[data-theme="dark"] body[data-theme="kis"] .product-card .product-name,
+html[data-theme="dark"] body[data-theme="kis"] .modal-content .modal-title,
+html[data-theme="dark"] body[data-theme="kis"] .product-card .product-price,
+html[data-theme="dark"] body[data-theme="kis"] .product-card .portion-price,
+html[data-theme="dark"] body[data-theme="kis"] .modal-content .single-price,
+html[data-theme="dark"] body[data-theme="kis"] .modal-content .price-item .amount {
+    color: var(--gold-primary);
+}
+html[data-theme="dark"] body[data-theme="kis"] .product-card .product-description {
+    color: var(--text-secondary);
+}
+
+/* Takvim — kar/buz koyu tonlari */
+html[data-theme="dark"] body[data-theme="kis"] .calendar-day.bos,
+html[data-theme="dark"] body[data-theme="kis"] .calendar-days-grid .calendar-day.bos,
+html[data-theme="dark"] body[data-theme="kis"] .legend-dot.bos {
+    background: #27374D;
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="kis"] .calendar-day.uygun,
+html[data-theme="dark"] body[data-theme="kis"] .calendar-days-grid .calendar-day.uygun,
+html[data-theme="dark"] body[data-theme="kis"] .legend-dot.uygun {
+    background: #2D4A6B;
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="kis"] .calendar-day.yogun,
+html[data-theme="dark"] body[data-theme="kis"] .calendar-days-grid .calendar-day.yogun,
+html[data-theme="dark"] body[data-theme="kis"] .legend-dot.yogun {
+    background: #5A4A6B;
+    color: var(--text-primary);
+}
+html[data-theme="dark"] body[data-theme="kis"] .calendar-day.dolu,
+html[data-theme="dark"] body[data-theme="kis"] .calendar-days-grid .calendar-day.dolu,
+html[data-theme="dark"] body[data-theme="kis"] .legend-dot.dolu {
+    background: #5A3A4A;
+    color: var(--text-primary);
+}
+
+/* FAQ + delivery + loyalty */
+html[data-theme="dark"] body[data-theme="kis"] .faq-item,
+html[data-theme="dark"] body[data-theme="kis"] .delivery-card,
+html[data-theme="dark"] body[data-theme="kis"] .loyalty-info,
+html[data-theme="dark"] body[data-theme="kis"] .loyalty-item {
+    background: rgba(20, 32, 45, 0.7);
+    border-color: rgba(168, 192, 216, 0.2);
+}
+
+/* Form */
+html[data-theme="dark"] body[data-theme="kis"] .contact-form input,
+html[data-theme="dark"] body[data-theme="kis"] .contact-form textarea,
+html[data-theme="dark"] body[data-theme="kis"] .form-group input,
+html[data-theme="dark"] body[data-theme="kis"] .form-group textarea {
+    background: rgba(6, 13, 24, 0.7);
+    color: var(--text-primary);
+    border-color: var(--pembe-accent);
+}
+
+/* ---------- Transitions (prefers-reduced-motion korumali) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    body,
+    .card,
+    .stat-card,
+    .product-card,
+    .modal-content,
+    .topbar,
+    .sidebar,
+    .btn,
+    .form-group input,
+    .form-group textarea,
+    input,
+    textarea,
+    select {
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+}
+
+/* ---------- System preference fallback ---------- */
+/* Kullanici manuel toggle etmediyse sistem tercihini dinle.
+   HTML'de data-theme yoksa (no-user-preference), prefers-color-scheme: dark aktifse overrides uygulanir. */
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+        /* Variable override'lari kopyala — JS yoksa bile calisan graceful fallback */
+        --pembe-soft: #2A1F28;
+        --pembe-accent: #4A3440;
+        --krem: #16141A;
+        --krem-dark: #1F1D23;
+        --kahve: #D4B896;
+        --kahve-light: #B89C7A;
+        --beyaz: #1F1D23;
+        --text-primary: #F5EDE8;
+        --text-secondary: #D4C5BA;
+        --text-light: #A69B94;
+        --gold-primary: #E8D5B5;
+
+        --admin-primary: #D4B896;
+        --admin-bg: #0F0E14;
+        --admin-sidebar: #0A0910;
+        --admin-text: #F5EDE8;
+        --admin-text-secondary: #B8ADA3;
+        --admin-text-light: #8B8078;
+        --admin-border: #2A2730;
+        --admin-border-light: #1F1D23;
+        --admin-card: #16141A;
+    }
+
+    html:not([data-theme]) body {
+        background: var(--krem);
+        color: var(--text-primary);
+    }
+
+    html:not([data-theme]) .card,
+    html:not([data-theme]) .stat-card,
+    html:not([data-theme]) .modal,
+    html:not([data-theme]) .topbar,
+    html:not([data-theme]) .product-card,
+    html:not([data-theme]) .modal-content {
+        background: var(--admin-card, var(--beyaz));
+    }
+}
+
+/* ---------- Print — dark mode'u yazdirirken yok say ---------- */
+@media print {
+    html[data-theme="dark"],
+    html[data-theme="dark"] body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+}

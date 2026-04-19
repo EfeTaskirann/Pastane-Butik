@@ -44,10 +44,10 @@ function getAyTakvimi($db, $ay, $yil, $ayIsimleri, $ayKisaIsimleri) {
     $ayinSonGunu = date('Y-m-t', strtotime($ayinIlkGunu));
     $ayinGunSayisi = (int)date('t', strtotime($ayinIlkGunu));
 
-    // Her gün için toplam puanları hesapla (teslim edilmemiş ve iptal olmayan siparişler)
-    $sql = "SELECT tarih, SUM(COALESCE(puan, 0) * COALESCE(kisi_sayisi, 1)) as toplam_puan
+    // Her gün için toplam puanları hesapla (tamamlanmamış ve arşivlenmemiş siparişler)
+    $sql = "SELECT tarih, SUM(COALESCE(puan, 0) * COALESCE(adet, 1)) as toplam_puan
             FROM siparisler
-            WHERE tarih >= ? AND tarih <= ? AND durum NOT IN ('teslim_edildi', 'iptal')
+            WHERE tarih >= ? AND tarih <= ? AND tamamlandi = 0 AND arsivlendi = 0
             GROUP BY tarih";
 
     $stmt = $db->query($sql, [$ayinIlkGunu, $ayinSonGunu]);

@@ -28,14 +28,14 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => __DIR__ . '/../uploads',
-            'url' => env('APP_URL') . '/uploads',
+            'url' => env('APP_URL', 'http://localhost/pastane') . '/uploads',
             'visibility' => 'public',
         ],
 
         'products' => [
             'driver' => 'local',
             'root' => __DIR__ . '/../uploads/products',
-            'url' => env('APP_URL') . '/uploads/products',
+            'url' => env('APP_URL', 'http://localhost/pastane') . '/uploads/products',
             'visibility' => 'public',
         ],
     ],

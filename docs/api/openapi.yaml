@@ -1,0 +1,1143 @@
+openapi: 3.0.3
+info:
+  title: Tatlı Düşler Pastanesi API
+  description: |
+    QR menü, sipariş, masa yönetimi, ödeme ve admin yönetimi için RESTful API.
+
+    **Kimlik Doğrulama:**
+    - Admin endpoint'leri: JWT Bearer token (`Authorization: Bearer <token>`)
+    - Müşteri (QR) endpoint'leri: Oturum token (`X-Oturum-Token: <token>` veya cookie)
+
+    **Rate Limiting:**
+    - Global API: 60 istek/dakika (IP)
+    - Login: 5 deneme/15 dakika
+    - Sipariş oluşturma: 5 istek/dakika
+    - Ödeme başlatma: 3 istek/dakika
+
+    **Versiyonlama:** URL bazlı (`/api/v1`). Detay için `docs/API_VERSIONING.md`.
+  version: 1.0.0
+  contact:
+    name: Tatlı Düşler Teknoloji Ekibi
+    email: tech@tatlidusler.local
+  license:
+    name: Proprietary
+servers:
+  - url: http://localhost/pastane/api/v1
+    description: Lokal geliştirme
+  - url: https://staging.tatlidusler.local/api/v1
+    description: Staging
+  - url: https://tatlidusler.local/api/v1
+    description: Production
+tags:
+  - name: Auth
+    description: Kimlik doğrulama ve oturum yönetimi
+  - name: Menu
+    description: QR menü (müşteri tarafı, oturum token ile)
+  - name: Siparişler
+    description: Web sipariş yönetimi (admin + public)
+  - name: Masalar
+    description: Masa yönetimi (admin)
+  - name: Masa Siparişleri
+    description: Masa (QR) sipariş yönetimi (admin)
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token. `/auth/login` üzerinden alınır.
+        Header: `Authorization: Bearer <token>`
+    OturumToken:
+      type: apiKey
+      in: header
+      name: X-Oturum-Token
+      description: QR menüden gelen müşteri oturum token'ı (cookie `oturum_token` ile de gönderilebilir)
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: (Rezerv) Sunucular arası çağrılar için API anahtarı
+
+  schemas:
+    Hata:
+      type: object
+      description: Standart hata zarfı
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Geçersiz istek.
+        errors:
+          type: object
+          description: Alan bazlı validasyon hataları (opsiyonel)
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            kullanici_adi: [Kullanıcı adı zorunludur.]
+      example:
+        success: false
+        message: Geçersiz kullanıcı adı veya şifre.
+
+    Basari:
+      type: object
+      description: Standart başarı zarfı
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: İşlem başarılı.
+        data:
+          type: object
+
+    Meta:
+      type: object
+      description: Sayfalama meta bilgisi
+      properties:
+        toplam:
+          type: integer
+          example: 145
+        sayfa:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        toplam_sayfa:
+          type: integer
+          example: 8
+
+    Kategori:
+      type: object
+      required: [id, isim, slug]
+      properties:
+        id:
+          type: integer
+          example: 3
+        isim:
+          type: string
+          example: Pastalar
+        slug:
+          type: string
+          example: pastalar
+        sira:
+          type: integer
+          example: 1
+        gorsel:
+          type: string
+          nullable: true
+          example: /uploads/kategoriler/pastalar.webp
+
+    Urun:
+      type: object
+      required: [id, isim, fiyat, kategori_id]
+      properties:
+        id:
+          type: integer
+          example: 12
+        isim:
+          type: string
+          example: Frambuazlı Cheesecake
+        aciklama:
+          type: string
+          nullable: true
+          example: Taze frambuaz soslu New York cheesecake.
+        fiyat:
+          type: number
+          format: float
+          example: 180.00
+        fiyat_4kisi:
+          type: number
+          format: float
+          nullable: true
+        fiyat_6kisi:
+          type: number
+          format: float
+          nullable: true
+        fiyat_8kisi:
+          type: number
+          format: float
+          nullable: true
+        fiyat_10kisi:
+          type: number
+          format: float
+          nullable: true
+        kategori_id:
+          type: integer
+          example: 3
+        kategori_ad:
+          type: string
+          example: Pastalar
+        kategori_slug:
+          type: string
+          example: pastalar
+        gorsel:
+          type: string
+          nullable: true
+        stok_durumu:
+          type: string
+          enum: [var, yok, az]
+          example: var
+        aktif:
+          type: boolean
+        cafe_menusu:
+          type: boolean
+
+    Siparis:
+      type: object
+      required: [id, musteri_adi, toplam_tutar, durum]
+      properties:
+        id:
+          type: integer
+          example: 501
+        musteri_adi:
+          type: string
+          example: Ayşe Yılmaz
+        telefon:
+          type: string
+          example: "+905551112233"
+        adres:
+          type: string
+        adet:
+          type: integer
+          example: 1
+        urun_id:
+          type: integer
+          example: 12
+        kategori:
+          type: string
+          example: pastalar
+        toplam_tutar:
+          type: number
+          format: float
+          example: 360.00
+        durum:
+          type: string
+          enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+          example: beklemede
+        tarih:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    Masa:
+      type: object
+      required: [id, masa_no, kapasite, durum]
+      properties:
+        id:
+          type: integer
+          example: 7
+        masa_no:
+          type: integer
+          example: 12
+        kapasite:
+          type: integer
+          minimum: 1
+          maximum: 50
+          example: 4
+        konum:
+          type: string
+          nullable: true
+          example: Bahçe
+        durum:
+          type: string
+          enum: [bos, aktif, kapali]
+          example: aktif
+        qr_token:
+          type: string
+          description: QR kod için URL token'ı (aleni)
+          example: f3b9...e1
+        created_at:
+          type: string
+          format: date-time
+
+    MasaSiparisKalemi:
+      type: object
+      required: [urun_id, adet]
+      properties:
+        urun_id:
+          type: integer
+          example: 12
+        adet:
+          type: integer
+          minimum: 1
+          maximum: 99
+          example: 2
+        porsiyon:
+          type: string
+          nullable: true
+          enum: [null, "4kisi", "6kisi", "8kisi", "10kisi"]
+        ozel_not:
+          type: string
+          maxLength: 200
+          nullable: true
+        birim_fiyat:
+          type: number
+          format: float
+          readOnly: true
+        toplam:
+          type: number
+          format: float
+          readOnly: true
+
+    MasaSiparis:
+      type: object
+      required: [id, masa_id, oturum_id, durum, toplam_tutar]
+      properties:
+        id:
+          type: integer
+          example: 1032
+        masa_id:
+          type: integer
+          example: 7
+        oturum_id:
+          type: integer
+          example: 443
+        durum:
+          type: string
+          enum: [beklemede, onaylandi, hazirlaniyor, hazir, teslim_edildi, iptal]
+        toplam_tutar:
+          type: number
+          format: float
+        siparis_notu:
+          type: string
+          nullable: true
+          maxLength: 500
+        odeme_durumu:
+          type: string
+          enum: [odenmedi, bekliyor, odendi, basarisiz, iade]
+        kalemler:
+          type: array
+          items:
+            $ref: '#/components/schemas/MasaSiparisKalemi'
+        siparis_zamani:
+          type: string
+          format: date-time
+
+    Kullanici:
+      type: object
+      required: [id, kullanici_adi, rol]
+      properties:
+        id:
+          type: integer
+          example: 1
+        kullanici_adi:
+          type: string
+          example: admin
+        email:
+          type: string
+          format: email
+          nullable: true
+        rol:
+          type: string
+          enum: [admin, mudur, garson, mutfak]
+          example: admin
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    LoginRequest:
+      type: object
+      required: [kullanici_adi, sifre]
+      properties:
+        kullanici_adi:
+          type: string
+          minLength: 3
+          maxLength: 50
+        sifre:
+          type: string
+          format: password
+          minLength: 8
+        two_factor_code:
+          type: string
+          pattern: '^\d{6}$'
+          nullable: true
+          description: 2FA etkinse TOTP kodu
+
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/Basari'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                expires_in:
+                  type: integer
+                  example: 3600
+                user:
+                  $ref: '#/components/schemas/Kullanici'
+
+    ChangePasswordRequest:
+      type: object
+      required: [mevcut_sifre, yeni_sifre, yeni_sifre_tekrar]
+      properties:
+        mevcut_sifre:
+          type: string
+          format: password
+        yeni_sifre:
+          type: string
+          format: password
+          minLength: 12
+          description: PasswordPolicy kurallarına uymalı (büyük/küçük/rakam/özel)
+        yeni_sifre_tekrar:
+          type: string
+          format: password
+
+    SiparisCreateRequest:
+      type: object
+      required: [musteri_adi, telefon, urun_id, adet, tarih]
+      properties:
+        musteri_adi:
+          type: string
+          minLength: 2
+          maxLength: 100
+        telefon:
+          type: string
+          pattern: '^\+?[0-9\s()-]{10,20}$'
+        email:
+          type: string
+          format: email
+          nullable: true
+        adres:
+          type: string
+          maxLength: 500
+        urun_id:
+          type: integer
+        adet:
+          type: integer
+          minimum: 1
+          maximum: 100
+        tarih:
+          type: string
+          format: date
+        ozel_istekler:
+          type: string
+          nullable: true
+          maxLength: 1000
+
+    SiparisDurumRequest:
+      type: object
+      required: [durum]
+      properties:
+        durum:
+          type: string
+          enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+
+    MasaSiparisCreateRequest:
+      type: object
+      required: [oturum_token, kalemler]
+      properties:
+        oturum_token:
+          type: string
+          maxLength: 128
+        kalemler:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/MasaSiparisKalemi'
+        siparis_notu:
+          type: string
+          maxLength: 500
+          nullable: true
+
+  responses:
+    BadRequest:
+      description: Geçersiz istek / geçersiz JSON
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    Unauthorized:
+      description: Kimlik doğrulama başarısız / token yok
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    Forbidden:
+      description: Yetkisiz erişim (role veya kaynak sahipliği)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    NotFound:
+      description: Kayıt bulunamadı
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    UnprocessableEntity:
+      description: Validasyon hatası
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    TooManyRequests:
+      description: Rate limit aşıldı
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Kaç saniye sonra tekrar denenebilir
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+    ServerError:
+      description: Sunucu hatası
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Hata'
+
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+paths:
+  /:
+    get:
+      tags: [Auth]
+      summary: API bilgisi
+      description: API versiyonu ve kullanılabilir endpoint listesi.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basari'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Admin girişi
+      description: |
+        Kullanıcı adı + şifre ile JWT token alır. 2FA etkinse `two_factor_code` zorunludur.
+
+        Rate limit: IP başına 15 dakika içinde 5 başarısız deneme.
+        5 denemeyi aşan IP 15 dakika kilitlenir.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              basit:
+                value:
+                  kullanici_adi: admin
+                  sifre: "********"
+              iki_faktor:
+                value:
+                  kullanici_adi: admin
+                  sifre: "********"
+                  two_factor_code: "123456"
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Hatalı kimlik veya 2FA gerekli
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Hata'
+                  - type: object
+                    properties:
+                      requires_2fa:
+                        type: boolean
+        '403':
+          description: Hesap kilitli
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hata'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Çıkış (token invalidasyonu)
+      description: JWT token'ı sunucu taraflı blacklist'e ekler. Aynı token bir daha kabul edilmez.
+      responses:
+        '200':
+          description: Çıkış başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basari'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Şifre değiştir
+      description: |
+        Mevcut şifre doğrulanır, yeni şifre PasswordPolicy'ye göre kontrol edilir
+        ve geçmiş 5 şifreden farklı olmalıdır.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Şifre değiştirildi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basari'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /menu/{qr_token}:
+    get:
+      tags: [Menu]
+      summary: QR menü verisi
+      description: |
+        Masanın QR token'ı ile kategoriler ve kafe menüsündeki aktif ürünleri getirir.
+        Geçersiz/pasif masa için 403 döner.
+      security: []
+      parameters:
+        - in: path
+          name: qr_token
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+      responses:
+        '200':
+          description: Menü verisi
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          masa:
+                            $ref: '#/components/schemas/Masa'
+                          oturum_token:
+                            type: string
+                          kategoriler:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Kategori'
+                          urunler:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Urun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /menu/siparis:
+    post:
+      tags: [Menu]
+      summary: Müşteri sipariş oluştur (QR)
+      description: |
+        Oturum token ile menü siparişi oluşturur. Fiyat hesaplaması sunucuda yapılır
+        (client'tan fiyat alınmaz).
+
+        Rate limit: IP başına dakikada 5 sipariş.
+      security:
+        - OturumToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MasaSiparisCreateRequest'
+            example:
+              oturum_token: f3b9...e1
+              kalemler:
+                - urun_id: 12
+                  adet: 2
+                  porsiyon: null
+                  ozel_not: Az şekerli
+              siparis_notu: Masaya birlikte getirin lütfen
+      responses:
+        '201':
+          description: Sipariş oluşturuldu
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis_id:
+                            type: integer
+                          durum:
+                            type: string
+                          toplam_tutar:
+                            type: number
+                          odeme_gerekli:
+                            type: boolean
+                          odeme_url:
+                            type: string
+                            nullable: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /siparisler:
+    get:
+      tags: [Siparişler]
+      summary: Siparişleri listele (Admin)
+      description: |
+        Admin JWT gereklidir. Durum, başlangıç/bitiş tarihi ile filtrelenebilir.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: durum
+          schema:
+            type: string
+            enum: [beklemede, onaylandi, hazirlaniyor, teslim_edildi, iptal]
+        - in: query
+          name: baslangic
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: bitis
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Liste
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparisler:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Siparis'
+                          meta:
+                            $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Siparişler]
+      summary: Yeni web siparişi oluştur (Public)
+      description: |
+        Müşteri sipariş formu üzerinden gelir.
+
+        **GÜVENLİK:** `toplam_tutar` ve `birim_fiyat` client'tan alınmaz,
+        servis katmanı hesaplar. Rate limit uygulanır.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiparisCreateRequest'
+      responses:
+        '201':
+          description: Sipariş oluşturuldu
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            $ref: '#/components/schemas/Siparis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /siparisler/track/{token}:
+    get:
+      tags: [Siparişler]
+      summary: Sipariş durumu (Public, Token bazlı)
+      description: |
+        **IDOR korumalı public takip endpoint'i (P1-09).**
+
+        Token ile sipariş durumu sorgulama — admin JWT gerekmez, yalnızca 32 karakterlik
+        hex token (`bin2hex(random_bytes(16))`) bilenler erişebilir. Token, sipariş
+        oluşturulduğunda yanıtta döner ve müşteriye özel takip URL'inde kullanılır.
+
+        **Rate limit:** IP başına 10 istek/dakika. Headers: `X-RateLimit-Limit`,
+        `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
+
+        **Güvenlik:**
+        - Token format doğrulaması (32 hex) endpoint girişinde yapılır.
+        - Hatalı format/bulunamayan token → 404 (mesaj sızıntısı yok).
+        - Yanıtta yalnızca müşteri görünür alanlar döner (iç admin alanları maskelenir).
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-f0-9]{32}$'
+            minLength: 32
+            maxLength: 32
+      responses:
+        '200':
+          description: Sipariş durumu (public alanlar)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              durum:
+                                type: string
+                              toplam_tutar:
+                                type: number
+                                format: float
+                              odeme_durumu:
+                                type: string
+                                nullable: true
+                              siparis_zamani:
+                                type: string
+                                format: date-time
+                                nullable: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /siparisler/{id}:
+    get:
+      tags: [Siparişler]
+      summary: Sipariş detayı (Admin)
+      description: |
+        **Admin JWT zorunlu.** Müşteri tarafı bu endpoint'e erişemez —
+        `/siparisler/track/{token}` endpoint'i kullanmalıdır (IDOR koruması, P1-09).
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Detay
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            $ref: '#/components/schemas/Siparis'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Siparişler]
+      summary: Sipariş sil / arşivle (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Silindi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basari'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /siparisler/{id}/durum:
+    patch:
+      tags: [Siparişler]
+      summary: Sipariş durumunu güncelle (Admin)
+      description: |
+        Durum geçiş kuralları service katmanında uygulanır:
+        beklemede → onaylandi → hazirlaniyor → teslim_edildi. İptal her aşamada olabilir.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiparisDurumRequest'
+      responses:
+        '200':
+          description: Güncellendi
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            $ref: '#/components/schemas/Siparis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /masalar:
+    get:
+      tags: [Masalar]
+      summary: Masaları listele (Admin)
+      responses:
+        '200':
+          description: Liste
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          masalar:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Masa'
+                          toplam:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /masa-siparisleri:
+    get:
+      tags: [Masa Siparişleri]
+      summary: Aktif masa siparişleri (Admin)
+      description: durum ve masa_id query param'ları ile filtrelenebilir.
+      parameters:
+        - in: query
+          name: durum
+          schema:
+            type: string
+            enum: [beklemede, onaylandi, hazirlaniyor, hazir, teslim_edildi, iptal]
+        - in: query
+          name: masa_id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparisler:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/MasaSiparis'
+                          toplam:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /masa-siparisleri/{id}:
+    get:
+      tags: [Masa Siparişleri]
+      summary: Masa siparişi detayı (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detay
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            $ref: '#/components/schemas/MasaSiparis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /masa-siparisleri/{id}/durum:
+    put:
+      tags: [Masa Siparişleri]
+      summary: Masa siparişi durum güncelle (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [yeni_durum]
+              properties:
+                yeni_durum:
+                  type: string
+                  enum: [onaylandi, hazirlaniyor, hazir, teslim_edildi, iptal]
+      responses:
+        '200':
+          description: Güncellendi
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Basari'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          siparis:
+                            $ref: '#/components/schemas/MasaSiparis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'

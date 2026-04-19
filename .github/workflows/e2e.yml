@@ -1,0 +1,145 @@
+name: E2E Tests (Playwright)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Target browser (chromium|firefox|all)'
+        required: false
+        default: 'all'
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '20'
+
+jobs:
+  playwright:
+    name: E2E (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+
+    services:
+      mysql:
+        image: mysql:8.0.36
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pastane_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, pdo_mysql, json, gd, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright (${{ matrix.browser }})
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env.testing
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=pastane_test/' .env.testing
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env.testing
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env.testing
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env.testing
+          cp .env.testing .env
+          mkdir -p storage/cache storage/logs uploads
+
+      - name: Seed database
+        run: |
+          mysql -h 127.0.0.1 -u root -proot pastane_test < database.sql || echo "seed warning"
+
+      - name: Start PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          # Wait for PHP server
+          for i in $(seq 1 15); do
+            if curl -fs http://127.0.0.1:8000/api/health.php/live > /dev/null; then
+              echo "PHP server ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run Playwright tests
+        env:
+          E2E_BASE_URL: http://127.0.0.1:8000
+          E2E_ADMIN_USERNAME: admin
+          E2E_ADMIN_PASSWORD: admin123
+          CI: 'true'
+        run: npx playwright test --project=${{ matrix.browser }}
+
+      - name: Stop PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill $(cat /tmp/php-server.pid) || true
+          fi
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: tests/e2e/report/
+          retention-days: 14
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results-${{ matrix.browser }}
+          path: tests/e2e/results/
+          retention-days: 7
+
+      - name: Upload PHP server log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-server-log-${{ matrix.browser }}
+          path: /tmp/php-server.log
+          retention-days: 7

@@ -85,6 +85,25 @@ abstract class BaseRepository
     protected string $updatedAtColumn = 'updated_at';
 
     /**
+     * @var bool Audit trail otomatik injection aktif mi?
+     *
+     * true ise create()/update() sırasında oturumdaki admin kullanıcısının ID'si
+     * `created_by` / `updated_by` kolonlarına otomatik yazılır (kolon fillable'da
+     * olduğu sürece). Kolon DB'de yoksa veya fillable'da değilse sessizce atlanır.
+     */
+    protected bool $auditTrail = true;
+
+    /**
+     * @var string Created by kolonu adı (nullable FK → admin_kullanicilar.id)
+     */
+    protected string $createdByColumn = 'created_by';
+
+    /**
+     * @var string Updated by kolonu adı (nullable FK → admin_kullanicilar.id)
+     */
+    protected string $updatedByColumn = 'updated_by';
+
+    /**
      * Constructor
      *
      * @param PDO|null $db
@@ -315,6 +334,8 @@ abstract class BaseRepository
             $data[$this->updatedAtColumn] = $now;
         }
 
+        $this->injectAuditColumns($data, true);
+
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
@@ -339,6 +360,8 @@ abstract class BaseRepository
         if ($this->timestamps) {
             $data[$this->updatedAtColumn] = date('Y-m-d H:i:s');
         }
+
+        $this->injectAuditColumns($data, false);
 
         $sets = [];
         foreach (array_keys($data) as $column) {
@@ -368,6 +391,8 @@ abstract class BaseRepository
         if ($this->timestamps) {
             $data[$this->updatedAtColumn] = date('Y-m-d H:i:s');
         }
+
+        $this->injectAuditColumns($data, false);
 
         $sets = [];
         $params = [];
@@ -613,6 +638,82 @@ abstract class BaseRepository
         }
 
         return array_intersect_key($data, array_flip($this->fillable));
+    }
+
+    /**
+     * Audit trail kolonlarını otomatik doldur (created_by / updated_by)
+     *
+     * Kurallar:
+     * - `$auditTrail` false ise hiçbir şey yapmaz.
+     * - Kolon zaten `$data` içinde varsa override etmez (explicit çağrıya saygı).
+     * - Audit kolonları fillable whitelist'te OLMASA bile DB'de varsa eklenir
+     *   (migration otomatik olarak hedef tablolara audit ekler, her repository'nin
+     *   fillable'ını teker teker güncellememek için). DB'de kolon yoksa
+     *   `filterFillable` ve bu metod koruma sağlar — kolon eklenmiş ama DB'de
+     *   olmayan durumda INSERT hatası oluşabilir, child repository'de
+     *   `$auditTrail = false` ile opt-out edilebilir.
+     * - `auth_user_id()` null dönerse (oturum yok/CLI/test) kolon set edilmez;
+     *   DB'de NULL olarak kalır (FK ON DELETE SET NULL).
+     *
+     * @param array &$data     Referans olarak değiştirilen veri
+     * @param bool  $isCreating true = INSERT (created_by set edilir), false = UPDATE (sadece updated_by)
+     * @return void
+     */
+    protected function injectAuditColumns(array &$data, bool $isCreating): void
+    {
+        if (!$this->auditTrail) {
+            return;
+        }
+
+        if (!function_exists('auth_user_id')) {
+            return;
+        }
+
+        $userId = auth_user_id();
+        if ($userId === null) {
+            return;
+        }
+
+        if ($isCreating && !array_key_exists($this->createdByColumn, $data) && $this->tableHasColumn($this->createdByColumn)) {
+            $data[$this->createdByColumn] = $userId;
+        }
+
+        if (!array_key_exists($this->updatedByColumn, $data) && $this->tableHasColumn($this->updatedByColumn)) {
+            $data[$this->updatedByColumn] = $userId;
+        }
+    }
+
+    /**
+     * @var array<string, array<string, bool>> Per-table column existence cache (request-scoped).
+     */
+    private static array $columnCache = [];
+
+    /**
+     * DB'de bu tabloda verilen kolon var mı? (information_schema lookup, request-cache'li.)
+     *
+     * Audit kolonları ({@see $createdByColumn}, {@see $updatedByColumn}) her tabloda bulunmaz;
+     * migration henüz çalışmamış veya tablo audit scope'u dışındaysa kolon yok ⇒ inject etme.
+     */
+    protected function tableHasColumn(string $column): bool
+    {
+        $table = $this->table;
+        if (isset(self::$columnCache[$table][$column])) {
+            return self::$columnCache[$table][$column];
+        }
+
+        try {
+            $row = db()->fetch(
+                'SELECT COUNT(*) AS c FROM information_schema.columns '
+                . 'WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?',
+                [$table, $column]
+            );
+            $exists = ((int)($row['c'] ?? 0)) > 0;
+        } catch (\Throwable) {
+            $exists = false;
+        }
+
+        self::$columnCache[$table][$column] = $exists;
+        return $exists;
     }
 
     /**

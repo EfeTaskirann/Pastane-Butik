@@ -19,6 +19,12 @@ use Pastane\Exceptions\HttpException;
 class KategoriService extends BaseService
 {
     /**
+     * Cache key / TTL sabitleri
+     */
+    private const CACHE_KEY_ALL_WITH_COUNT = 'kategoriler:urun-sayisi';
+    private const CACHE_TTL_ALL_WITH_COUNT = 300; // 5 dk
+
+    /**
      * @var KategoriRepository
      */
     protected KategoriRepository $kategoriRepository;
@@ -37,11 +43,18 @@ class KategoriService extends BaseService
     /**
      * Tüm kategorileri ürün sayısıyla birlikte getir
      *
+     * Hot path: hem menü hem admin panel bu metodu çağırır.
+     * 5 dk cache'lenir. Create/update/delete/updateOrder sonrası invalidate.
+     *
      * @return array
      */
     public function getAllWithProductCount(): array
     {
-        return $this->kategoriRepository->getAllWithProductCount();
+        return $this->cacheRemember(
+            self::CACHE_KEY_ALL_WITH_COUNT,
+            fn () => $this->kategoriRepository->getAllWithProductCount(),
+            self::CACHE_TTL_ALL_WITH_COUNT
+        );
     }
 
     /**
@@ -86,8 +99,8 @@ class KategoriService extends BaseService
     public function create(array $data): array
     {
         // Slug oluştur
-        if (empty($data['slug']) && !empty($data['ad'])) {
-            $data['slug'] = $this->generateSlug($data['ad']);
+        if (empty($data['slug']) && !empty($data['isim'])) {
+            $data['slug'] = $this->generateSlug($data['isim']);
         }
 
         // Varsayılan sıra
@@ -107,9 +120,9 @@ class KategoriService extends BaseService
      */
     public function update(int|string $id, array $data): array
     {
-        // Ad değiştiyse slug'ı yeniden oluştur
-        if (!empty($data['ad']) && empty($data['slug'])) {
-            $data['slug'] = $this->generateSlug($data['ad'], (int)$id);
+        // İsim değiştiyse slug'ı yeniden oluştur
+        if (!empty($data['isim']) && empty($data['slug'])) {
+            $data['slug'] = $this->generateSlug($data['isim'], (int)$id);
         }
 
         $result = parent::update($id, $data);
@@ -187,11 +200,21 @@ class KategoriService extends BaseService
     /**
      * Kategori cache'ini temizle
      *
+     * Kategori create/update/delete/updateOrder sonrası çağrılır.
+     * Ayrıca kategori değişimi menü listesini de etkilediği için
+     * ilgili ürün cache key'lerini de temizler.
+     *
      * @return void
      */
     protected function clearCache(): void
     {
-        $this->clearCacheKeys('categories_all');
+        $this->clearCacheKeys(
+            'categories_all',
+            self::CACHE_KEY_ALL_WITH_COUNT,
+            'urunler:aktif:all',    // UrunService::CACHE_KEY_ACTIVE_ALL — kategori değişti → menü bayat
+            'cafe_menu_urunleri',   // UrunService::CACHE_KEY_CAFE_MENU
+            'urunler:one-cikan'     // UrunService::CACHE_KEY_FEATURED
+        );
     }
 
     /**
@@ -203,7 +226,7 @@ class KategoriService extends BaseService
     protected function validateCreate(array $data): void
     {
         $this->validate($data, [
-            'ad' => 'required|string|min:2|max:100',
+            'isim' => 'required|string|min:2|max:100',
         ]);
     }
 
@@ -218,9 +241,9 @@ class KategoriService extends BaseService
     {
         parent::validateUpdate($id, $data);
 
-        if (isset($data['ad'])) {
+        if (isset($data['isim'])) {
             $this->validate($data, [
-                'ad' => 'string|min:2|max:100',
+                'isim' => 'string|min:2|max:100',
             ]);
         }
     }

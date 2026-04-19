@@ -200,7 +200,7 @@ $totalCount = count($messages);
     </h2>
     <?php if ($unreadCount > 0): ?>
         <div class="page-header-actions">
-            <form method="POST" style="display: inline;">
+            <form method="POST" class="u-d-inline">
                 <?= csrfTokenField() ?>
                 <input type="hidden" name="mark_all_read" value="1">
                 <button type="submit" class="btn btn-secondary">
@@ -216,8 +216,8 @@ $totalCount = count($messages);
 </div>
 
 <!-- Stats -->
-<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-    <div class="stat-card" style="--stat-color: var(--admin-primary);">
+<div class="stats-grid u-grid-auto-180-tight">
+    <div class="stat-card stat-card--primary">
         <div class="stat-icon primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -228,7 +228,7 @@ $totalCount = count($messages);
             <span>Toplam Mesaj</span>
         </div>
     </div>
-    <div class="stat-card" style="--stat-color: var(--admin-info);">
+    <div class="stat-card stat-card--info">
         <div class="stat-icon info">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
@@ -241,7 +241,7 @@ $totalCount = count($messages);
             <span>Okunmamış</span>
         </div>
     </div>
-    <div class="stat-card" style="--stat-color: var(--admin-success);">
+    <div class="stat-card stat-card--success">
         <div class="stat-icon success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
@@ -286,7 +286,10 @@ $totalCount = count($messages);
                     $saat = date('H:i', strtotime($msg['created_at']));
                 ?>
                     <div class="message-card <?= !$msg['okundu'] ? 'unread' : '' ?>"
-                         onclick="openMessageModal(<?= htmlspecialchars(json_encode($msg), ENT_QUOTES, 'UTF-8') ?>)">
+                         data-action="open-message-modal"
+                         data-message="<?= htmlspecialchars(json_encode($msg), ENT_QUOTES, 'UTF-8') ?>"
+                         role="button"
+                         tabindex="0">
                         <div class="message-card-header">
                             <div class="message-sender">
                                 <div class="avatar avatar-primary"><?= e($ilkHarf) ?></div>
@@ -306,9 +309,9 @@ $totalCount = count($messages);
                             <div class="message-meta">
                                 <div class="message-date"><?= $tarih ?> <?= $saat ?></div>
                                 <?php if (!$msg['okundu']): ?>
-                                    <span class="badge badge-info" style="margin-top: var(--space-1);">Yeni</span>
+                                    <span class="badge badge-info u-mt-1">Yeni</span>
                                 <?php else: ?>
-                                    <span class="badge badge-success" style="margin-top: var(--space-1);">Okundu</span>
+                                    <span class="badge badge-success u-mt-1">Okundu</span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -330,7 +333,7 @@ $totalCount = count($messages);
                 </svg>
                 Mesaj Detayı
             </h3>
-            <button class="modal-close" onclick="closeMessageModal()" aria-label="Kapat">
+            <button type="button" class="modal-close" data-action="close-message-modal" aria-label="Kapat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -355,13 +358,13 @@ $totalCount = count($messages);
                 <div class="message-detail-value" id="modalDate"></div>
             </div>
 
-            <div style="margin-top: var(--space-4);">
-                <div class="message-detail-label" style="margin-bottom: var(--space-2);">Mesaj İçeriği</div>
+            <div class="u-mt-4">
+                <div class="message-detail-label u-mb-2">Mesaj İçeriği</div>
                 <div class="message-content-box" id="modalContent"></div>
             </div>
         </div>
         <div class="modal-footer">
-            <form method="POST" id="markReadForm" style="display: inline;">
+            <form method="POST" id="markReadForm" class="u-d-inline">
                 <?= csrfTokenField() ?>
                 <input type="hidden" name="read_id" id="markReadId">
                 <button type="submit" id="modalMarkRead" class="btn btn-success">
@@ -371,7 +374,7 @@ $totalCount = count($messages);
                     Okundu İşaretle
                 </button>
             </form>
-            <button type="button" class="btn btn-danger" onclick="deleteMessage()">
+            <button type="button" class="btn btn-danger" data-action="delete-message">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -387,14 +390,14 @@ $totalCount = count($messages);
     <div class="modal modal-sm">
         <div class="modal-header">
             <h3>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="u-text-admin-danger">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 Mesaj Sil
             </h3>
-            <button class="modal-close" onclick="closeDeleteModal()" aria-label="Kapat">
+            <button type="button" class="modal-close" data-action="close-delete-modal" aria-label="Kapat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -402,16 +405,16 @@ $totalCount = count($messages);
             </button>
         </div>
         <div class="modal-body">
-            <p style="text-align: center; color: var(--admin-text-secondary); margin: 0;">
+            <p class="u-text-center u-text-admin-secondary u-m-0">
                 Bu mesajı silmek istediğinize emin misiniz?
             </p>
-            <p style="text-align: center; font-size: var(--text-sm); color: var(--admin-danger); margin-top: var(--space-3); margin-bottom: 0;">
+            <p class="u-form-error-text">
                 Bu işlem geri alınamaz.
             </p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
-            <form method="POST" id="deleteForm" style="display: inline;">
+            <button type="button" class="btn btn-secondary" data-action="close-delete-modal">İptal</button>
+            <form method="POST" id="deleteForm" class="u-d-inline">
                 <?= csrfTokenField() ?>
                 <input type="hidden" name="delete_id" id="deleteId">
                 <button type="submit" class="btn btn-danger">
@@ -427,98 +430,147 @@ $totalCount = count($messages);
 </div>
 
 <script nonce="<?= getCspNonce() ?>">
-let currentMessage = null;
+(function() {
+    'use strict';
+    let currentMessage = null;
+    const messageModal = document.getElementById('messageModal');
+    const deleteModal = document.getElementById('deleteModal');
 
-function openMessageModal(mesaj) {
-    currentMessage = mesaj;
-
-    // Sender
-    document.getElementById('modalSender').textContent = mesaj.ad;
-
-    // Email
-    const emailRow = document.getElementById('modalEmailRow');
-    const emailEl = document.getElementById('modalEmail');
-    if (mesaj.email) {
-        emailRow.style.display = 'grid';
-        emailEl.innerHTML = '<a href="mailto:' + escapeHtml(mesaj.email) + '">' + escapeHtml(mesaj.email) + '</a>';
-    } else {
-        emailRow.style.display = 'none';
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
-    // Phone
-    const phoneRow = document.getElementById('modalPhoneRow');
-    const phoneEl = document.getElementById('modalPhone');
-    if (mesaj.telefon) {
-        phoneRow.style.display = 'grid';
-        phoneEl.innerHTML = '<a href="tel:' + escapeHtml(mesaj.telefon) + '">' + escapeHtml(mesaj.telefon) + '</a>';
-    } else {
-        phoneRow.style.display = 'none';
-    }
+    function openMessageModal(mesaj) {
+        currentMessage = mesaj;
 
-    // Date
-    const tarih = new Date(mesaj.created_at);
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    document.getElementById('modalDate').textContent = tarih.toLocaleDateString('tr-TR', options);
+        // Sender
+        document.getElementById('modalSender').textContent = mesaj.ad;
 
-    // Content
-    document.getElementById('modalContent').textContent = mesaj.mesaj;
+        // Email
+        const emailRow = document.getElementById('modalEmailRow');
+        const emailEl = document.getElementById('modalEmail');
+        if (mesaj.email) {
+            emailRow.style.display = 'grid';
+            emailEl.innerHTML = '<a href="mailto:' + escapeHtml(mesaj.email) + '">' + escapeHtml(mesaj.email) + '</a>';
+        } else {
+            emailRow.style.display = 'none';
+        }
 
-    // Read button
-    const markReadForm = document.getElementById('markReadForm');
-    if (mesaj.okundu == 1) {
-        markReadForm.style.display = 'none';
-    } else {
-        markReadForm.style.display = 'inline';
-        document.getElementById('markReadId').value = mesaj.id;
-    }
+        // Phone
+        const phoneRow = document.getElementById('modalPhoneRow');
+        const phoneEl = document.getElementById('modalPhone');
+        if (mesaj.telefon) {
+            phoneRow.style.display = 'grid';
+            phoneEl.innerHTML = '<a href="tel:' + escapeHtml(mesaj.telefon) + '">' + escapeHtml(mesaj.telefon) + '</a>';
+        } else {
+            phoneRow.style.display = 'none';
+        }
 
-    // Show modal
-    document.getElementById('messageModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
+        // Date
+        const tarih = new Date(mesaj.created_at);
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('modalDate').textContent = tarih.toLocaleDateString('tr-TR', options);
 
-function closeMessageModal() {
-    document.getElementById('messageModal').classList.remove('active');
-    document.body.style.overflow = '';
-    currentMessage = null;
-}
+        // Content
+        document.getElementById('modalContent').textContent = mesaj.mesaj;
 
-function deleteMessage() {
-    if (currentMessage) {
-        document.getElementById('deleteId').value = currentMessage.id;
-        closeMessageModal();
-        document.getElementById('deleteModal').classList.add('active');
+        // Read button
+        const markReadForm = document.getElementById('markReadForm');
+        if (mesaj.okundu == 1) {
+            markReadForm.style.display = 'none';
+        } else {
+            markReadForm.style.display = 'inline';
+            document.getElementById('markReadId').value = mesaj.id;
+        }
+
+        // Show modal
+        if (messageModal) messageModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
-}
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Close modals on overlay click
-document.getElementById('messageModal').addEventListener('click', function(e) {
-    if (e.target === this) closeMessageModal();
-});
-
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
-});
-
-// Close modals on ESC key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeMessageModal();
-        closeDeleteModal();
+    function closeMessageModal() {
+        if (messageModal) messageModal.classList.remove('active');
+        document.body.style.overflow = '';
+        currentMessage = null;
     }
-});
+
+    function deleteMessage() {
+        if (currentMessage) {
+            document.getElementById('deleteId').value = currentMessage.id;
+            closeMessageModal();
+            if (deleteModal) deleteModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeDeleteModal() {
+        if (deleteModal) deleteModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function parseMessageData(trigger) {
+        const raw = trigger.dataset.message;
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch (err) {
+            console.error('Mesaj verisi okunamadı', err);
+            return null;
+        }
+    }
+
+    // Event delegation (CSP uyumlu)
+    document.addEventListener('click', function(e) {
+        const openTrigger = e.target.closest('[data-action="open-message-modal"]');
+        if (openTrigger) {
+            const data = parseMessageData(openTrigger);
+            if (data) openMessageModal(data);
+            return;
+        }
+        if (e.target.closest('[data-action="close-message-modal"]')) {
+            closeMessageModal();
+            return;
+        }
+        if (e.target.closest('[data-action="delete-message"]')) {
+            deleteMessage();
+            return;
+        }
+        if (e.target.closest('[data-action="close-delete-modal"]')) {
+            closeDeleteModal();
+        }
+    });
+
+    // Klavyeyle message card açma (erişilebilirlik)
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-action="open-message-modal"]')) {
+            e.preventDefault();
+            const data = parseMessageData(e.target);
+            if (data) openMessageModal(data);
+        }
+    });
+
+    // Overlay tıklamasında modal kapat
+    if (messageModal) {
+        messageModal.addEventListener('click', function(e) {
+            if (e.target === this) closeMessageModal();
+        });
+    }
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    }
+
+    // ESC tuşuyla modalları kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeMessageModal();
+            closeDeleteModal();
+        }
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

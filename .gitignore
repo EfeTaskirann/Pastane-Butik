@@ -6,6 +6,14 @@
 .env.*.local
 .env.production
 .env.staging
+.env.backup-*
+.env.bak
+
+# Subagent + dev tooling artefactları
+.agent-logs/
+get_pip.py
+*.bat.tmp
+/tmp-*
 
 # ===========================================
 # Dependencies

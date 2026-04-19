@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Two-Factor Authentication (TOTP)
  *
@@ -192,7 +194,8 @@ class TwoFactorAuth
      */
     public static function hashBackupCodes(array $codes): array
     {
-        return array_map(fn($code) => password_hash($code, PASSWORD_DEFAULT), $codes);
+        // Backup code hash: Bcrypt cost 12 — kullanıcı şifresi ile aynı güçte saklama.
+        return array_map(fn($code) => password_hash($code, PASSWORD_BCRYPT, ['cost' => 12]), $codes);
     }
 
     /**

@@ -1,0 +1,711 @@
+/* =============================================
+   YAZ TEMASI — Tatli Dusler
+   Tropikal hisler, meyve animasyonlari, ferah yaz renkleri
+
+   NOT: Bu tema, mevcut renk degiskenlerini (--pembe-soft, --kahve vb.)
+   yaz paleti ile override eder. Degisken adlari orijinal temadan
+   kalmistir — "pembe-soft" yaz temasinda seftali tonuna, "kahve" sicak
+   toprak tonuna donusur. Icerik mevsimseldir, adlar orijinaldir.
+
+   Strateji:
+   1. :root CSS variable override -> tum mevcut bilesenler otomatik renk degistirir
+   2. [data-theme="yaz"] prefix -> !important kullanmadan specificity artisi
+   3. Dekoratif katmanlar (yuzen meyveler, gunes isigi)
+   ============================================= */
+
+/* ---------- Renk Paleti Override ----------
+   NOT: Variable override'lari body[data-theme="yaz"] scope'una baglandi —
+   boylece (1) dark mode html[data-theme="dark"] ile cakismaz,
+   (2) tema aktif degilken default palet korunur,
+   (3) paralel agent CSS variable cakisma riski (CLAUDE.md dersi) elimine.
+   Text color seviyesi WCAG AA uyumlu (text-secondary en az 4.5:1).
+   ------------------------------------------- */
+body[data-theme="yaz"] {
+    --pembe-soft: #FFF0E6;       /* seftali krem */
+    --pembe-accent: #FFB088;     /* mercan seftali */
+    --pembe-medium: #FF8C69;     /* sicak mercan */
+    --krem: #FFFDF5;             /* gunesli krem */
+    --krem-dark: #FFF5E6;        /* sicak vanilya */
+    --kahve: #7A6855;            /* sicak toprak */
+    --kahve-light: #9B8B78;      /* acik toprak */
+    --kirmizi-soft: #E8A5A5;     /* sicak gul */
+    --yesil-soft: #88C9A5;       /* nane yesili */
+
+    --text-primary: #4A3F35;     /* espresso */
+    --text-secondary: #6B5C53;   /* WCAG AA uyumlu (>=4.5:1 krem uzerinde) */
+    --text-light: #7A6855;       /* dekoratif ama AA uyumlu */
+
+    /* Yaz ozel tokenlar */
+    --summer-sunshine: #FFD93D;
+    --summer-coral: #FF6B6B;
+    --summer-mint: #6BCB77;
+    --summer-sky: #87CEEB;
+    --summer-lemon: #FFF44F;
+    --summer-strawberry: #FF5C8D;
+    --summer-peach: #FFB088;
+
+    /* Altin override — sicak altin */
+    --gold-primary: #D4A54A;
+    --gold-light: #E0BA6A;
+    --gold-shimmer: linear-gradient(135deg, #D4A54A, #F0D48A, #D4A54A);
+
+    /* Glassmorphism — yaz icin ferah, hafif */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 176, 136, 0.2);
+    --glass-blur: 10px;
+
+    /* Pasta (cake) SVG yaz palet — sicak seftali/mercan */
+    --tier-light: #FFF0E0;       /* seftali krem */
+    --tier-mid:   #FFD4B5;       /* sicak seftali */
+    --tier-dark:  #E89A75;       /* mercan */
+    --tier-base:  #FFC9A8;       /* kaide */
+    --cream:      #FFFDF5;       /* gunesli krem */
+    --cream-shade:#F5D4B0;
+    --berry:      #FF5C7A;       /* cilek — sicak pembe */
+    --berry-dark: #C93D5A;
+    --leaf:       #88C97E;
+    --dot-pink:   #FFB08B;
+    --dot-green:  #A8D8A8;
+    --sparkle:    #FFFBEB;
+    --contact:    rgba(122, 76, 50, 0.20);
+
+    /* Cupcake yaz palet — sicak mercan + altin vanilya */
+    --cup-stroke:       #3D2618;
+    --cup-wrap:         #FF8A69;    /* mercan kagit */
+    --cup-wrap-dark:    #D9583A;
+    --cup-wrap-edge:    #FFB098;    /* acik seftali bant */
+    --cup-wrap-shadow:  #8B3A1F;
+    --cup-cake:         #A87248;    /* sicak vanilya */
+    --cup-cake-shade:   #6B4525;
+    --cup-frost:        #FFD49A;    /* altin-krem swirl */
+    --cup-frost-mid:    #F5B677;
+    --cup-sprinkle:     #FF5B5B;
+    --cup-cherry:       #E0373F;    /* olgun cilek */
+    --cup-cherry-shade: #8A1822;
+    --cup-cherry-light: #FF8F7A;
+    --cup-leaf:         #6FA86A;
+    --cup-cheek:        #FFBFA5;
+    --cup-shadow:       rgba(138, 58, 31, 0.25);
+}
+
+/*
+ * NOT: .bg-gradient-1/2/3 siniflari zaten CSS degiskenlerini kullaniyor,
+ * bu yuzden section arka planlari yukaridaki :root override ile
+ * otomatik olarak yaz tonlarina donusur. Ekstra override gerekmez.
+ */
+
+/* ---------- Gunesli Kartlar + Glassmorphism ---------- */
+[data-theme="yaz"] .product-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+    border: 1px solid var(--glass-border);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 12px rgba(255, 140, 105, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="yaz"] .product-card:hover {
+    border-color: rgba(255, 176, 136, 0.3);
+    box-shadow:
+        0 12px 40px rgba(255, 140, 105, 0.18),
+        0 0 40px rgba(255, 217, 61, 0.06),
+        0 0 0 1px rgba(255, 176, 136, 0.25);
+}
+
+/* Gunes isigi spot — hover'da radial gradient glow */
+[data-theme="yaz"] .product-card::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -30%;
+    width: 160%;
+    height: 160%;
+    background: radial-gradient(
+        circle at 30% 20%,
+        rgba(255, 217, 61, 0.12) 0%,
+        rgba(255, 217, 61, 0.04) 30%,
+        transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+    transform: scale(0.8);
+}
+
+[data-theme="yaz"] .product-card:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ---------- Sparkle -> Gunes Parcaciklari ---------- */
+[data-theme="yaz"] .sparkle {
+    background: radial-gradient(
+        circle,
+        rgba(255, 217, 61, 0.9) 0%,
+        rgba(255, 176, 136, 0.4) 50%,
+        transparent 70%
+    );
+    box-shadow: 0 0 8px rgba(255, 217, 61, 0.5);
+}
+
+[data-theme="yaz"] .sparkle::before {
+    background: linear-gradient(
+        to bottom, transparent, rgba(255, 217, 61, 0.7), transparent
+    );
+}
+
+[data-theme="yaz"] .sparkle::after {
+    background: linear-gradient(
+        to right, transparent, rgba(255, 217, 61, 0.7), transparent
+    );
+}
+
+/* ---------- Isik Kureleri -> Sicak Tonlar ---------- */
+[data-theme="yaz"] .light-orb-1 {
+    background: radial-gradient(circle, rgba(255, 217, 61, 0.25) 0%, transparent 70%);
+}
+
+[data-theme="yaz"] .light-orb-2 {
+    background: radial-gradient(circle, rgba(255, 140, 105, 0.2) 0%, transparent 70%);
+}
+
+/* ---------- Dekoratif Bloblar -> Sicak ---------- */
+[data-theme="yaz"] .decoration-blob {
+    background: rgba(255, 217, 61, 0.12);
+}
+
+/* ---------- Hero Logo ---------- */
+[data-theme="yaz"] .hero-logo h1 {
+    text-shadow:
+        0 0 10px rgba(122, 104, 85, 0.08),
+        0 0 25px rgba(255, 176, 136, 0.15),
+        0 0 50px rgba(255, 217, 61, 0.08);
+}
+
+/* ---------- Scroll Progress Bar ---------- */
+[data-theme="yaz"] .scroll-progress {
+    background: linear-gradient(90deg, #FFD93D 0%, #FF8C69 50%, #FF5C8D 100%);
+}
+
+/* ---------- Promosyon Banner ---------- */
+[data-theme="yaz"] .promo-banner {
+    background: linear-gradient(135deg, #FF8C69 0%, #FF6B6B 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Butonlar ---------- */
+[data-theme="yaz"] .btn-primary,
+[data-theme="yaz"] .product-order-btn {
+    background: linear-gradient(135deg, #FF8C69 0%, #FF6B6B 100%);
+    border-color: #FF8C69;
+    color: #fff;
+}
+
+[data-theme="yaz"] .btn-primary:hover,
+[data-theme="yaz"] .product-order-btn:hover {
+    background: linear-gradient(135deg, #FF7C59 0%, #FF5B5B 100%);
+    box-shadow: 0 4px 15px rgba(255, 140, 105, 0.35);
+}
+
+[data-theme="yaz"] .btn-secondary {
+    background: var(--pembe-soft);
+    color: var(--text-primary);
+}
+
+/* ---------- Kategori Filtre ---------- */
+[data-theme="yaz"] .filter-btn.active,
+[data-theme="yaz"] .filter-btn:hover {
+    color: #FF8C69;
+}
+
+[data-theme="yaz"] .filter-btn.active::after,
+[data-theme="yaz"] .filter-btn:hover::after {
+    background: #FF8C69;
+}
+
+/* Footer temel renk — detayli siluet asagida */
+
+/* ---------- Takvim Renkleri ---------- */
+[data-theme="yaz"] .calendar-day.bos {
+    background: #FFF0E6;
+}
+
+[data-theme="yaz"] .calendar-day.uygun {
+    background: #C8E6C9;
+}
+
+[data-theme="yaz"] .calendar-day.yogun {
+    background: #FFD93D;
+    color: #4A3F35;
+}
+
+[data-theme="yaz"] .calendar-day.dolu {
+    background: #FF8C69;
+    color: #fff;
+}
+
+/* ---------- Iletisim Formu ---------- */
+[data-theme="yaz"] .contact-form input:focus,
+[data-theme="yaz"] .contact-form textarea:focus {
+    border-color: #FFB088;
+    box-shadow: 0 0 0 3px rgba(255, 176, 136, 0.15);
+}
+
+/* ---------- WhatsApp Butonu Sicak Halka ---------- */
+[data-theme="yaz"] .whatsapp-float {
+    box-shadow:
+        0 4px 20px rgba(37, 211, 102, 0.4),
+        0 0 0 4px rgba(255, 217, 61, 0.25);
+}
+
+/* ---------- Modal ---------- */
+[data-theme="yaz"] .modal-content {
+    border: 1px solid rgba(255, 176, 136, 0.1);
+}
+
+/* ---------- FAQ ---------- */
+[data-theme="yaz"] .faq-item {
+    border-color: rgba(255, 176, 136, 0.2);
+}
+
+[data-theme="yaz"] .faq-item:hover {
+    background: rgba(255, 240, 230, 0.5);
+}
+
+/* ---------- Section Baslik Dekorasyonu ----------
+   animations.css .section-header h2::before/::after ile sparkle var.
+   Tema bunu gunes ikonuyla degistiriyor (override, cakisma yok).
+   ------------------------------------------------ */
+[data-theme="yaz"] .section-header h2::before {
+    content: '\2600'; /* sun */
+    color: var(--summer-sunshine);
+    font-size: 0.55em;
+    animation: sunRotate 8s linear infinite;
+}
+
+[data-theme="yaz"] .section-header h2::after {
+    content: '\2600'; /* sun */
+    color: var(--summer-sunshine);
+    font-size: 0.55em;
+    animation: sunRotate 8s linear infinite;
+    animation-delay: 2s;
+}
+
+@keyframes sunRotate {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* =============================================
+   YUZEN MEYVE KATMANI
+   ============================================= */
+.summer-fruits {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.floating-fruit {
+    position: absolute;
+    font-size: 1.5rem;
+    opacity: 0;
+    animation: fruitFloat linear infinite;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes fruitFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(110vh) rotate(0deg) scale(0.7);
+    }
+    8% {
+        opacity: 0.65;
+    }
+    25% {
+        transform: translateY(75vh) translateX(var(--sway, 20px)) rotate(90deg) scale(0.9);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(50vh) translateX(calc(var(--sway, 20px) * -0.5)) rotate(180deg) scale(1);
+    }
+    75% {
+        transform: translateY(25vh) translateX(var(--sway-end, -20px)) rotate(270deg) scale(0.9);
+    }
+    92% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-10vh) translateX(var(--sway-end, -20px)) rotate(360deg) scale(0.7);
+    }
+}
+
+/* =============================================
+   GUNES ISIGI EFEKTI (Hero'da)
+   ============================================= */
+.summer-sunshine-rays {
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(
+        circle,
+        rgba(255, 217, 61, 0.12) 0%,
+        rgba(255, 217, 61, 0.05) 40%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    animation: sunPulse 5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes sunPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 0.85; }
+}
+
+/* Gunes isinlari — CSS conic-gradient */
+.summer-sun-rays {
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 400px;
+    height: 400px;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg, rgba(255, 217, 61, 0.06) 10deg, transparent 20deg,
+        transparent 30deg, rgba(255, 217, 61, 0.06) 40deg, transparent 50deg,
+        transparent 60deg, rgba(255, 217, 61, 0.06) 70deg, transparent 80deg,
+        transparent 90deg, rgba(255, 217, 61, 0.06) 100deg, transparent 110deg,
+        transparent 120deg, rgba(255, 217, 61, 0.06) 130deg, transparent 140deg,
+        transparent 150deg, rgba(255, 217, 61, 0.06) 160deg, transparent 170deg,
+        transparent 180deg, rgba(255, 217, 61, 0.06) 190deg, transparent 200deg,
+        transparent 210deg, rgba(255, 217, 61, 0.06) 220deg, transparent 230deg,
+        transparent 240deg, rgba(255, 217, 61, 0.06) 250deg, transparent 260deg,
+        transparent 270deg, rgba(255, 217, 61, 0.06) 280deg, transparent 290deg,
+        transparent 300deg, rgba(255, 217, 61, 0.06) 310deg, transparent 320deg,
+        transparent 330deg, rgba(255, 217, 61, 0.06) 340deg, transparent 350deg,
+        transparent 360deg
+    );
+    border-radius: 50%;
+    animation: raysRotate 30s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes raysRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .floating-fruit {
+        font-size: 1rem;
+    }
+
+    .summer-sunshine-rays {
+        width: 200px;
+        height: 200px;
+        top: -40px;
+        right: -40px;
+    }
+
+    .summer-sun-rays {
+        width: 250px;
+        height: 250px;
+        top: -60px;
+        right: -60px;
+    }
+}
+
+/* =============================================
+   SECTION DIVIDER — YAZ DALGASI
+   ============================================= */
+[data-theme="yaz"] section {
+    position: relative;
+}
+
+[data-theme="yaz"] section + section::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 100%;
+    height: 24px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 24' preserveAspectRatio='none'%3E%3Cpath d='M0 12 Q50 0 100 12 Q150 24 200 12 Q250 0 300 12 Q350 24 400 12 Q450 0 500 12 Q550 24 600 12 Q650 0 700 12 Q750 24 800 12 Q850 0 900 12 Q950 24 1000 12 Q1050 0 1100 12 Q1150 24 1200 12 L1200 24 L0 24Z' fill='rgba(255,176,136,0.12)'/%3E%3Cpath d='M0 16 Q50 6 100 16 Q150 26 200 16 Q250 6 300 16 Q350 26 400 16 Q450 6 500 16 Q550 26 600 16 Q650 6 700 16 Q750 26 800 16 Q850 6 900 16 Q950 26 1000 16 Q1050 6 1100 16 Q1150 26 1200 16 L1200 24 L0 24Z' fill='rgba(255,217,61,0.08)'/%3E%3C/svg%3E") no-repeat center top;
+    background-size: 100% 24px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* =============================================
+   WATERCOLOR CICEK KENAR DESENI (section'lar)
+   ============================================= */
+[data-theme="yaz"] .about,
+[data-theme="yaz"] .products,
+[data-theme="yaz"] .contact {
+    position: relative;
+}
+
+[data-theme="yaz"] .about::after,
+[data-theme="yaz"] .products::after,
+[data-theme="yaz"] .contact::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 180px;
+    height: 180px;
+    background:
+        radial-gradient(ellipse at 80% 20%, rgba(255, 92, 141, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 60% 40%, rgba(255, 217, 61, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 60%, rgba(107, 203, 119, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* =============================================
+   FOOTER — YAZ AKSAMI SİLUETİ
+   ============================================= */
+[data-theme="yaz"] footer {
+    background: linear-gradient(180deg, #5A4535 0%, #4A3F35 20%, #3A2F25 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="yaz"] footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 70' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sunset' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23FF8C69' stop-opacity='0.15'/%3E%3Cstop offset='0.5' stop-color='%23FF6B6B' stop-opacity='0.08'/%3E%3Cstop offset='1' stop-color='%234A3F35' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='70' fill='url(%23sunset)'/%3E%3Cpath d='M0 70 L0 50 Q20 48 30 45 Q35 42 40 40 L40 25 Q42 20 44 25 L44 16 Q46 10 48 16 L48 25 Q50 20 52 25 L52 40 Q58 38 65 45 Q80 50 100 50 L100 42 Q102 38 104 42 L104 35 Q106 30 108 35 L108 42 Q110 38 112 42 L112 50 L180 50 Q185 46 195 43 L200 30 Q204 15 208 30 L212 43 Q218 46 225 50 L300 50 L300 45 Q302 40 305 35 Q308 20 310 15 Q312 20 315 35 Q318 40 320 45 L320 50 L400 50 Q405 48 410 45 L415 38 Q418 28 420 22 Q422 28 425 38 L428 45 Q432 48 440 50 L520 50 L520 42 Q522 38 525 35 Q528 25 530 18 Q532 25 535 35 Q538 38 540 42 L540 50 L620 50 Q625 48 630 45 L635 35 Q638 22 640 15 Q642 22 645 35 L650 45 Q655 48 665 50 L740 50 Q742 46 748 42 L752 30 Q755 18 758 30 L762 42 Q768 46 775 50 L860 50 L860 42 Q862 36 865 30 Q868 18 870 12 Q872 18 875 30 Q878 36 880 42 L880 50 L960 50 Q965 48 970 44 L975 35 Q978 22 980 15 Q982 22 985 35 L990 44 Q995 48 1005 50 L1080 50 Q1085 46 1090 42 L1095 30 Q1098 18 1100 12 Q1102 18 1105 30 L1108 42 Q1112 46 1120 50 L1200 50 L1200 70Z' fill='%233A2F25'/%3E%3Ccircle cx='46' cy='13' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='207' cy='18' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='420' cy='25' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='530' cy='20' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='640' cy='18' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='870' cy='15' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='980' cy='18' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3Ccircle cx='1100' cy='15' r='0.8' fill='%23FFD93D' opacity='0.3'/%3E%3C/svg%3E") no-repeat center top;
+    background-size: 100% 70px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+[data-theme="yaz"] .footer-content {
+    position: relative;
+    z-index: 2;
+}
+
+[data-theme="yaz"] .footer-bottom {
+    position: relative;
+    z-index: 2;
+}
+
+/* =============================================
+   GENEL ATMOSFER — TAZE, CANLI, ENERJİK
+   ============================================= */
+/* Parlak ama pastel section arka planlari */
+[data-theme="yaz"] .bg-gradient-1 {
+    background: linear-gradient(180deg, #FFF8F0 0%, #FFFDF5 50%, #FFF5E6 100%);
+}
+
+[data-theme="yaz"] .bg-gradient-2 {
+    background: linear-gradient(180deg, #FFFDF5 0%, #FFF8F0 50%, #FFF0E6 100%);
+}
+
+[data-theme="yaz"] .bg-gradient-3 {
+    background: linear-gradient(180deg, #FFF0E6 0%, #FFE8D6 100%);
+}
+
+/* =============================================
+   GUNES ISIGI LENS FLARE EFEKTİ
+   ============================================= */
+.summer-lens-flare {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background:
+        radial-gradient(circle at 70% 20%, rgba(255, 217, 61, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(255, 140, 105, 0.04) 0%, transparent 35%);
+    pointer-events: none;
+    z-index: 1;
+    animation: lensFlare 12s ease-in-out infinite;
+}
+
+@keyframes lensFlare {
+    0%, 100% { opacity: 0.3; transform: translate(0, 0) scale(1); }
+    25% { opacity: 0.6; transform: translate(-10px, 10px) scale(1.1); }
+    50% { opacity: 0.4; transform: translate(-5px, 5px) scale(1.05); }
+    75% { opacity: 0.7; transform: translate(5px, -5px) scale(1.15); }
+}
+
+/* Kelebek container */
+.summer-butterfly {
+    position: fixed;
+    pointer-events: none;
+    z-index: 3;
+    font-size: 1.2rem;
+    opacity: 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    will-change: transform, opacity;
+}
+
+/* Parlayan noktalar container */
+.summer-sparkle-dot {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 217, 61, 0.8);
+    box-shadow: 0 0 6px rgba(255, 217, 61, 0.6);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    animation: sparkleDotPulse 2s ease-in-out forwards;
+}
+
+@keyframes sparkleDotPulse {
+    0% { opacity: 0; transform: scale(0); }
+    30% { opacity: 0.8; transform: scale(1.5); }
+    60% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+}
+
+/* =============================================
+   YAZ TEMASI — BACKGROUND LAYERS & TEXTURES
+   ============================================= */
+
+/* Hero: Sicak yaz gradient overlay */
+[data-theme="yaz"] .hero {
+    background:
+        radial-gradient(ellipse 120% 80% at 80% 10%, rgba(255, 217, 61, 0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 110% 70% at 20% 85%, rgba(255, 140, 105, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 240, 230, 0.45) 0%, transparent 70%),
+        linear-gradient(180deg, var(--pembe-soft) 0%, var(--krem) 100%);
+}
+
+[data-theme="yaz"] .hero::before {
+    background:
+        radial-gradient(circle 550px at 75% 15%, rgba(255, 217, 61, 0.2) 0%, transparent 65%),
+        radial-gradient(circle 400px at 20% 80%, rgba(255, 176, 136, 0.15) 0%, transparent 55%);
+}
+
+[data-theme="yaz"] .hero::after {
+    background:
+        linear-gradient(170deg, transparent 0%, transparent 35%, rgba(255, 253, 245, 0.5) 65%, rgba(255, 253, 245, 0.85) 100%);
+}
+
+/* Parallax katmanlari — sicak tonlar */
+[data-theme="yaz"] .parallax-layer--back {
+    background:
+        radial-gradient(circle 300px at 15% 30%, rgba(255, 176, 136, 0.15) 0%, transparent 100%),
+        radial-gradient(circle 280px at 85% 65%, rgba(255, 217, 61, 0.12) 0%, transparent 100%);
+}
+
+[data-theme="yaz"] .parallax-layer--mid {
+    background:
+        radial-gradient(circle 220px at 65% 25%, rgba(255, 217, 61, 0.1) 0%, transparent 100%),
+        radial-gradient(circle 200px at 25% 75%, rgba(107, 203, 119, 0.06) 0%, transparent 100%);
+}
+
+/* Dalga/cicek SVG pattern */
+[data-theme="yaz"] .parallax-layer--front {
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q10 35 20 40 Q30 45 40 40 Q50 35 60 40 Q70 45 80 40' fill='none' stroke='%23FFB088' stroke-width='0.4' opacity='0.12'/%3E%3Ccircle cx='20' cy='20' r='4' fill='none' stroke='%23FFD93D' stroke-width='0.3' opacity='0.1'/%3E%3Ccircle cx='20' cy='20' r='1' fill='%23FFD93D' opacity='0.08'/%3E%3Ccircle cx='60' cy='60' r='3' fill='none' stroke='%23FF8C69' stroke-width='0.3' opacity='0.08'/%3E%3Ccircle cx='60' cy='60' r='1' fill='%23FF8C69' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    opacity: 0.65;
+}
+
+/* Gunes isigi bokeh section texture */
+[data-theme="yaz"] .section-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='15' fill='%23FFD93D' opacity='0.04'/%3E%3Ccircle cx='90' cy='50' r='20' fill='%23FFB088' opacity='0.03'/%3E%3Ccircle cx='50' cy='90' r='12' fill='%23FFD93D' opacity='0.035'/%3E%3Ccircle cx='100' cy='100' r='8' fill='%23FF8C69' opacity='0.025'/%3E%3Cpath d='M0 60 Q30 55 60 60 Q90 65 120 60' fill='none' stroke='%23FFB088' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    opacity: 0.4;
+}
+
+/* About parallax — sicak tonlar */
+[data-theme="yaz"] .parallax-layer--about {
+    background:
+        radial-gradient(circle 300px at 70% 30%, rgba(255, 217, 61, 0.1) 0%, transparent 100%),
+        radial-gradient(circle 250px at 20% 70%, rgba(255, 176, 136, 0.08) 0%, transparent 100%);
+}
+
+/* ---------- Erisilebilirlik ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .floating-fruit {
+        animation: none !important;
+        display: none !important;
+    }
+
+    .summer-sunshine-rays,
+    .summer-sun-rays {
+        animation: none;
+    }
+
+    [data-theme="yaz"] .section-header h2::before,
+    [data-theme="yaz"] .section-header h2::after {
+        animation: none;
+    }
+
+    .summer-lens-flare {
+        animation: none;
+        display: none;
+    }
+
+    .summer-butterfly {
+        display: none;
+    }
+
+    .summer-sparkle-dot {
+        display: none;
+    }
+
+    [data-theme="yaz"] section + section::before {
+        display: none;
+    }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    [data-theme="yaz"] section + section::before {
+        height: 16px;
+        top: -12px;
+    }
+
+    [data-theme="yaz"] footer::before {
+        height: 45px;
+        background-size: 100% 45px;
+    }
+
+    .summer-lens-flare {
+        display: none;
+    }
+
+    .summer-butterfly {
+        display: none;
+    }
+
+    [data-theme="yaz"] .about::after,
+    [data-theme="yaz"] .products::after,
+    [data-theme="yaz"] .contact::after {
+        width: 100px;
+        height: 100px;
+    }
+
+    /* Mobilde backdrop-filter kaldir (GPU yuku) */
+    [data-theme="yaz"] .product-card {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.92);
+    }
+}

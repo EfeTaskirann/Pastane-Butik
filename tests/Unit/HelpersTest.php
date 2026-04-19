@@ -123,12 +123,15 @@ class HelpersTest extends TestCase
 
     /**
      * @test
+     *
+     * TR locale konvansiyonu: sembol MİKTARDAN SONRA ve boşluklu.
+     * Örn: "1.234,56 ₺" (TDK/TÜİK standardı). Bkz. CLAUDE.md [2026-04-17] dersi.
      */
     public function it_formats_money_correctly(): void
     {
         $result = money(1234.56);
 
-        $this->assertEquals('₺1.234,56', $result);
+        $this->assertEquals('1.234,56 ₺', $result);
     }
 
     /**

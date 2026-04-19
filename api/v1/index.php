@@ -12,11 +12,30 @@ declare(strict_types=1);
 
 // Load bootstrap (Composer autoload + config + security)
 require_once __DIR__ . '/../../includes/bootstrap.php';
+require_once __DIR__ . '/../../includes/Metrics.php';
 
 // PSR-4 autoloaded via Composer
 use Pastane\Middleware\CorsMiddleware;
 use Pastane\Middleware\RateLimitMiddleware;
 use Pastane\Router\Router;
+
+// Request counter (Prometheus) — shutdown'da gerçek HTTP status'a göre artır
+$__metricsRegistered = false;
+if (!$__metricsRegistered) {
+    register_shutdown_function(static function (): void {
+        try {
+            $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+            $status = (string) (function_exists('http_response_code') ? (http_response_code() ?: 200) : 200);
+            Metrics::inc('pastane_http_requests_total', [
+                'method' => $method,
+                'status' => $status,
+            ]);
+        } catch (Throwable) {
+            // sessiz
+        }
+    });
+    $__metricsRegistered = true;
+}
 
 // Apply CORS headers early (before any output)
 // OPTIONS preflight → boş string döner, sonlandır
@@ -41,6 +60,9 @@ $router->get('/api/v1', function() {
             'orders' => '/api/v1/siparisler',
             'auth' => '/api/v1/auth',
             'reports' => '/api/v1/raporlar',
+            'tables' => '/api/v1/masalar',
+            'menu' => '/api/v1/menu/{qr_token}',
+            'masa_siparisleri' => '/api/v1/masa-siparisleri',
         ],
     ]);
 });
@@ -50,6 +72,9 @@ require_once __DIR__ . '/routes/urunler.php';
 require_once __DIR__ . '/routes/kategoriler.php';
 require_once __DIR__ . '/routes/siparisler.php';
 require_once __DIR__ . '/routes/auth.php';
+require_once __DIR__ . '/routes/masalar.php';
+require_once __DIR__ . '/routes/menu.php';
+require_once __DIR__ . '/routes/masa-siparisleri.php';
 
 // Parse request
 $requestUri = $_SERVER['REQUEST_URI'];

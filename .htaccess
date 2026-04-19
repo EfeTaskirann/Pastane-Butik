@@ -4,7 +4,7 @@
 # Enable rewrite engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    RewriteBase /pastane/
 
     # Force HTTPS (uncomment in production)
     # RewriteCond %{HTTPS} off
@@ -12,15 +12,15 @@
 
     # Remove trailing slashes
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)/$ /$1 [L,R=301]
+    RewriteRule ^(.*)/$ $1 [L,R=301]
+
+    # API routing (must come before catch-all)
+    RewriteRule ^api/v1/(.*)$ api/v1/index.php [L,QSA]
 
     # Remove index.php from URLs
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ index.php?/$1 [L,QSA]
-
-    # API routing
-    RewriteRule ^api/v1/(.*)$ api/v1/index.php [L,QSA]
 </IfModule>
 
 # ============================================

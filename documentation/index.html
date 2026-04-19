@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tatli Dusler Pastane - Documentation</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #d0d0d0; padding: 10px 12px; text-align: left; font-size: 14px; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 16px; }
+  .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 18px; background: #ffffff; }
+  .card h3 { margin-top: 0; }
+  .card a { color: #c94f7c; text-decoration: none; font-weight: 600; }
+  .card a:hover { text-decoration: underline; }
+  .badge { display: inline-block; background: #c94f7c; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Tatli Dusler Pastane - Online Ordering &amp; Cafe Management</h1>
+  <div class="subtitle">Official documentation package - Version 1.0</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html" class="active">Home</a>
+  <a href="installation.html">Installation</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="admin-guide.html">Admin Guide</a>
+  <a href="user-guide.html">User Guide</a>
+  <a href="faq.html">FAQ</a>
+</nav>
+
+<h2>Welcome</h2>
+<p>Thank you for purchasing the <strong>Tatli Dusler Pastane</strong> platform. This is a complete, production-ready web application for bakeries, patisseries, cafes and small restaurants. It combines a public-facing online menu, customer ordering, QR-code in-house ordering, and a full administrative back office in a single deployable package.</p>
+
+<p>This documentation will walk you through everything you need to know, from the first minute after download to advanced operational tasks such as taking database backups and rotating secrets. Read the sections in order if you are a first-time installer, or jump to the FAQ if you are looking for a quick answer.</p>
+
+<div class="screenshot">
+  <img src="screenshots/hero-banner.png" alt="Main application banner showing pastries and order interface" />
+  <figcaption>Figure 1. Public-facing landing page with product highlights.</figcaption>
+</div>
+
+<h2>What is included</h2>
+<p>The package delivers a feature-rich, Turkish-developed but fully translatable bakery and cafe management system. Below is an at-a-glance summary of every major capability shipped in version 1.0.</p>
+
+<div class="card-grid">
+
+  <div class="card">
+    <h3><span class="badge">Core</span> Online Menu</h3>
+    <p>Category-driven, responsive, mobile-first menu with cart, checkout, order tracking, and printable receipts. Search, filters, featured items and portion selection are all built-in.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="badge">Core</span> QR Ordering</h3>
+    <p>Each physical table has a unique QR code. Guests scan and place orders without downloading an app. Orders stream to the Kitchen and Waiter dashboards in near real time.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="badge">Admin</span> Back Office</h3>
+    <p>Full CRUD for products, categories, orders, tables, reservations and customers. Role-based access control (Admin, Editor, Viewer) with 23 granular permissions.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="badge">Security</span> Hardening</h3>
+    <p>CSRF protection, rate limiting, Content Security Policy with nonces, 2FA for administrators, backup codes, activity audit log, and session fingerprinting.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="badge">Ops</span> Observability</h3>
+    <p>Prometheus metrics endpoint, health-check probes for Kubernetes, optional Sentry error reporting, and rotated logs with configurable retention.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="badge">Ops</span> Deployment</h3>
+    <p>Dockerfile and docker-compose are provided for local, staging and blue-green production rollout. A single Makefile target covers setup, migrate, seed and smoke checks.</p>
+  </div>
+
+</div>
+
+<h2>Documentation map</h2>
+<p>The documentation is split into five chapters plus a frequently-asked-questions section. Each file is standalone; you can print it, distribute it to your team, or email it to your IT provider.</p>
+
+<table>
+  <tr><th>Chapter</th><th>Audience</th><th>What you will learn</th></tr>
+  <tr><td><a href="installation.html">Installation</a></td><td>DevOps, Site owner</td><td>Server requirements, uploading the files, creating the database, running migrations and logging in for the first time.</td></tr>
+  <tr><td><a href="configuration.html">Configuration</a></td><td>DevOps, Site owner</td><td>Every environment variable explained, SMTP setup, payment gateway toggles, SMS driver selection, caching and Sentry.</td></tr>
+  <tr><td><a href="admin-guide.html">Admin Guide</a></td><td>Store manager, Staff</td><td>How to manage products, categories, orders, tables, messages, kitchen queue, reports, backups and user accounts.</td></tr>
+  <tr><td><a href="user-guide.html">User Guide</a></td><td>End customers</td><td>Browsing the menu, placing an order, tracking delivery status, and using the QR code for in-house ordering.</td></tr>
+  <tr><td><a href="faq.html">FAQ</a></td><td>Everyone</td><td>Answers to the ten most common support questions, from permission errors to resetting an admin password.</td></tr>
+</table>
+
+<h2>Technical highlights</h2>
+<p>Developers integrating or extending the platform will appreciate the following properties of the codebase:</p>
+<ul>
+  <li>Pure PHP 8.1+ backend, no heavyweight framework lock-in. A small but modern structure with Controllers, Services, Repositories and Validators.</li>
+  <li>MySQL 8.0+ schema with explicit migrations under <code>database/migrations/</code>. Idempotent seed script ships 5 categories, 15 demo products, 10 tables and one admin account.</li>
+  <li>Strict <code>Content-Security-Policy</code> with per-request nonces. No inline JavaScript handlers anywhere in the codebase (verified during the Sprint 4 audit).</li>
+  <li>OpenAPI 3.0.3 specification for the public JSON API, rendered via an optional Swagger UI gateway at <code>/api/docs.php</code> on non-production environments.</li>
+  <li>Prometheus metrics exported at <code>/api/metrics.php</code> and protected by a bearer token.</li>
+  <li>Health probes at <code>/api/health</code> with live and ready variants, suitable for Kubernetes or any load balancer.</li>
+</ul>
+
+<div class="screenshot">
+  <img src="screenshots/architecture-overview.png" alt="High-level architecture diagram of the application" />
+  <figcaption>Figure 2. High-level architecture: PHP app, MySQL, Redis (optional), Nginx/Apache, Sentry.</figcaption>
+</div>
+
+<h2>Support and updates</h2>
+<p>Buyers receive six months of update entitlement from the CodeCanyon purchase date. Minor patches are delivered through the original purchase download page. For personalised help please open a support ticket from your CodeCanyon dashboard - include the item license code and your server environment summary.</p>
+
+<div class="note">
+  <strong>Before you begin.</strong> Take a few minutes to read the <a href="installation.html">Installation</a> chapter end-to-end before unzipping the archive on a production server. Many of the small pitfalls it covers (file permissions, mod_rewrite, PHP extensions) are easy to fix before installation but painful to diagnose afterwards.
+</div>
+
+<h2>License</h2>
+<p>Use of this item is governed by the <strong>Envato Regular License</strong> or <strong>Envato Extended License</strong> purchased on CodeCanyon. A copy is included as <code>LICENSE.txt</code> at the root of the archive. The license permits use in a single end-product (regular) or a paid end-product (extended). It does not permit resale of the source code as a template.</p>
+
+<div class="screenshot">
+  <img src="screenshots/feature-collage.png" alt="Collage of admin dashboard, menu page and mobile view" />
+  <figcaption>Figure 3. Product feature collage: desktop admin, public menu and mobile ordering.</figcaption>
+</div>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

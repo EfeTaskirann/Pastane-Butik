@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Tatlı Düşler API — Dokümantasyon</title>
+    <!--
+        Swagger UI — CDN üzerinden SRI (integrity) ile yüklenir.
+        Sürüm: swagger-ui-dist@5.17.14 (LTS)
+        Güncellerken hash'leri de güncelle: https://www.srihash.org
+        CSP notu: Bu sayfa api/docs.php üzerinden servis edilirken CSP şu
+        origin'leri içermelidir:
+            script-src  'self' https://cdn.jsdelivr.net
+            style-src   'self' 'unsafe-inline' https://cdn.jsdelivr.net
+            img-src     'self' data: https://cdn.jsdelivr.net
+            connect-src 'self'
+    -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui.css"
+        integrity="sha384-SbPh5KNoqfF/UNWtlmWV72J3XhvbV0kxbeuLu8TyRCG7gIzSBtZtZeLMj/u6UBZz"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+    <style>
+        body { margin: 0; background: #fafafa; }
+        .swagger-env-banner {
+            background: #0d6efd;
+            color: #fff;
+            padding: 10px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+            text-align: center;
+        }
+        .swagger-env-banner strong { margin-right: 8px; }
+        #swagger-ui { max-width: 1280px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <div class="swagger-env-banner" role="status" aria-live="polite">
+        <strong>Ortam:</strong>
+        <span id="env-label">Yükleniyor…</span>
+        &middot; Sadece geliştirme/staging erişimine açıktır.
+    </div>
+    <div id="swagger-ui"></div>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"
+        integrity="sha384-b2KB3cY6dUzAiPv7hgb5gGdj89m3Hp9x9gBVehrCB2hNU1mdh5XHvVeEwZwTNdMG"
+        crossorigin="anonymous"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"
+        integrity="sha384-gNU3PHPK2cKpzz27sPmFbNtxSKq5YkUVN2i1FJ54sO3L0l06T3Yz7h8ubvnaaQq4"
+        crossorigin="anonymous"></script>
+
+    <script>
+        // Ortam bilgisini query string ile al (docs.php enjekte eder)
+        var params = new URLSearchParams(window.location.search);
+        var env = params.get('env') || 'local';
+        document.getElementById('env-label').textContent = env.toUpperCase();
+
+        // Spec URL — aynı kökende servis ediliyor
+        var specUrl = params.get('spec') || '/pastane/docs/api/openapi.yaml';
+
+        window.ui = SwaggerUIBundle({
+            url: specUrl,
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset.slice(1)
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: 'BaseLayout',
+            defaultModelsExpandDepth: 1,
+            docExpansion: 'list',
+            tryItOutEnabled: env !== 'production',
+            persistAuthorization: true,
+            filter: true,
+            requestInterceptor: function (req) {
+                // Tüm isteklere X-API-Docs-Request header'ı ekle (opsiyonel loglama için)
+                req.headers['X-API-Docs-Request'] = '1';
+                return req;
+            }
+        });
+    </script>
+</body>
+</html>

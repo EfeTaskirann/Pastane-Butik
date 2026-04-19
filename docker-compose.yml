@@ -34,7 +34,8 @@ services:
 
   # MySQL Database
   db:
-    image: mysql:8.0
+    # Pinned patch version for reproducibility
+    image: mysql:8.0.36
     container_name: pastane-db
     restart: unless-stopped
     environment:
@@ -58,7 +59,8 @@ services:
 
   # Redis Cache (optional)
   redis:
-    image: redis:7-alpine
+    # Pinned minor version for reproducibility
+    image: redis:7.2-alpine
     container_name: pastane-redis
     restart: unless-stopped
     ports:

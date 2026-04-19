@@ -1,0 +1,179 @@
+# ============================================================================
+# prometheus/alerts.yml — Pastane Production Alert Rules
+# ----------------------------------------------------------------------------
+# Prometheus Alertmanager tarafından değerlendirilen uyarı kuralları.
+#
+# Kurulum:
+#   prometheus.yml içinde:
+#     rule_files:
+#       - /etc/prometheus/rules/alerts.yml
+#
+#   docker-compose:
+#     prometheus:
+#       volumes:
+#         - ./prometheus/alerts.yml:/etc/prometheus/rules/alerts.yml:ro
+#
+# Severity mapping (docs/INCIDENT_RESPONSE.md'ye bağlı):
+#   critical → P1 (sayfa oda, on-call)
+#   warning  → P2 (24 saat içinde çöz)
+#   info     → P3 (haftalık review)
+#
+# Label standart:
+#   severity: critical | warning | info
+#   service:  pastane
+#   team:     platform
+#   runbook:  docs/MONITORING_RUNBOOK.md#<alert-name>
+# ============================================================================
+
+groups:
+  - name: pastane_critical
+    interval: 30s
+    rules:
+
+      - alert: HealthDown
+        expr: up{job=~"pastane.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#healthdown"
+        annotations:
+          summary: "pastane instance DOWN ({{ $labels.instance }})"
+          description: |
+            {{ $labels.instance }} Prometheus scrape'e 2 dakikadır yanıt vermiyor.
+            Health endpoint erişilemiyor. Olası nedenler: container crash, network,
+            OOMKill, disk dolması.
+          action: "docs/MONITORING_RUNBOOK.md#healthdown adımlarını uygula. Gerekirse blue-green rollback: bin/deploy.sh rollback"
+
+      - alert: HighErrorRate
+        expr: sum(rate(pastane_php_errors_total{level="error"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: critical
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#higherrorrate"
+        annotations:
+          summary: "PHP error rate > 10/5m ({{ $value | humanize }})"
+          description: |
+            Son 5 dakikada PHP error_log seviyesinde {{ $value }} hata/sn kaydedildi.
+            Sentry'ye bak: environment=production, level:error, last 15m.
+          action: "Sentry filtrele + son deploy'u kontrol et. Canary'deyse rollback kararı al (docs/INCIDENT_RESPONSE.md P2)."
+
+      - alert: Http5xxRatioHigh
+        expr: |
+          (
+            sum(rate(pastane_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(pastane_http_requests_total[5m]))
+          ) > 0.02
+        for: 5m
+        labels:
+          severity: critical
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#http5xxratiohigh"
+        annotations:
+          summary: "HTTP 5xx oranı %2'yi aştı ({{ $value | humanizePercentage }})"
+          description: |
+            Son 5 dakika HTTP 5xx / total > %2. Kullanıcı deneyimi ciddi etkilendi.
+          action: "Acil rollback kararı. bin/deploy.sh rollback + Sentry incelemesi."
+
+  - name: pastane_warning
+    interval: 60s
+    rules:
+
+      - alert: DiskFull
+        expr: pastane_disk_free_bytes < 5368709120  # 5 GiB
+        for: 5m
+        labels:
+          severity: warning
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#diskfull"
+        annotations:
+          summary: "Disk alanı 5 GB altına düştü ({{ $value | humanize }}B kaldı)"
+          description: |
+            Uygulama disk alanı kritik eşiğin altında. Backup dosyaları, eski loglar
+            veya upload klasörü dolmuş olabilir.
+          action: "bin/cron/log-rotate.php çalıştır. storage/backups/ eski dosyaları sil. Uploads audit et."
+
+      - alert: DbSlowQuery
+        expr: histogram_quantile(0.95, sum(rate(pastane_db_query_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#dbslowquery"
+        annotations:
+          summary: "DB query p95 > 500ms ({{ $value | humanizeDuration }})"
+          description: |
+            10 dakikadır DB sorgu p95 latency 500ms'yi geçiyor. N+1 veya eksik index
+            sorunu olabilir.
+          action: "docs/MONITORING_RUNBOOK.md#dbslowquery — MySQL slow_query_log + EXPLAIN analiz."
+
+      - alert: BackupStale
+        expr: time() - pastane_last_backup_timestamp > 86400
+        for: 15m
+        labels:
+          severity: warning
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#backupstale"
+        annotations:
+          summary: "Son yedek 24 saatten eski"
+          description: |
+            bin/cron/db-backup.php cron'u 24 saattir çalışmadı veya başarısız.
+            Backup monitor eşikleri: 25h WARN, 48h CRIT.
+          action: "bin/cron/backup-monitor.php çıktısını incele. Cron log: storage/logs/db-backup.log"
+
+      - alert: RateLimit429Spike
+        expr: sum(rate(pastane_http_requests_total{status="429"}[5m])) > 5
+        for: 10m
+        labels:
+          severity: warning
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#ratelimit429spike"
+        annotations:
+          summary: "429 Too Many Requests oranı yüksek ({{ $value }}/sn)"
+          description: |
+            10 dakikadır saniyede 5'ten fazla 429 dönüyor. Bot saldırısı veya yanlış
+            limit config olabilir.
+          action: "SecurityAudit log'larını incele. IP bazlı pattern ara."
+
+      - alert: CacheDown
+        expr: pastane_cache_operations_total{result="error"} > 0 and absent(pastane_cache_operations_total{result="hit"})
+        for: 5m
+        labels:
+          severity: warning
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#cachedown"
+        annotations:
+          summary: "Cache backend yanıt vermiyor (hit=0, error>0)"
+          description: |
+            Redis veya file cache çalışmıyor. Service'ler doğrudan DB'ye gidiyor,
+            yük artabilir.
+          action: "Redis container log: docker logs pastane-redis --tail 100"
+
+  - name: pastane_info
+    interval: 5m
+    rules:
+
+      - alert: SentryEventSpike
+        expr: increase(pastane_sentry_events_total[1h]) > 100
+        for: 15m
+        labels:
+          severity: info
+          service: pastane
+          team: platform
+          runbook: "docs/MONITORING_RUNBOOK.md#sentryeventspike"
+        annotations:
+          summary: "Sentry'ye son 1 saatte >100 event gönderildi"
+          description: |
+            Normal seviyenin üstünde hata toplandı. Yeni deploy'dan sonra benzer
+            artış görülürse hotfix gerekir.
+          action: "Sentry dashboard'da issue'lara bak, tekrarlayanı hotfix branch'e al."

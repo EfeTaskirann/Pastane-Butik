@@ -1,0 +1,116 @@
+{
+    "config": {
+        "verbosity": "normal",
+        "color": true,
+        "ansi-colors": true
+    },
+    "commit-msg": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "\\CaptainHook\\App\\Hook\\Message\\Action\\Regex",
+                "options": {
+                    "regex": "#^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\\([a-z0-9\\-_/]+\\))?!?:\\s.{3,100}$#i",
+                    "error": "Commit mesajı Conventional Commits formatına uymuyor.\n\nFormat: <type>(<scope>)?: <subject>\n\nType: feat | fix | docs | style | refactor | perf | test | build | ci | chore | revert\nScope (opsiyonel): admin, api, auth, masa, siparis, cache, ...\nSubject: Türkçe veya İngilizce, 3-100 karakter, nokta olmadan.\n\nÖrnekler:\n  feat(masa): masa oturumu inaktivite temizliği eklendi\n  fix(auth): rate limit header hesabı düzeltildi\n  docs: onboarding rehberi eklendi\n  refactor(siparis): repository N+1 fix"
+                }
+            }
+        ]
+    },
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "\\CaptainHook\\App\\Hook\\File\\Action\\DoesNotContainRegex",
+                "options": {
+                    "regex": "(var_dump|print_r|dd\\(|dump\\()\\s*\\(",
+                    "fileExtensions": ["php"],
+                    "error": "Debug fonksiyonu (var_dump/print_r/dd/dump) bırakılmış — temizle."
+                }
+            },
+            {
+                "action": "\\CaptainHook\\App\\Hook\\PHP\\Action\\Linting",
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            },
+            {
+                "action": "vendor/bin/phpcs --standard=PSR12 {$STAGED_FILES|of-type:php|separated-by: }",
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            },
+            {
+                "action": "vendor/bin/php-cs-fixer fix --dry-run --diff {$STAGED_FILES|of-type:php|separated-by: }",
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            },
+            {
+                "action": "vendor/bin/phpstan analyse --no-progress {$STAGED_FILES|of-type:php|separated-by: }",
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            }
+        ]
+    },
+    "pre-push": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "vendor/bin/phpunit --testsuite=Unit",
+                "options": {
+                    "description": "Unit testleri push öncesi koş"
+                }
+            }
+        ]
+    },
+    "prepare-commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-checkout": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-merge": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "composer install --no-interaction --prefer-dist",
+                "options": {
+                    "description": "composer.lock değiştiyse bağımlılıkları güncelle"
+                },
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": [["composer.lock"]]
+                    }
+                ]
+            },
+            {
+                "action": "npm ci",
+                "options": {
+                    "description": "package-lock.json değiştiyse npm ci"
+                },
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": [["package-lock.json"]]
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Administrator Guide - Tatli Dusler Pastane</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #d0d0d0; padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .warn { background: #ffebee; border-left: 4px solid #d32f2f; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li { margin-bottom: 6px; }
+  .toc { background: #f9f0f5; padding: 16px 22px; border-radius: 6px; margin-bottom: 24px; }
+  .toc ul { margin: 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Administrator Guide</h1>
+  <div class="subtitle">Everything you can do from the back-office, section by section.</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html">Home</a>
+  <a href="installation.html">Installation</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="admin-guide.html" class="active">Admin Guide</a>
+  <a href="user-guide.html">User Guide</a>
+  <a href="faq.html">FAQ</a>
+</nav>
+
+<div class="toc">
+  <strong>In this chapter</strong>
+  <ul>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#products">Products</a></li>
+    <li><a href="#categories">Categories</a></li>
+    <li><a href="#orders">Orders</a></li>
+    <li><a href="#messages">Messages</a></li>
+    <li><a href="#calendar">Calendar</a></li>
+    <li><a href="#tables">Tables</a></li>
+    <li><a href="#kitchen">Kitchen queue</a></li>
+    <li><a href="#waiter">Waiter view</a></li>
+    <li><a href="#reports">Reports</a></li>
+    <li><a href="#activity">Activity log</a></li>
+    <li><a href="#settings">Settings (2FA, Mail, SMS, Backup, Users)</a></li>
+  </ul>
+</div>
+
+<h2 id="dashboard">Dashboard</h2>
+<p>The dashboard at <code>/admin/dashboard.php</code> is your daily command centre. At a glance you get six stat cards (today's orders, revenue, average ticket, new messages, pending refunds, low stock), a revenue sparkline for the last fourteen days, a list of the five most recent orders, and inbox-unread messages. The cards refresh automatically every thirty seconds.</p>
+
+<!-- SCREENSHOT: admin-dashboard.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-dashboard.png" alt="Dashboard with stat cards, revenue chart and recent orders" />
+  <figcaption>Figure 1. The dashboard after a typical morning shift.</figcaption>
+</div>
+
+<p>The dashboard respects role-based access. Viewers see the same layout but without action buttons. Editors can click through to orders and messages but cannot access user management. Admins see everything.</p>
+
+<h2 id="products">Products</h2>
+<p>Navigate to <em>Menu &rarr; Products</em> or <code>/admin/urunler.php</code>. This is where your menu lives. You can create, edit, archive, feature, and hide any product.</p>
+
+<table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>Name (<code>isim</code>)</td><td>Customer-facing product name. Up to 80 characters.</td></tr>
+  <tr><td>Category</td><td>Foreign key to the categories table. Required.</td></tr>
+  <tr><td>Description</td><td>Long-form description shown on the product detail card. Plain text, auto-paragraph on display.</td></tr>
+  <tr><td>Price</td><td>Primary price in Turkish Lira. Two decimal places.</td></tr>
+  <tr><td>Portions</td><td>Optional per-size pricing (e.g. Small, Medium, Large). Defined on the Categories page.</td></tr>
+  <tr><td>Image</td><td>JPG, PNG or WebP up to 5 MB. The system automatically generates thumbnail variants.</td></tr>
+  <tr><td>Featured</td><td>Shows the product in the homepage carousel.</td></tr>
+  <tr><td>Active</td><td>Toggle off to hide from the menu without deleting.</td></tr>
+</table>
+
+<!-- SCREENSHOT: admin-products.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-products.png" alt="Product list with search, filters and inline action buttons" />
+  <figcaption>Figure 2. Product list - filter by category, search by name, bulk-toggle featured.</figcaption>
+</div>
+
+<p>Click a product row to open the edit form. Image uploads run through a dedicated sanitiser that strips EXIF data and verifies the MIME against the actual file contents to prevent polyglot uploads.</p>
+
+<h2 id="categories">Categories</h2>
+<p>Categories are the top-level groups on the public menu. Create as few or as many as you want; the default seed ships with five. Each category has a display order (<code>sira</code>) that determines left-to-right placement on the menu, and an optional icon.</p>
+
+<p>Hierarchy is single-level by design - subcategories are explicitly not supported to keep the customer flow fast. If you need to group further, use product tags.</p>
+
+<!-- SCREENSHOT: admin-categories.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-categories.png" alt="Categories list with drag handle for display order" />
+  <figcaption>Figure 3. Drag-and-drop reordering of categories.</figcaption>
+</div>
+
+<h2 id="orders">Orders</h2>
+<p>The orders screen at <code>/admin/siparisler.php</code> is the single source of truth for every delivery, pickup and in-house order. Filters let you narrow by date range, status, payment method, and channel (menu or QR table).</p>
+
+<p>Each row expands to reveal the customer's details, line items, unit prices, totals, delivery address (for online orders) and a payment event trail. Action buttons on the right allow you to:</p>
+<ul>
+  <li>Mark as preparing, ready, delivered or cancelled.</li>
+  <li>Print an 80 mm thermal receipt directly from the browser.</li>
+  <li>Reassign the order to a different waiter or kitchen.</li>
+  <li>Trigger a refund (gateway-specific; for cash orders the operation is logged only).</li>
+</ul>
+
+<p>Status transitions write to the activity log and, for online orders, trigger the matching customer notification (email and optional SMS).</p>
+
+<h2 id="messages">Messages</h2>
+<p>Contact form submissions accumulate at <code>/admin/mesajlar.php</code>. Each message can be replied to inline (the reply is emailed back via your configured SMTP) or archived. Unread messages are counted in the dashboard header badge.</p>
+
+<!-- SCREENSHOT: admin-messages.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-messages.png" alt="Messages inbox with filters and inline reply composer" />
+  <figcaption>Figure 4. Inline reply composer - typing here sends an email via SMTP.</figcaption>
+</div>
+
+<h2 id="calendar">Calendar</h2>
+<p>The calendar view at <code>/admin/takvim.php</code> is an operational timeline of every order grouped by delivery or pickup slot. Each cell shows order count and total revenue, and clicking a cell opens the detail drawer. This is particularly useful during busy periods such as Mother's Day, Valentine's Day or the first week of Ramadan.</p>
+
+<p>You can drag-drop an order from one slot to another to reschedule, and the system will record the change in the activity log plus notify the customer.</p>
+
+<h2 id="tables">Tables</h2>
+<p>Physical tables are managed at <code>/admin/masalar.php</code>. Each table has a name (typically a number), a capacity hint, and a unique QR token. Print the QR poster directly from the interface - the generated PDF includes the table name, the QR code itself, and a short "scan to order" hint in your chosen language.</p>
+
+<div class="note">
+  <strong>QR tokens.</strong> Tokens are random 32-byte values, rendered as hex. They are safe to expose publicly; they only identify the table, not the account. If you suspect a token was photographed and abused, you can rotate it from the same screen.
+</div>
+
+<h2 id="kitchen">Kitchen queue</h2>
+<p>The kitchen view at <code>/admin/mutfak.php</code> is a large-screen-friendly live queue of orders that are in the "preparing" state. It polls the server every thirty seconds and highlights orders that have been pending for longer than your configured SLA.</p>
+
+<!-- SCREENSHOT: admin-kitchen.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-kitchen.png" alt="Kitchen queue with colour-coded cards per order" />
+  <figcaption>Figure 5. Orders age from green to amber to red as they sit in queue.</figcaption>
+</div>
+
+<h2 id="waiter">Waiter view</h2>
+<p>The waiter screen at <code>/admin/garson.php</code> is the companion view to the kitchen. It groups orders by table, shows the total due per table, and lets the waiter mark an item as delivered to the table. The most common workflow is: guest scans QR, places order, kitchen prepares, waiter carries items, waiter taps "delivered". Optimised thanks to the Sprint 4 N+1 fix (single batch query for all tables).</p>
+
+<h2 id="reports">Reports</h2>
+<p>Reports live at <code>/admin/raporlar.php</code>. You can export any of them to CSV or PDF.</p>
+<ul>
+  <li><strong>Daily revenue</strong> - line chart for the last thirty days.</li>
+  <li><strong>Monthly revenue</strong> - bar chart for the last twelve months.</li>
+  <li><strong>Top products</strong> - sorted by quantity sold or by revenue.</li>
+  <li><strong>Customer segments</strong> - grouped by frequency: new, returning, VIP.</li>
+  <li><strong>Hour-of-day heatmap</strong> - identify your peak hours.</li>
+</ul>
+
+<!-- SCREENSHOT: admin-reports.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-reports.png" alt="Reports page showing daily revenue chart and top-products table" />
+  <figcaption>Figure 6. Daily revenue and top products for the current month.</figcaption>
+</div>
+
+<h2 id="activity">Activity log</h2>
+<p>Every sensitive action writes a row to the <code>security_events</code> table and is browsable at <code>/admin/activity-log.php</code>. Filters include user, event type, IP address and date range. Pagination is 25 rows per page; the full JSON payload is available behind a "Details" modal.</p>
+
+<p>Typical events captured include: administrator login (success and failure), password change, role change, 2FA enable or disable, product create or delete, order status override, settings change, and backup download.</p>
+
+<h2 id="settings">Settings</h2>
+<p>Settings are grouped into five tabs at <code>/admin/ayarlar/</code>.</p>
+
+<h3>General</h3>
+<p>Site title, contact phone, address, working hours, tax registration number, delivery radius, minimum order amount. Saved to the <code>ayarlar</code> table which is cached for five minutes.</p>
+
+<h3>Security / 2FA</h3>
+<p>Covered in depth in <a href="configuration.html">Configuration</a>. Each administrator must enable 2FA individually. Backup codes are single-use and are shown only once.</p>
+
+<!-- SCREENSHOT: admin-settings-2fa.png -->
+<div class="screenshot">
+  <img src="screenshots/admin-settings-2fa.png" alt="Security settings with 2FA enrolment and backup code list" />
+  <figcaption>Figure 7. 2FA enrolment and one-time backup code display.</figcaption>
+</div>
+
+<h3>Mail</h3>
+<p>Confirm SMTP settings, test send, set default From address, toggle email templates on and off (order confirmation, shipping notification, password reset).</p>
+
+<h3>SMS</h3>
+<p>Choose driver, enter API credentials, test send, toggle SMS templates on and off. Failed sends are logged and retried up to three times.</p>
+
+<h3>Backup</h3>
+<p>The backup tab shows the most recent database backups, their size, and their age. You can trigger a manual backup with one click. Automatic backups are scheduled through <code>bin/cron/db-backup.php</code>; a sister job <code>bin/cron/backup-monitor.php</code> warns you if the latest backup is older than 25 hours and raises a critical alert at 48 hours.</p>
+
+<pre><code># Suggested crontab entries:
+10 3 * * *   cd /var/www/pastane &amp;&amp; php bin/cron/db-backup.php
+*/30 * * * * cd /var/www/pastane &amp;&amp; php bin/cron/backup-monitor.php
+0  4 * * *   cd /var/www/pastane &amp;&amp; php bin/cron/log-rotate.php</code></pre>
+
+<h3>Users (RBAC)</h3>
+<p>User management lives at <code>/admin/ayarlar/kullanicilar.php</code> (admin role only). Three built-in roles are available:</p>
+
+<table>
+  <tr><th>Role</th><th>Typical user</th><th>What they can do</th></tr>
+  <tr><td><strong>admin</strong></td><td>Owner, IT lead</td><td>Full access to every screen, all settings, user management.</td></tr>
+  <tr><td><strong>editor</strong></td><td>Store manager</td><td>Manage products, categories, orders, messages, reports; cannot change user accounts or system settings.</td></tr>
+  <tr><td><strong>viewer</strong></td><td>Accountant, auditor</td><td>Read-only access to orders, reports and activity log.</td></tr>
+</table>
+
+<div class="warn">
+  <strong>Change the default admin password</strong> immediately after installation. The credentials generated by <code>db-seed.php</code> are logged to disk and should be considered temporary.
+</div>
+
+<h2>Keyboard shortcuts</h2>
+<table>
+  <tr><th>Shortcut</th><th>Action</th></tr>
+  <tr><td><code>/</code></td><td>Focus the top search bar.</td></tr>
+  <tr><td><code>g</code> then <code>d</code></td><td>Go to Dashboard.</td></tr>
+  <tr><td><code>g</code> then <code>o</code></td><td>Go to Orders.</td></tr>
+  <tr><td><code>g</code> then <code>p</code></td><td>Go to Products.</td></tr>
+  <tr><td><code>Esc</code></td><td>Close any open modal or side drawer.</td></tr>
+  <tr><td><code>?</code></td><td>Show the shortcut cheat sheet.</td></tr>
+</table>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

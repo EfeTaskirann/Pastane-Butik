@@ -46,9 +46,8 @@ $router->get('/api/v1/siparisler', function() use ($siparisService) {
         json_error('Geçersiz bitiş tarihi formatı (YYYY-MM-DD).', 422);
     }
 
-    // Filtrelerle sipariş listesi — SiparisService/Repository henüz bu kadar esnek
-    // filtreleme desteklemediği için bu geçici olarak doğrudan query kullanır.
-    // TODO: SiparisRepository.getFiltered() metodu eklenecek (FAZ 8 optimizasyon)
+    // Filtrelerle sipariş listesi — doğrudan query ile filtreleme
+    // NOT: İleride SiparisRepository.getFiltered() metodu ile refactor edilebilir
     $where = "1=1";
     $params = [];
 
@@ -76,7 +75,7 @@ $router->get('/api/v1/siparisler', function() use ($siparisService) {
     $params[] = $offset;
 
     $siparisler = db()->fetchAll(
-        "SELECT s.*, k.ad as kategori_adi
+        "SELECT s.*, k.isim as kategori_adi
          FROM siparisler s
          LEFT JOIN kategoriler k ON s.kategori = k.slug
          WHERE {$where}
@@ -97,10 +96,59 @@ $router->get('/api/v1/siparisler', function() use ($siparisService) {
 });
 
 /**
+ * GET /api/v1/siparisler/track/{token}
+ * Sipariş durumu (Public, Token bazli — IDOR korumali)
+ *
+ * Token: 32 karakter hex (bin2hex(random_bytes(16))).
+ * Rate limit: 10/dk/IP (`siparis-track-api`).
+ * Yanitta sadece musteriye gosterilebilir alanlar bulunur; iç admin alanlari sizmamali.
+ */
+$router->get('/api/v1/siparisler/track/{token}', function ($params) {
+    \RateLimiter::enforce('siparis-track-api');
+
+    $token = trim((string)($params['token'] ?? ''));
+
+    // Format validasyonu: 32 karakter hex. Hatali = 404 (timing-safe, sizinti yok).
+    if (!preg_match(\Pastane\Repositories\SiparisRepository::TAKIP_TOKEN_REGEX, $token)) {
+        json_error('Sipariş bulunamadı.', 404);
+    }
+
+    // Her iki tablo icin de ara: onceki masa_siparisleri, sonra siparisler.
+    $masaRepo = new \Pastane\Repositories\MasaSiparisRepository();
+    $siparisRow = $masaRepo->findByToken($token);
+
+    if ($siparisRow === null) {
+        $siparisRepo = new \Pastane\Repositories\SiparisRepository();
+        $siparisRow = $siparisRepo->findByToken($token);
+    }
+
+    if ($siparisRow === null) {
+        json_error('Sipariş bulunamadı.', 404);
+    }
+
+    // Musteriye gorunur minimal alanlar (hassas iç alanlari disla)
+    $publicFields = [
+        'id'            => (int)($siparisRow['id'] ?? 0),
+        'durum'         => $siparisRow['durum'] ?? ($siparisRow['tamamlandi'] ? 'teslim_edildi' : 'beklemede'),
+        'toplam_tutar'  => (float)($siparisRow['toplam_tutar'] ?? 0),
+        'odeme_durumu'  => $siparisRow['odeme_durumu'] ?? null,
+        'siparis_zamani' => $siparisRow['siparis_zamani'] ?? $siparisRow['created_at'] ?? null,
+    ];
+
+    json_success(['siparis' => $publicFields]);
+});
+
+/**
  * GET /api/v1/siparisler/{id}
  * Sipariş detayı (Admin)
+ *
+ * Admin JWT zorunlu. Musteri bu endpoint'e erisemez (musteri tarafi
+ * takip icin `GET /api/v1/siparisler/track/{token}` kullanmalidir).
+ * Token-based public erisim ayri endpoint'te — bu route sadece admin.
  */
 $router->get('/api/v1/siparisler/{id}', function($params) use ($siparisService) {
+    // Admin JWT zorunlu — yoksa 401.
+    // JWT::requireAuth() HttpException fırlatir (401 envelope).
     JWT::requireAuth();
 
     $siparis = $siparisService->find((int)$params['id']);

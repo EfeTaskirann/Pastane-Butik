@@ -1,0 +1,27 @@
+{
+    "siparis-onay": {
+        "filename": "siparis-onay.html",
+        "subject_default": "Siparişiniz Alındı - {{site_adi}}",
+        "variables": [
+            "site_adi",
+            "musteri_adi",
+            "siparis_no",
+            "siparis_tarihi",
+            "telefon",
+            "adres",
+            "tutar",
+            "takip_url"
+        ],
+        "description": "Sipariş oluşturulduktan sonra müşteriye gönderilen onay e-postası.",
+        "sample_data": {
+            "site_adi": "Tatlı Düşler",
+            "musteri_adi": "Ayşe Yılmaz",
+            "siparis_no": "10234",
+            "siparis_tarihi": "20.04.2026",
+            "telefon": "+90 555 123 45 67",
+            "adres": "İstanbul, Kadıköy",
+            "tutar": "450,00 ₺",
+            "takip_url": "https://example.com/menu/siparis-takip?token=abc123"
+        }
+    }
+}

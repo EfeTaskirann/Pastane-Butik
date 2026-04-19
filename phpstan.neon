@@ -10,3 +10,13 @@ parameters:
     ignoreErrors:
         # Unsafe new static() — HttpException factory methods (meşru kullanım)
         - '#Unsafe usage of new static#'
+        # Optional vendor adapter pattern: class_exists() guard ile polymorphic
+        # dispatch yapan service'ler (PdfService → Dompdf, ExportService →
+        # PhpSpreadsheet, IyzicoService → Iyzipay). Vendor lib opsiyonel
+        # composer require ile eklenir; PHPStan dev'de yokken hata vermesin.
+        - '#Instantiated class (PhpOffice\\PhpSpreadsheet|Dompdf|Iyzipay)#'
+        - '#Call to method [a-zA-Z_]+\(\) on an unknown class (PhpOffice\\PhpSpreadsheet|Dompdf|Iyzipay)#'
+        # IyzicoService::$baseUrl — şu an stub method'lar tarafından okunmuyor
+        # ama gerçek API entegrasyonu (initiateWithPackage/Curl) implement
+        # edildiğinde kullanılacak. Property silinmesin.
+        - '#Property Pastane\\Services\\IyzicoService::\$baseUrl is never read#'

@@ -1,0 +1,106 @@
+/* Empty-state komponent stili — P3-21 */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    min-height: 280px;
+    color: var(--text-secondary, #6B5C53);
+    background: var(--bg-surface, #FFFFFF);
+    border: 1px dashed var(--border-color, rgba(0, 0, 0, 0.12));
+    border-radius: 12px;
+    gap: 0.75rem;
+}
+
+.empty-state__icon {
+    color: var(--text-secondary, #9B8B7A);
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+    line-height: 0;
+}
+
+.empty-state__icon svg {
+    width: 64px;
+    height: 64px;
+}
+
+.empty-state__emoji {
+    display: inline-block;
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.empty-state__title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary, #2C1F19);
+}
+
+.empty-state__description {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 46ch;
+    color: var(--text-secondary, #6B5C53);
+}
+
+.empty-state__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin-top: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.empty-state__cta-icon {
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .empty-state {
+    background: var(--bg-surface, #1C1A22);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary, #A09590);
+}
+
+html[data-theme="dark"] .empty-state__icon {
+    color: var(--text-secondary, #A09590);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .empty-state {
+        padding: 2rem 1rem;
+        min-height: 220px;
+    }
+
+    .empty-state__icon svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .empty-state__title {
+        font-size: 1rem;
+    }
+
+    .empty-state__description {
+        font-size: 0.875rem;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .empty-state__cta {
+        transition: none;
+    }
+}

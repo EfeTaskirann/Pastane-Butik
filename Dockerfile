@@ -4,7 +4,8 @@
 # ===========================================
 
 # Stage 1: Build frontend assets
-FROM node:20-alpine AS frontend
+# Pinned minor version for reproducibility
+FROM node:20.11-alpine AS frontend
 WORKDIR /build
 
 COPY package*.json ./
@@ -15,7 +16,8 @@ COPY vite.config.js ./
 RUN npm run build
 
 # Stage 2: Install PHP dependencies (separate stage for caching)
-FROM composer:2 AS composer
+# Pinned minor version for reproducibility
+FROM composer:2.7 AS composer
 WORKDIR /build
 
 COPY composer.json composer.lock* ./
@@ -24,7 +26,8 @@ COPY includes/ includes/
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Stage 3: Production runtime
-FROM php:8.2-apache AS runtime
+# Pinned PHP minor version for reproducibility
+FROM php:8.2.15-apache AS runtime
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

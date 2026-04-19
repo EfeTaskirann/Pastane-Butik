@@ -262,7 +262,7 @@ abstract class BaseController
     /**
      * Render view (for traditional pages)
      *
-     * @param string $view View path (relative to views/)
+     * @param string $view View path (relative to views/, dot-notation: admin.urunler.index)
      * @param array $data Data to pass to view
      * @return void
      */
@@ -276,6 +276,93 @@ abstract class BaseController
         }
 
         include $viewPath;
+    }
+
+    /**
+     * View render (admin sayfaları için alias, Laravel konvansiyonuna yakın).
+     *
+     * Admin sayfaları header.php/footer.php ile sarmalanır. Controller action'ları
+     * `$this->view('admin.urunler.index', [...])` çağırır; view dosyasının sorumluluğu
+     * yalnızca HTML + `<?= ?>` echo'ları olmalıdır (logic yasak).
+     *
+     * @param string $view dot-notation (admin.urunler.index)
+     * @param array $data view'e taşınacak değişkenler
+     * @return void
+     */
+    protected function view(string $view, array $data = []): void
+    {
+        $this->render($view, $data);
+    }
+
+    /**
+     * Admin partial include — view içinden çağrılır, aynı $data scope'unu paylaşır.
+     *
+     * @param string $view dot-notation (admin.urunler._row)
+     * @param array $data ek değişkenler (opsiyonel)
+     * @return void
+     */
+    protected function partial(string $view, array $data = []): void
+    {
+        $this->render($view, $data);
+    }
+
+    /**
+     * Flash mesajı kuyruğa al (session tabanlı, tek seferlik).
+     * helpers.php içindeki setFlash() wrapper'ı — controller API'si tutarlı kalsın diye.
+     *
+     * @param string $type success|error|warning|info
+     * @param string $message
+     * @return void
+     */
+    protected function flash(string $type, string $message): void
+    {
+        if (function_exists('setFlash')) {
+            setFlash($type, $message);
+            return;
+        }
+        // Fallback — helpers yüklenmemişse session'a doğrudan yaz
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['flash'] = ['type' => $type, 'message' => $message];
+    }
+
+    /**
+     * CSRF token doğrula; başarısızsa flash + redirect.
+     * Admin POST action'larının başında çağrılmalı.
+     *
+     * @param string $redirectOnFail başarısız olursa yönlendirilecek relative URL
+     * @return void
+     */
+    protected function requireCsrf(string $redirectOnFail): void
+    {
+        $valid = false;
+
+        if (function_exists('verifyCSRF')) {
+            $valid = verifyCSRF();
+        } elseif (function_exists('validateSecureCSRFToken')) {
+            $token = $_POST['csrf_token'] ?? '';
+            $valid = validateSecureCSRFToken($token);
+        }
+
+        if (!$valid) {
+            $this->flash('error', 'Güvenlik doğrulaması başarısız.');
+            $this->redirect($redirectOnFail);
+        }
+    }
+
+    /**
+     * Permission guard — helpers.php require_permission() wrapper'ı.
+     * Yetki yoksa 403 sayfası render edilir ve script sonlanır.
+     *
+     * @param string $permission (ör. "product.view")
+     * @return void
+     */
+    protected function requirePermission(string $permission): void
+    {
+        if (function_exists('require_permission')) {
+            require_permission($permission);
+        }
     }
 
     /**

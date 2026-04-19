@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Rate Limiter
  *
@@ -19,6 +21,15 @@ class RateLimiter
         'login' => ['requests' => 5, 'window' => 60],
         'api' => ['requests' => 100, 'window' => 60],
         'contact' => ['requests' => 3, 'window' => 60],
+        'menu_siparis' => ['requests' => 5, 'window' => 60],
+        'menu_odeme' => ['requests' => 3, 'window' => 60],
+        'odeme_callback' => ['requests' => 10, 'window' => 60],
+        // Siparis takip — public takip sayfasi (gecerli token ile)
+        'siparis-takip-token' => ['requests' => 30, 'window' => 60],
+        // Siparis takip — eski ?id= URL'i (enumeration denemesi)
+        'siparis-takip-id-legacy' => ['requests' => 5, 'window' => 60],
+        // API track endpoint: tokenla public sipariş sorgusu
+        'siparis-track-api' => ['requests' => 10, 'window' => 60],
     ];
 
     /**
@@ -199,30 +210,85 @@ class RateLimiter
     /**
      * Get rate limit headers
      *
+     * Standart rate limit header'ları döner:
+     * - X-RateLimit-Limit: Pencerede izin verilen max istek
+     * - X-RateLimit-Remaining: Kalan istek sayısı
+     * - X-RateLimit-Reset: Pencerenin sıfırlanacağı unix timestamp
+     *
+     * Reset değeri, mevcut pencerenin `first_attempt_at + window` değeridir;
+     * kayıt yoksa `time() + window` olarak hesaplanır.
+     *
      * @param string $action
-     * @return array
+     * @param string|null $identifier
+     * @return array<string, int>
+     */
+    public static function getLimitHeaders(string $action = 'default', ?string $identifier = null): array
+    {
+        $identifier = $identifier ?? self::getIdentifier();
+        $limits = self::$limits[$action] ?? self::$limits['default'];
+        $window = (int) ($limits['window'] ?? 60);
+        $maxRequests = (int) $limits['requests'];
+
+        // Check durumunu al — attempts artırmaz, sadece okur.
+        $status = self::check($action, $identifier);
+        $remaining = (int) ($status['remaining'] ?? 0);
+
+        // Reset: mevcut pencerenin sonu (first_attempt_at + window).
+        // Kayıt yoksa veya pencere sıfırlandıysa now + window.
+        $resetAt = time() + $window;
+        try {
+            $record = db()->fetch(
+                "SELECT first_attempt_at FROM rate_limits WHERE identifier = ? AND action = ?",
+                [$identifier, $action]
+            );
+            if ($record && !empty($record['first_attempt_at'])) {
+                $firstAttempt = strtotime($record['first_attempt_at']);
+                if ($firstAttempt !== false) {
+                    $windowEnd = $firstAttempt + $window;
+                    // Eğer pencere hâlâ aktifse (henüz süresi dolmadıysa) onu kullan,
+                    // aksi halde yeni pencere başlayacağı için now + window.
+                    if ($windowEnd > time()) {
+                        $resetAt = $windowEnd;
+                    }
+                }
+            }
+        } catch (Exception) {
+            // DB hatası — varsayılan resetAt kullan (fail-safe).
+        }
+
+        return [
+            'X-RateLimit-Limit' => $maxRequests,
+            'X-RateLimit-Remaining' => $remaining,
+            'X-RateLimit-Reset' => $resetAt,
+        ];
+    }
+
+    /**
+     * Geriye dönük uyumluluk için alias — eski çağrılar bozulmasın.
+     *
+     * @param string $action
+     * @return array<string, int>
+     * @deprecated Bunun yerine getLimitHeaders() kullanın.
      */
     public static function getHeaders(string $action = 'default'): array
     {
-        $status = self::check($action);
-        $limits = self::$limits[$action] ?? self::$limits['default'];
-
-        return [
-            'X-RateLimit-Limit' => $limits['requests'],
-            'X-RateLimit-Remaining' => $status['remaining'],
-            'X-RateLimit-Reset' => time() + ($limits['window'] ?? 60),
-        ];
+        return self::getLimitHeaders($action);
     }
 
     /**
      * Send rate limit headers
      *
      * @param string $action
+     * @param string|null $identifier
      * @return void
      */
-    public static function sendHeaders(string $action = 'default'): void
+    public static function sendHeaders(string $action = 'default', ?string $identifier = null): void
     {
-        foreach (self::getHeaders($action) as $name => $value) {
+        // Header'lar zaten gönderilmişse (output başlamışsa) skip et.
+        if (headers_sent()) {
+            return;
+        }
+        foreach (self::getLimitHeaders($action, $identifier) as $name => $value) {
             header("{$name}: {$value}");
         }
     }
@@ -240,9 +306,11 @@ class RateLimiter
         $status = self::check($action, $identifier);
 
         if (!$status['allowed']) {
-            self::sendHeaders($action);
+            self::sendHeaders($action, $identifier);
             $retryAfter = $status['retry_after'] ?? 60;
-            header('Retry-After: ' . $retryAfter);
+            if (!headers_sent()) {
+                header('Retry-After: ' . $retryAfter);
+            }
 
             throw \Pastane\Exceptions\HttpException::tooManyRequests(
                 $status['message'] ?? 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.',
@@ -251,7 +319,7 @@ class RateLimiter
         }
 
         self::hit($action, $identifier);
-        self::sendHeaders($action);
+        self::sendHeaders($action, $identifier);
 
         return true;
     }

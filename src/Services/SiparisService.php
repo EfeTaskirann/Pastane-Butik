@@ -105,22 +105,133 @@ class SiparisService extends BaseService
         $orderData = [
             'tarih' => $data['tarih'],
             'kategori' => $kategori,
-            'kisi_sayisi' => $adet,
+            'adet' => $adet,
             'puan' => $puan,
             'birim_fiyat' => $birimFiyat,
             'toplam_tutar' => $toplamTutar,
             'odeme_tipi' => $data['odeme_tipi'] ?? 'online',
             'kanal' => $data['kanal'] ?? 'site',
-            'ad_soyad' => $data['musteri_adi'] ?? $data['ad_soyad'] ?? null,
+            'musteri_adi' => $data['musteri_adi'] ?? $data['ad_soyad'] ?? null,
             'telefon' => trim($data['telefon'] ?? ''),
-            'ozel_istekler' => $data['adres'] ?? $data['ozel_istekler'] ?? null,
+            'adres' => $data['adres'] ?? $data['ozel_istekler'] ?? null,
             'notlar' => $data['notlar'] ?? null,
-            'durum' => 'beklemede'
+            'tamamlandi' => 0
         ];
 
         $id = $this->siparisRepository->create($orderData);
+        $siparis = $this->siparisRepository->find($id);
 
-        return $this->siparisRepository->find($id);
+        // Prometheus counter (DB değil — monitoring, sessiz fail)
+        try {
+            if (class_exists('\\Metrics', false) || class_exists('Metrics', false)) {
+                \Metrics::inc('pastane_orders_total', [
+                    'durum' => $siparis['tamamlandi'] ?? 0 ? 'tamamlandi' : 'beklemede',
+                ]);
+            }
+        } catch (\Throwable) {
+            // monitoring kaydı ana akışı engellememeli
+        }
+
+        // Email bildirim (sessizce fail etsin, sipariş akışını engellemesin)
+        if ($siparis !== null) {
+            $this->siparisOnayEmailiGonder($siparis, $data);
+            $this->siparisOnaySmsGonder($siparis);
+        }
+
+        return $siparis;
+    }
+
+    /**
+     * Sipariş onay SMS'i gönder (hook)
+     *
+     * Müşteri telefonu varsa `siparis-onay` template'i ile SMS yollar.
+     * Herhangi bir hata sipariş akışını engellemez (try/catch ile sessizce yutulur).
+     *
+     * @param array $siparis Oluşturulan sipariş
+     * @return void
+     */
+    protected function siparisOnaySmsGonder(array $siparis): void
+    {
+        try {
+            $telefon = trim((string) ($siparis['telefon'] ?? ''));
+            if ($telefon === '') {
+                return;
+            }
+
+            if (!class_exists('SmsService')) {
+                return;
+            }
+
+            $smsService = new \SmsService();
+            $smsService->sendTemplate($telefon, 'siparis-onay', [
+                'musteri_adi'    => $siparis['musteri_adi'] ?? 'Degerli Musterimiz',
+                'siparis_no'     => (string) ($siparis['id'] ?? ''),
+                'siparis_tarihi' => date('d.m.Y', strtotime((string) ($siparis['tarih'] ?? 'now'))),
+                'toplam_tutar'   => number_format((float) ($siparis['toplam_tutar'] ?? 0), 2, ',', '.') . ' TL',
+                'site_adi'       => function_exists('env') ? (string) env('APP_NAME', 'Tatli Dusler') : 'Tatli Dusler',
+            ]);
+        } catch (\Throwable) {
+            // SMS hatası sipariş akışını bloklamasın
+        }
+    }
+
+    /**
+     * Sipariş onay email'i gönder (hook)
+     *
+     * Sipariş oluşturulduğunda müşteriye HTML email gönderir.
+     * Herhangi bir hata sipariş akışını engellemez (try/catch ile sessizce yutulur).
+     *
+     * @param array $siparis Oluşturulan sipariş
+     * @param array $input Orijinal input (email alanı için)
+     * @return void
+     */
+    protected function siparisOnayEmailiGonder(array $siparis, array $input): void
+    {
+        try {
+            // Email adresi — önce input'tan, yoksa müşteri kaydından alınabilir
+            $aliciEmail = $input['email'] ?? $input['musteri_email'] ?? null;
+            if (empty($aliciEmail) || !filter_var($aliciEmail, FILTER_VALIDATE_EMAIL)) {
+                return; // Email yoksa sessizce geç
+            }
+
+            if (!class_exists('EmailService')) {
+                return;
+            }
+
+            $emailService = new \EmailService();
+
+            // E-mail HTML body: inline style ZORUNLU — Gmail/Outlook gibi client'lar
+            // external stylesheet referanslarını silip atar, inline'ı korur.
+            // Bu yüzden `class="u-*"` kullanılmaz; rendering için inline style gerekir.
+            $urunListesi = '<tr><td style="padding:10px 12px; border-bottom:1px solid #f3cfc6;">'
+                . htmlspecialchars(ucfirst((string)($siparis['kategori'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                . '</td><td align="center" style="padding:10px 12px; border-bottom:1px solid #f3cfc6;">'
+                . (int)($siparis['adet'] ?? 1)
+                . '</td><td align="right" style="padding:10px 12px; border-bottom:1px solid #f3cfc6;">'
+                . number_format((float)($siparis['toplam_tutar'] ?? 0), 2, ',', '.') . ' ₺'
+                . '</td></tr>';
+
+            $data = [
+                'musteri_adi'    => $siparis['musteri_adi'] ?? 'Değerli Müşterimiz',
+                'siparis_no'     => $siparis['id'] ?? '',
+                'siparis_tarihi' => date('d.m.Y H:i', strtotime((string)($siparis['tarih'] ?? 'now'))),
+                'toplam_tutar'   => number_format((float)($siparis['toplam_tutar'] ?? 0), 2, ',', '.') . ' ₺',
+                'urun_listesi'   => $urunListesi,
+                'adres'          => $siparis['adres'] ?? '-',
+                'telefon'        => $siparis['telefon'] ?? '-',
+                'site_adi'       => function_exists('env') ? (string) env('APP_NAME', 'Tatlı Düşler') : 'Tatlı Düşler',
+                'yil'            => date('Y'),
+            ];
+
+            $emailService->send(
+                $aliciEmail,
+                'Siparişiniz Alındı #' . ($siparis['id'] ?? ''),
+                'siparis-onay',
+                $data
+            );
+        } catch (\Throwable) {
+            // Email hatası sipariş akışını bloklamasın
+        }
     }
 
     /**
@@ -140,7 +251,7 @@ class SiparisService extends BaseService
 
         // Siparişi al
         $siparis = $this->siparisRepository->findOrFail($id);
-        $eskiDurum = $siparis['durum'] ?? 'beklemede';
+        $eskiDurum = ($siparis['tamamlandi'] ?? 0) ? 'teslim_edildi' : 'beklemede';
 
         // Durum zaten aynıysa işlem yapma
         if ($eskiDurum === $yeniDurum) {
@@ -153,7 +264,7 @@ class SiparisService extends BaseService
         }
 
         // Durumu güncelle
-        $this->siparisRepository->updateStatus($id, $yeniDurum);
+        $this->siparisRepository->updateStatus($id, $yeniDurum === 'teslim_edildi');
 
         $hediyeKazanildi = false;
         $hediyeGeriAlindi = false;
@@ -168,8 +279,8 @@ class SiparisService extends BaseService
                 $result = $this->musteriService->recordDeliveredOrder(
                     $telefon,
                     (float)($siparis['toplam_tutar'] ?? 0),
-                    $siparis['ad_soyad'] ?? null,
-                    $siparis['ozel_istekler'] ?? null
+                    $siparis['musteri_adi'] ?? null,
+                    $siparis['adres'] ?? null
                 );
 
                 // Müşteri kaydedildi olarak işaretle
@@ -222,7 +333,7 @@ class SiparisService extends BaseService
     {
         $siparis = $this->siparisRepository->findOrFail((int)$id);
 
-        if ($siparis['durum'] === 'teslim_edildi') {
+        if ($siparis['tamamlandi'] ?? false) {
             // Tamamlanmış sipariş - arşivle (raporlarda kalır)
             $this->siparisRepository->archive((int)$id);
 

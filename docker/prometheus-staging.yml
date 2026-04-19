@@ -1,0 +1,24 @@
+# Prometheus scrape config — staging
+# docker-compose.staging.yml tarafından `profiles: [observability]` ile opsiyonel yüklenir.
+# Aktifleştirmek için: docker compose -f docker-compose.staging.yml --profile observability up -d
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+  external_labels:
+    environment: staging
+    service: pastane
+
+scrape_configs:
+  - job_name: pastane-app
+    metrics_path: /api/metrics.php
+    scheme: http
+    scrape_interval: 15s
+    # METRICS_TOKEN env var'ından alınmalı. Prometheus v2.26+ destekliyor:
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/metrics_token
+    static_configs:
+      - targets: ['app:80']
+        labels:
+          instance: pastane-staging

@@ -35,6 +35,10 @@
     --admin-info-light: #DBEAFE;
     --admin-info-dark: #2563EB;
 
+    --admin-orange: #F97316;
+    --admin-orange-dark: #EA580C;
+    --admin-orange-light: #FFF7ED;
+
     /* Neutral Colors */
     --admin-bg: #F8FAFC;
     --admin-sidebar: #1E293B;
@@ -215,7 +219,8 @@ code {
     display: flex;
     flex-direction: column;
     position: fixed;
-    height: 100vh;
+    height: 100vh; /* fallback */
+    height: 100dvh; /* dinamik viewport — iOS Safari adres cubugu fix */
     z-index: var(--z-fixed);
     transition: transform var(--transition-slow), width var(--transition-slow);
     overflow: hidden;
@@ -292,6 +297,13 @@ code {
     color: white;
 }
 
+.nav-item:focus-visible {
+    outline: 2px solid var(--admin-accent);
+    outline-offset: -2px;
+    background: var(--admin-sidebar-hover);
+    color: white;
+}
+
 .nav-item:hover svg {
     opacity: 1;
 }
@@ -334,6 +346,87 @@ code {
     background: var(--admin-danger);
 }
 
+/* External link indicator for target="_blank" nav items */
+.nav-item[target="_blank"]::after {
+    content: '\2197';
+    font-size: 0.7em;
+    margin-left: 4px;
+    opacity: 0.5;
+}
+
+.nav-external-hint {
+    font-size: var(--text-xs);
+    opacity: 0.5;
+    margin-left: auto;
+}
+
+/* ---------- Nav Group (acilir-kapanir alt menu) ---------- */
+.nav-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-group .nav-group-toggle {
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.nav-group-toggle span:first-of-type {
+    flex: 1;
+}
+
+.nav-group-chevron {
+    width: 14px;
+    height: 14px;
+    margin-left: auto;
+    transition: transform 180ms ease;
+    opacity: 0.6;
+}
+
+.nav-group.is-open .nav-group-chevron {
+    transform: rotate(180deg);
+}
+
+.nav-group-items {
+    display: flex;
+    flex-direction: column;
+    padding-left: 32px;
+    margin-top: 2px;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.nav-group-items[hidden] {
+    display: none !important;
+}
+
+.nav-item.nav-sub {
+    padding: 8px 14px;
+    font-size: 13.5px;
+    opacity: 0.85;
+}
+
+.nav-item.nav-sub.active {
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* Accessibility helper */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+}
+
 /* ---------- Main Content ---------- */
 .main-content {
     flex: 1;
@@ -368,6 +461,12 @@ code {
 }
 
 .menu-toggle:hover {
+    background: var(--admin-bg);
+}
+
+.menu-toggle:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
     background: var(--admin-bg);
 }
 
@@ -1426,6 +1525,7 @@ select.form-control {
     justify-content: center;
     align-items: center;
     padding: var(--space-4);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
 
@@ -1438,7 +1538,8 @@ select.form-control {
     border-radius: var(--radius-2xl);
     width: 100%;
     max-width: 560px;
-    max-height: 90vh;
+    max-height: 90vh; /* fallback */
+    max-height: 90dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1492,6 +1593,12 @@ select.form-control {
 .modal-close:hover {
     color: var(--admin-text);
     background: var(--admin-bg);
+}
+
+.modal-close:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+    color: var(--admin-text);
 }
 
 .modal-close svg {
@@ -1747,6 +1854,7 @@ select.form-control {
         inset: 0;
         background: rgba(15, 23, 42, 0.5);
         z-index: calc(var(--z-fixed) - 1);
+        -webkit-backdrop-filter: blur(2px);
         backdrop-filter: blur(2px);
     }
 
@@ -1795,7 +1903,8 @@ select.form-control {
     }
 
     .modal {
-        max-height: 100vh;
+        max-height: 100vh; /* fallback */
+        max-height: 100dvh; /* dinamik viewport — iOS Safari adres cubugu fix */
         border-radius: var(--radius-xl) var(--radius-xl) 0 0;
         margin-top: auto;
     }
@@ -1949,9 +2058,1058 @@ select.form-control {
 .p-8 { padding: var(--space-8); }
 
 .cursor-pointer { cursor: pointer; }
-.select-none { user-select: none; }
+.select-none {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
 .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* =============================================
+   MASA YÖNETİMİ (Table Management)
+   ============================================= */
+
+/* ---------- Masa İstatistik Kartları ---------- */
+.masa-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.masa-stat-card {
+    flex: 1;
+    min-width: 180px;
+    background: var(--admin-card);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--admin-border-light);
+    text-align: center;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.masa-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--admin-primary);
+}
+
+.masa-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.masa-stat-card__sayi {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    line-height: 1;
+    margin-bottom: var(--space-1);
+}
+
+.masa-stat-card__etiket {
+    font-size: var(--text-sm);
+    color: var(--admin-text-secondary);
+    font-weight: var(--font-medium);
+}
+
+/* İstatistik renk varyantları */
+.masa-stat-card--toplam::before { background: var(--admin-primary); }
+.masa-stat-card--toplam .masa-stat-card__sayi { color: var(--admin-primary); }
+
+.masa-stat-card--aktif::before { background: var(--admin-info); }
+.masa-stat-card--aktif .masa-stat-card__sayi { color: var(--admin-info); }
+
+.masa-stat-card--bos::before { background: var(--admin-success); }
+.masa-stat-card--bos .masa-stat-card__sayi { color: var(--admin-success); }
+
+.masa-stat-card--kapali::before { background: var(--admin-danger); }
+.masa-stat-card--kapali .masa-stat-card__sayi { color: var(--admin-danger); }
+
+/* ---------- Masa Grid ---------- */
+.masa-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+}
+
+/* ---------- Masa Kartı ---------- */
+.masa-card {
+    background: var(--admin-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--admin-border-light);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.masa-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Durum varyantları */
+.masa-card--bos {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.masa-card--bos::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #22c55e;
+}
+
+.masa-card--bos:hover {
+    border-color: #22c55e;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.2);
+}
+
+.masa-card--aktif {
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.masa-card--aktif::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #3b82f6;
+}
+
+.masa-card--aktif:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
+}
+
+.masa-card--kapali {
+    border-color: rgba(239, 68, 68, 0.3);
+    opacity: 0.7;
+}
+
+.masa-card--kapali::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #ef4444;
+}
+
+.masa-card--kapali:hover {
+    opacity: 0.85;
+    border-color: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15);
+}
+
+/* ---------- Masa Kartı İç Yapısı ---------- */
+.masa-card__numara {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    color: var(--admin-text);
+    line-height: 1;
+    margin-bottom: var(--space-3);
+}
+
+.masa-card__bilgi {
+    font-size: var(--text-sm);
+    color: var(--admin-text-secondary);
+    margin-bottom: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.masa-card__bilgi span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+}
+
+.masa-card__bilgi svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.masa-card__durum {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-4);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.masa-card--bos .masa-card__durum {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.masa-card--aktif .masa-card__durum {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.masa-card--kapali .masa-card__durum {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.masa-card__aksiyonlar {
+    display: flex;
+    gap: var(--space-2);
+    width: 100%;
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--admin-border-light);
+}
+
+.masa-card__aksiyonlar .btn {
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+}
+
+.masa-card__aksiyonlar .btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ---------- QR Kod Modal ---------- */
+.qr-modal {
+    text-align: center;
+}
+
+.qr-modal__image {
+    display: inline-block;
+    padding: var(--space-6);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--admin-border);
+    margin-bottom: var(--space-4);
+}
+
+.qr-modal__image img,
+.qr-modal__image canvas,
+.qr-modal__image svg {
+    display: block;
+    max-width: 240px;
+    height: auto;
+    margin: 0 auto;
+}
+
+.qr-modal__masa-bilgi {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--admin-text);
+    margin-bottom: var(--space-4);
+}
+
+.qr-modal__actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+/* ---------- Masa Yönetimi Responsive ---------- */
+@media (max-width: 1199px) {
+    .masa-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .masa-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+    }
+
+    .masa-stats {
+        gap: var(--space-3);
+    }
+
+    .masa-stat-card {
+        min-width: 140px;
+        padding: var(--space-4);
+    }
+
+    .masa-stat-card__sayi {
+        font-size: var(--text-2xl);
+    }
+
+    .masa-card {
+        padding: var(--space-4);
+    }
+
+    .masa-card__numara {
+        font-size: var(--text-3xl);
+    }
+
+    .masa-card__aksiyonlar {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 479px) {
+    .masa-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .masa-stats {
+        flex-direction: column;
+    }
+
+    .masa-stat-card {
+        min-width: 0;
+    }
+
+    .qr-modal__actions {
+        flex-direction: column;
+    }
+
+    .qr-modal__actions .btn {
+        width: 100%;
+    }
+}
+
+/* ---------- QR Kod Print Stili ---------- */
+@media print {
+    .masa-card__aksiyonlar,
+    .masa-stats,
+    .page-header-actions {
+        display: none !important;
+    }
+
+    .masa-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .masa-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+
+    .qr-modal {
+        position: static;
+        display: block !important;
+    }
+
+    .qr-modal__image {
+        border: none;
+        padding: 0;
+    }
+}
+
+/* ========================================
+   Inline Form & Silme Modal Yardimci Siniflari
+   ======================================== */
+.form-inline { margin: 0; display: inline; }
+.form-hidden { display: none; }
+
+.sil-modal-body { text-align: center; }
+.sil-modal-body__uyari { color: var(--admin-danger); font-size: 1.1rem; margin-bottom: var(--space-3); }
+.sil-modal-body__bilgi { color: var(--admin-text-secondary); font-size: 0.9rem; }
+
+/* =============================================
+   MASA SİPARİŞ YÖNETİMİ (Order Management)
+   ============================================= */
+
+/* ---------- İstatistik Kart Renk Varyantlari ---------- */
+.siparis-stat-card--aktif::before { background: var(--admin-primary); }
+.siparis-stat-card--aktif .masa-stat-card__sayi { color: var(--admin-primary); }
+
+.siparis-stat-card--beklemede::before { background: var(--admin-warning); }
+.siparis-stat-card--beklemede .masa-stat-card__sayi { color: var(--admin-warning); }
+
+.siparis-stat-card--onaylandi::before { background: var(--admin-info); }
+.siparis-stat-card--onaylandi .masa-stat-card__sayi { color: var(--admin-info); }
+
+.siparis-stat-card--hazirlaniyor::before { background: var(--admin-orange); }
+.siparis-stat-card--hazirlaniyor .masa-stat-card__sayi { color: var(--admin-orange); }
+
+.siparis-stat-card--hazir::before { background: var(--admin-info); }
+.siparis-stat-card--hazir .masa-stat-card__sayi { color: var(--admin-info); }
+
+.siparis-stat-card--teslim::before { background: var(--admin-success); }
+.siparis-stat-card--teslim .masa-stat-card__sayi { color: var(--admin-success); }
+
+/* ---------- Filtre Butonlari ---------- */
+.siparis-filtre {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+/* ---------- Siparis Grid ---------- */
+.siparis-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+}
+
+/* ---------- Siparis Karti ---------- */
+.siparis-kart {
+    background: var(--admin-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--admin-border-light);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.siparis-kart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.siparis-kart:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Durum renkleri (ust cizgi) */
+.siparis-kart--beklemede::before { background: var(--admin-warning); }
+.siparis-kart--onaylandi::before { background: var(--admin-info); }
+.siparis-kart--hazirlaniyor::before { background: var(--admin-orange); }
+.siparis-kart--hazir::before { background: var(--admin-info-dark); }
+.siparis-kart--teslim_edildi::before { background: var(--admin-success); }
+.siparis-kart--iptal::before { background: var(--admin-danger); }
+.siparis-kart--iptal { opacity: 0.7; }
+
+/* Kart Ust */
+.siparis-kart__ust {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    padding-top: calc(var(--space-4) + 3px);
+    border-bottom: 1px solid var(--admin-border-light);
+}
+
+.siparis-kart__masa {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.siparis-kart__masa-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    background: var(--admin-primary);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    font-weight: var(--font-bold);
+    font-size: var(--text-sm);
+}
+
+.siparis-kart__no {
+    font-size: var(--text-sm);
+    color: var(--admin-text-secondary);
+    font-weight: var(--font-medium);
+}
+
+.siparis-kart__zaman {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--admin-text-light);
+}
+
+.siparis-kart__zaman svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Durum Bar */
+.siparis-kart__durum-bar {
+    padding: var(--space-2) var(--space-5);
+    display: flex;
+    align-items: center;
+}
+
+.siparis-kart__durum-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.siparis-kart__durum-badge--warning {
+    background: var(--admin-warning-light);
+    color: var(--admin-warning-dark);
+}
+
+.siparis-kart__durum-badge--info {
+    background: var(--admin-info-light);
+    color: var(--admin-info-dark);
+}
+
+.siparis-kart__durum-badge--orange {
+    background: var(--admin-orange-light);
+    color: var(--admin-orange-dark);
+}
+
+.siparis-kart__durum-badge--success {
+    background: var(--admin-success-light);
+    color: var(--admin-success-dark);
+}
+
+.siparis-kart__durum-badge--danger {
+    background: var(--admin-danger-light);
+    color: var(--admin-danger-dark);
+}
+
+.siparis-kart__odeme-badge--masada {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    background: var(--admin-warning-light);
+    color: var(--admin-warning-dark);
+    border: 1px solid var(--admin-warning);
+}
+
+/* Kart Icerik */
+.siparis-kart__icerik {
+    padding: var(--space-3) var(--space-5);
+    flex: 1;
+}
+
+.siparis-kart__urunler {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.siparis-kart__urun {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--admin-border-light);
+}
+
+.siparis-kart__urun:last-child {
+    border-bottom: none;
+}
+
+.siparis-kart__urun-bilgi {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.siparis-kart__urun-adet {
+    font-weight: var(--font-bold);
+    color: var(--admin-primary);
+    min-width: 28px;
+}
+
+.siparis-kart__urun-adi {
+    color: var(--admin-text);
+    font-weight: var(--font-medium);
+}
+
+.siparis-kart__urun-porsiyon {
+    font-size: var(--text-xs);
+    color: var(--admin-text-secondary);
+}
+
+.siparis-kart__urun-not {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--admin-text-secondary);
+    margin-top: var(--space-1);
+    padding-left: 28px;
+    font-style: italic;
+}
+
+.siparis-kart__urun-not svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.siparis-kart__siparis-notu {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    background: var(--admin-warning-light);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--admin-warning-dark);
+    line-height: var(--leading-normal);
+}
+
+.siparis-kart__siparis-notu svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Kart Alt */
+.siparis-kart__alt {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--admin-border-light);
+    background: var(--admin-bg);
+}
+
+.siparis-kart__tutar {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--admin-text);
+}
+
+.siparis-kart__odeme-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+}
+
+.siparis-kart__odeme-badge--odenmedi {
+    background: var(--admin-danger-light);
+    color: var(--admin-danger-dark);
+}
+
+.siparis-kart__odeme-badge--odendi {
+    background: var(--admin-success-light);
+    color: var(--admin-success-dark);
+}
+
+.siparis-kart__odeme-badge--iade {
+    background: var(--admin-warning-light);
+    color: var(--admin-warning-dark);
+}
+
+/* Aksiyon Butonlari */
+.siparis-kart__aksiyonlar {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--admin-border-light);
+    flex-wrap: wrap;
+}
+
+.siparis-kart__aksiyonlar .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+}
+
+.siparis-kart__aksiyonlar .btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Hazirlaniyor butonu (turuncu) */
+.siparis-btn--hazirlaniyor {
+    background: var(--admin-orange);
+    color: #fff;
+    border: none;
+}
+
+.siparis-btn--hazirlaniyor:hover {
+    background: var(--admin-orange-dark);
+}
+
+/* Son Durum Badge (teslim/iptal) */
+.siparis-kart__son-durum {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+}
+
+.siparis-kart__son-durum svg {
+    width: 16px;
+    height: 16px;
+}
+
+.siparis-kart__son-durum--success {
+    color: var(--admin-success-dark);
+    background: var(--admin-success-light);
+}
+
+.siparis-kart__son-durum--danger {
+    color: var(--admin-danger-dark);
+    background: var(--admin-danger-light);
+}
+
+/* ---------- Siparis Yonetimi Responsive ---------- */
+@media (max-width: 1199px) {
+    .siparis-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .siparis-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .siparis-filtre {
+        gap: var(--space-1);
+    }
+
+    .siparis-filtre .btn {
+        font-size: var(--text-xs);
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .siparis-kart__ust {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .siparis-kart__icerik {
+        padding: var(--space-2) var(--space-4);
+    }
+
+    .siparis-kart__alt {
+        padding: var(--space-2) var(--space-4);
+    }
+
+    .siparis-kart__aksiyonlar {
+        padding: var(--space-2) var(--space-4);
+    }
+}
+
+@media (max-width: 479px) {
+    .siparis-kart__masa-badge {
+        font-size: var(--text-xs);
+    }
+
+    .siparis-kart__aksiyonlar {
+        flex-direction: column;
+    }
+}
+
+/* ---------- Siparis Buton Focus Visible ---------- */
+.siparis-kart__aksiyonlar .btn:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-primary);
+}
+
+.siparis-btn--hazirlaniyor:focus-visible {
+    outline-color: var(--admin-orange);
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
+}
+
+/* ---------- Siparis Print Stili ---------- */
+@media print {
+    .siparis-filtre,
+    .siparis-kart__aksiyonlar,
+    .page-header-actions,
+    #yenilemeToast,
+    #iptalModal {
+        display: none !important;
+    }
+
+    .siparis-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .siparis-kart {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+
+    .siparis-kart::before {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .siparis-kart__durum-badge {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+/* ---------- Mutfak/Garson Print Stili ---------- */
+@media print {
+    .mutfak-container,
+    .garson-container {
+        display: none;
+    }
+
+    body.sayfa-mutfak::before,
+    body.sayfa-garson::before {
+        content: 'Bu sayfa yazdirilmak icin uygun degildir.';
+        display: block;
+        text-align: center;
+        padding: 2rem;
+        font-size: 1.5rem;
+    }
+}
+
+/* =============================================
+   SPRINT 3 — MOBILE UX, A11Y, DARK MODE SUPPORT
+   ============================================= */
+
+/* ---------- Skip Link (WCAG 2.4.1 Bypass Blocks) ---------- */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--admin-primary);
+    color: #fff;
+    padding: var(--space-3) var(--space-4);
+    z-index: var(--z-toast);
+    font-weight: var(--font-semibold);
+    border-radius: 0 0 var(--radius-md) 0;
+    text-decoration: none;
+    transition: top var(--transition-base);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+    outline: 3px solid var(--admin-primary);
+    outline-offset: 2px;
+}
+
+/* ---------- Menu-toggle touch target (>= 44x44) ---------- */
+.menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* ---------- Theme Toggle Butonu ---------- */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--space-2);
+    margin-left: auto;
+    margin-right: var(--space-3);
+    background: transparent;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--admin-text);
+    transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+.theme-toggle:hover {
+    background: var(--admin-bg);
+    border-color: var(--admin-primary);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Ay ikonu default gizli, sun gorulu; dark'ta tersi */
+.theme-toggle .icon-moon { display: none; }
+.theme-toggle .icon-sun { display: block; }
+
+html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+
+/* ---------- WCAG: admin-text-light kullanim duzeltmesi ---------- */
+/* onceki kontrast basarisiz siniflari aa-compliant yap */
+.stat-info small,
+.table-empty-state p,
+.muted-text {
+    color: var(--admin-text-secondary);
+}
+
+/* ---------- Mobile Table Responsive (< 768px kart gorunumu) ---------- */
+@media (max-width: 768px) {
+    /* iOS font zoom fix */
+    input,
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    /* Admin grid genisliği genel */
+    .admin-wrapper [style*="minmax(400px"],
+    .admin-wrapper [style*="minmax(350px"] {
+        /* inline style ile gelen grid'leri mobil'de 1-col'a zorla */
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Siparis grid 2-col */
+    .siparis-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Card-table-mobile: tablonun kart gibi davranmasi (opt-in: tabloyu `.table-responsive` sar) */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 calc(-1 * var(--space-4));
+        padding: 0 var(--space-4);
+    }
+
+    /* Card-rows pattern: tabloda `data-label` attribute'leri varsa mobile'de gizle-goster */
+    .table-cards th {
+        display: none;
+    }
+
+    .table-cards tbody tr {
+        display: block;
+        margin-bottom: var(--space-3);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-3);
+        background: var(--admin-card);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .table-cards tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-2) 0;
+        border: none;
+        text-align: right;
+    }
+
+    .table-cards tbody td::before {
+        content: attr(data-label);
+        font-weight: var(--font-semibold);
+        color: var(--admin-text-secondary);
+        margin-right: var(--space-3);
+        text-align: left;
+    }
+}
+
+/* ---------- Siparis Grid < 480 1-col ---------- */
+@media (max-width: 479px) {
+    .siparis-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Touch target minimum 44x44 (WCAG 2.5.5 Level AAA, we target AA best-effort) ---------- */
+@media (max-width: 768px) {
+    .btn,
+    .nav-item,
+    .filter-btn,
+    .category-tab,
+    button[type="submit"],
+    button[type="button"]:not(.qty-btn):not(.modal-close) {
+        min-height: 44px;
+    }
+}
+
+/* ---------- Sidebar Escape key close support (JS ile) ---------- */
+.sidebar.open {
+    box-shadow: var(--shadow-xl);
+}
+
+/* ---------- Dil Secici (TR/EN) — P2-15 i18n ---------- */
+.lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 16px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6B5C53);
+    user-select: none;
+}
+
+.lang-switcher .lang-link {
+    color: inherit;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lang-switcher .lang-link:hover,
+.lang-switcher .lang-link:focus-visible {
+    background-color: rgba(139, 69, 19, 0.08);
+    color: #8B4513;
+    outline: none;
+}
+
+.lang-switcher .lang-link.is-active {
+    background-color: #8B4513;
+    color: #fff;
+}
+
+.lang-switcher .lang-link:focus-visible {
+    outline: 2px solid #C5A572;
+    outline-offset: 2px;
+}
+

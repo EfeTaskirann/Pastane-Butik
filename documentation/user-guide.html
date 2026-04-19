@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Customer Guide - Tatli Dusler Pastane</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #d0d0d0; padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .tip { background: #e3f2fd; border-left: 4px solid #1976d2; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li, ol li { margin-bottom: 6px; }
+  .step-flow { counter-reset: step; list-style: none; padding-left: 0; }
+  .step-flow li { position: relative; padding-left: 48px; margin-bottom: 20px; }
+  .step-flow li:before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    width: 34px; height: 34px;
+    background: #c94f7c; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Customer Guide</h1>
+  <div class="subtitle">How your customers browse, order and track. Share this chapter with your support team.</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html">Home</a>
+  <a href="installation.html">Installation</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="admin-guide.html">Admin Guide</a>
+  <a href="user-guide.html" class="active">User Guide</a>
+  <a href="faq.html">FAQ</a>
+</nav>
+
+<h2>Browsing the menu</h2>
+<p>The public menu lives at <code>/menu</code>. It is the digital shop window: a grid of product cards organised by category, with search, filters, a sticky cart summary, and a featured carousel at the top. The entire experience is built mobile-first - more than seventy percent of real-world visits come from phones.</p>
+
+<!-- SCREENSHOT: menu-landing.png -->
+<div class="screenshot">
+  <img src="screenshots/menu-landing.png" alt="Public menu home page with category tabs and a featured carousel" />
+  <figcaption>Figure 1. Public menu - category tabs, featured carousel, product grid.</figcaption>
+</div>
+
+<p>Customers can:</p>
+<ul>
+  <li>Tap a category tab to filter to one group of products.</li>
+  <li>Use the search box to find an item by name.</li>
+  <li>Sort by "Most popular", "Price low to high" or "Newest".</li>
+  <li>Tap the heart icon to mark a favourite (persisted in local storage, no login required).</li>
+  <li>Tap a product card to open the full detail view with description, portions, and allergens.</li>
+</ul>
+
+<h2>Placing an order</h2>
+<p>The order flow is a classic three-step checkout: cart, details, confirmation.</p>
+
+<ol class="step-flow">
+  <li><strong>Add items to the cart.</strong> On the product detail view, tap <em>Add to cart</em>. Select a portion (Small, Medium, Large) if the product has portions defined. Adjust quantity using the plus and minus buttons.</li>
+  <li><strong>Open the cart.</strong> The sticky cart badge shows the live item count. Tap it to slide in the cart drawer. Review items, remove any that are no longer wanted, and see the subtotal, delivery fee and grand total.</li>
+  <li><strong>Proceed to checkout.</strong> Tap <em>Checkout</em> and fill in the form: full name, phone number, delivery address (optional, only for delivery orders), payment method, and any special instructions (for example "no sugar" or "ring the bell twice").</li>
+  <li><strong>Confirm.</strong> A summary page shows the final breakdown. Tap <em>Place order</em>. For online payment orders, the browser is redirected to the payment gateway at this point.</li>
+  <li><strong>Success.</strong> A confirmation page displays the order number and an estimated ready-time. The same information is sent by email and (if SMS is enabled) by text message.</li>
+</ol>
+
+<!-- SCREENSHOT: menu-checkout.png -->
+<div class="screenshot">
+  <img src="screenshots/menu-checkout.png" alt="Checkout form with customer details and payment choice" />
+  <figcaption>Figure 2. Checkout - name, phone, address, payment method, special instructions.</figcaption>
+</div>
+
+<div class="tip">
+  <strong>Good to know.</strong> Customers are not required to create an account. The platform deliberately keeps the friction low. If you would like repeat customers to log in for discounts or points, the loyalty module can be enabled from the Settings area.
+</div>
+
+<h2>Tracking an order</h2>
+<p>After placing an order the customer receives a tracking link by email (and optionally SMS). The link points to <code>/menu/siparis-takip?kod=XXXXXX</code> where <code>XXXXXX</code> is a short, non-guessable tracking code unique to the order. The tracking page shows a visual timeline:</p>
+
+<ol>
+  <li><strong>Received</strong> - the order has been accepted by the system.</li>
+  <li><strong>Preparing</strong> - the kitchen is working on it.</li>
+  <li><strong>Ready</strong> - the order is packaged and waiting for pickup or a courier.</li>
+  <li><strong>On the way</strong> - a courier is in transit to the delivery address (only for delivery orders).</li>
+  <li><strong>Delivered</strong> - the customer has received the order.</li>
+</ol>
+
+<!-- SCREENSHOT: menu-tracking.png -->
+<div class="screenshot">
+  <img src="screenshots/menu-tracking.png" alt="Order tracking page with a five-step timeline" />
+  <figcaption>Figure 3. Real-time order tracking.</figcaption>
+</div>
+
+<p>The tracking page polls the server every minute while the order is active, and displays an estimated ready-time based on historical preparation speed for similar orders.</p>
+
+<h2>QR menu for in-house dining</h2>
+<p>For guests sitting at a table, each table carries a unique printed QR code. Scanning it with any phone camera opens the menu automatically scoped to that table. The order is charged to the table tab and the kitchen and waiter see it immediately.</p>
+
+<!-- SCREENSHOT: menu-qr-scan.png -->
+<div class="screenshot">
+  <img src="screenshots/menu-qr-scan.png" alt="Phone scanning a table QR code and opening the scoped menu" />
+  <figcaption>Figure 4. Guest scans table QR; menu opens scoped to that table.</figcaption>
+</div>
+
+<p>The QR experience differs from the takeaway flow in a few important ways:</p>
+<ul>
+  <li><strong>No address required.</strong> Delivery is to the table.</li>
+  <li><strong>Payment is deferred.</strong> The default is "Pay on delivery" - the bill is settled with the waiter before the guest leaves.</li>
+  <li><strong>Session-bound cart.</strong> Multiple guests at the same table can add items to a shared session. The waiter sees the combined list.</li>
+  <li><strong>Auto-close.</strong> If no activity is detected for three hours, the session closes automatically to prevent a stale QR from being reused across dining groups.</li>
+</ul>
+
+<h2>Payment options</h2>
+<p>The checkout form shows one or more of the following, depending on what the site owner has enabled in <em>Settings &rarr; Payment</em>:</p>
+
+<table>
+  <tr><th>Option</th><th>How it works</th><th>Fee to customer</th></tr>
+  <tr><td>Cash on delivery</td><td>Customer pays the courier on arrival.</td><td>None</td></tr>
+  <tr><td>Card on delivery</td><td>Courier carries a portable card reader.</td><td>None</td></tr>
+  <tr><td>Online card payment</td><td>Redirects to a secure 3D Secure page at the payment gateway; customer is returned here with a confirmation token.</td><td>None (merchant pays the gateway fee)</td></tr>
+</table>
+
+<div class="note">
+  <strong>Security.</strong> No card data ever touches the application's server. The online payment flow uses a redirect-and-callback model, which means your business does not fall under stricter PCI scope.
+</div>
+
+<h2>Contacting the store</h2>
+<p>The public site also carries a contact form at <code>/iletisim.php</code> where customers can ask questions, give feedback or report issues. Submissions appear in the administrator's <em>Messages</em> inbox and can be replied to directly from there. The contact page also surfaces the store's phone number, address, opening hours and a WhatsApp-click-to-chat button (if WhatsApp is configured in the settings).</p>
+
+<h2>Accessibility</h2>
+<p>The public site aims to meet WCAG 2.1 AA. Specific measures include:</p>
+<ul>
+  <li>Keyboard navigation through every interactive element.</li>
+  <li>Visible focus rings on all buttons and links.</li>
+  <li>A skip-to-content link at the top of every page.</li>
+  <li>Text contrast ratios of at least 4.5:1 for body copy.</li>
+  <li>ARIA roles and labels on all dynamic regions (cart drawer, modals, toasts).</li>
+  <li>A dark mode switch that respects <code>prefers-color-scheme</code> and is persisted in local storage.</li>
+</ul>
+
+<!-- SCREENSHOT: menu-dark-mode.png -->
+<div class="screenshot">
+  <img src="screenshots/menu-dark-mode.png" alt="Menu rendered in dark mode showing adjusted palette and card contrast" />
+  <figcaption>Figure 5. Dark mode variant of the public menu.</figcaption>
+</div>
+
+<h2>Customer privacy</h2>
+<p>The platform collects only what is strictly required to fulfil the order: name, phone, address (for delivery orders), and an optional email for tracking. No third-party analytics are bundled by default. You can add Google Analytics, Plausible or any other tag from <em>Settings &rarr; General &rarr; Tracking snippets</em>. Customers are shown a cookie banner that lets them opt in or out; opting out disables non-essential cookies entirely.</p>
+
+<h2>Tips for store owners</h2>
+<ul>
+  <li>Upload high-quality square images (minimum 800 x 800) for every product. The menu conversion rate is directly correlated with image quality.</li>
+  <li>Keep category names short - three words or fewer.</li>
+  <li>Mark at least three items as "Featured" so the homepage carousel has content.</li>
+  <li>Respond to messages within one business day. The inbox has a badge that counts overdue items.</li>
+  <li>Print the QR table posters on weather-resistant laminate; the paper tends to age badly.</li>
+</ul>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

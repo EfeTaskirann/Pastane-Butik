@@ -27,27 +27,36 @@ class SiparisRepository extends BaseRepository
     protected array $fillable = [
         'tarih',
         'kategori',
-        'kisi_sayisi',
+        'adet',
         'puan',
         'birim_fiyat',
         'toplam_tutar',
         'odeme_tipi',
         'kanal',
-        'ad_soyad',
+        'musteri_adi',
         'telefon',
-        'ozel_istekler',
+        'adres',
         'notlar',
-        'durum',
+        'tamamlandi',
         'musteri_kaydedildi',
-        'arsivlendi'
+        'arsivlendi',
+        'takip_token',
     ];
+
+    /**
+     * Takip token regex — 32 karakter hexadecimal.
+     *
+     * `bin2hex(random_bytes(16))` tam olarak bu formati uretir.
+     * Validation public endpoint'lerde bypass denemelerine karsi zorunlu.
+     */
+    public const TAKIP_TOKEN_REGEX = '/^[a-f0-9]{32}$/';
 
     /**
      * @var array Sortable columns whitelist
      */
     protected array $sortableColumns = [
-        'id', 'tarih', 'durum', 'toplam_tutar', 'ad_soyad', 'telefon',
-        'kategori', 'kanal', 'odeme_tipi', 'created_at', 'updated_at',
+        'id', 'tarih', 'tamamlandi', 'toplam_tutar', 'musteri_adi', 'telefon',
+        'kategori', 'kanal', 'odeme_tipi', 'created_at',
     ];
 
     /**
@@ -65,7 +74,6 @@ class SiparisRepository extends BaseRepository
     {
         $sql = "SELECT * FROM {$this->table}
                 WHERE tarih = ?
-                AND durum != 'iptal'
                 AND (arsivlendi = 0 OR arsivlendi IS NULL)
                 ORDER BY created_at DESC";
 
@@ -84,13 +92,13 @@ class SiparisRepository extends BaseRepository
     public function getAllActive(?string $durum = null): array
     {
         $sql = "SELECT * FROM {$this->table}
-                WHERE (arsivlendi = 0 OR arsivlendi IS NULL)
-                AND durum != 'iptal'";
+                WHERE (arsivlendi = 0 OR arsivlendi IS NULL)";
         $params = [];
 
-        if ($durum) {
-            $sql .= " AND durum = ?";
-            $params[] = $durum;
+        if ($durum === 'tamamlandi') {
+            $sql .= " AND tamamlandi = 1";
+        } elseif ($durum === 'beklemede') {
+            $sql .= " AND tamamlandi = 0";
         }
 
         $sql .= " ORDER BY tarih DESC, created_at DESC";
@@ -110,10 +118,11 @@ class SiparisRepository extends BaseRepository
      */
     public function getCalendarData(string $baslangic, string $bitis): array
     {
-        $sql = "SELECT tarih, SUM(COALESCE(puan, 0) * COALESCE(kisi_sayisi, 1)) as toplam_puan
+        $sql = "SELECT tarih, SUM(COALESCE(puan, 0) * COALESCE(adet, 1)) as toplam_puan
                 FROM {$this->table}
                 WHERE tarih >= ? AND tarih <= ?
-                AND durum NOT IN ('teslim_edildi', 'iptal')
+                AND tamamlandi = 0
+                AND (arsivlendi = 0 OR arsivlendi IS NULL)
                 GROUP BY tarih";
 
         $stmt = $this->db->prepare($sql);
@@ -137,14 +146,13 @@ class SiparisRepository extends BaseRepository
      */
     public function getDayWorkload(string $tarih, bool $sadeceBekleyenler = true): int
     {
-        $sql = "SELECT SUM(COALESCE(puan, 0) * COALESCE(kisi_sayisi, 1)) as toplam
+        $sql = "SELECT SUM(COALESCE(puan, 0) * COALESCE(adet, 1)) as toplam
                 FROM {$this->table}
                 WHERE tarih = ?
-                AND durum != 'iptal'
                 AND (arsivlendi = 0 OR arsivlendi IS NULL)";
 
         if ($sadeceBekleyenler) {
-            $sql .= " AND durum != 'teslim_edildi'";
+            $sql .= " AND tamamlandi = 0";
         }
 
         $stmt = $this->db->prepare($sql);
@@ -155,22 +163,24 @@ class SiparisRepository extends BaseRepository
     }
 
     /**
-     * Sipariş durumunu güncelle
+     * Sipariş tamamlanma bayrağını güncelle
      *
-     * @param int $id
-     * @param string $durum
-     * @return bool
+     * NOT: `siparisler` tablosunda ENUM bazlı `durum` kolonu YOKTUR;
+     * yalnızca `tamamlandi` (TINYINT 0/1) vardır. Bu metot o bayrağı
+     * günceller. Çoklu durumlu (onaylandi/hazirlaniyor/teslim_edildi...)
+     * akış için {@see \Pastane\Repositories\MasaSiparisRepository::updateDurum()}
+     * kullanın.
+     *
+     * @param int  $id           Sipariş ID
+     * @param bool $tamamlandi   true → tamamlandı, false → bekliyor
+     * @return bool              UPDATE başarılıysa true
      */
-    public function updateStatus(int $id, string $durum): bool
+    public function updateStatus(int $id, bool $tamamlandi): bool
     {
-        if (!in_array($durum, self::VALID_STATUSES)) {
-            $durum = 'beklemede';
-        }
-
-        $sql = "UPDATE {$this->table} SET durum = ?, updated_at = NOW() WHERE id = ?";
+        $sql = "UPDATE {$this->table} SET tamamlandi = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([$durum, $id]);
+        return $stmt->execute([$tamamlandi ? 1 : 0, $id]);
     }
 
     /**
@@ -181,7 +191,7 @@ class SiparisRepository extends BaseRepository
      */
     public function archive(int $id): bool
     {
-        $sql = "UPDATE {$this->table} SET arsivlendi = 1, updated_at = NOW() WHERE id = ?";
+        $sql = "UPDATE {$this->table} SET arsivlendi = 1 WHERE id = ?";
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([$id]);
@@ -195,7 +205,7 @@ class SiparisRepository extends BaseRepository
      */
     public function markCustomerRecorded(int $id): bool
     {
-        $sql = "UPDATE {$this->table} SET musteri_kaydedildi = 1, updated_at = NOW() WHERE id = ?";
+        $sql = "UPDATE {$this->table} SET musteri_kaydedildi = 1 WHERE id = ?";
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([$id]);
@@ -213,10 +223,10 @@ class SiparisRepository extends BaseRepository
     {
         $sql = "SELECT * FROM {$this->table}
                 WHERE tarih >= ? AND tarih <= ?
-                AND durum != 'iptal'";
+                AND (arsivlendi = 0 OR arsivlendi IS NULL)";
 
         if ($sadeceTeslimEdilmis) {
-            $sql .= " AND durum = 'teslim_edildi'";
+            $sql .= " AND tamamlandi = 1";
         }
 
         $sql .= " ORDER BY tarih DESC, created_at DESC";
@@ -249,7 +259,7 @@ class SiparisRepository extends BaseRepository
         $sql = "SELECT kategori, COUNT(*) as adet, SUM(toplam_tutar) as toplam_tutar
                 FROM {$this->table}
                 WHERE tarih >= ? AND tarih <= ?
-                AND durum = 'teslim_edildi'
+                AND tamamlandi = 1
                 GROUP BY kategori
                 ORDER BY adet DESC";
 
@@ -319,5 +329,70 @@ class SiparisRepository extends BaseRepository
         $stmt->execute([$telefon, $limit]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Yeni sipariş oluştur.
+     *
+     * BaseRepository::create() metodunun üzerine yazar; `takip_token` alani
+     * explicit olarak set edilmemisse otomatik üretilir (`bin2hex(random_bytes(16))`).
+     * Token unique constraint'e carparsa (astronomik olasilikla) bir kez daha dener.
+     *
+     * @param array $data Sipariş verisi
+     * @return int|string Last insert ID
+     */
+    public function create(array $data): int|string
+    {
+        if (empty($data['takip_token'])) {
+            $data['takip_token'] = $this->generateTrackingToken();
+        }
+
+        try {
+            return parent::create($data);
+        } catch (\PDOException $e) {
+            // Unique index çakışması — kolon adımız `takip_token`
+            if (str_contains($e->getMessage(), 'takip_token') && (int)$e->getCode() === 23000) {
+                $data['takip_token'] = $this->generateTrackingToken();
+                return parent::create($data);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Kriptografik olarak güvenli takip tokeni üret.
+     *
+     * 16 byte random → 32 karakter hex. Enumeration, brute-force ve çakışma
+     * riskini ihmal edilebilir kilar (2^128 alan).
+     *
+     * @return string 32 karakter hexadecimal
+     */
+    public function generateTrackingToken(): string
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Takip tokeni ile sipariş getir.
+     *
+     * Token format validasyonu (32 hex karakter) basarisiz olursa
+     * sorgu çalistirilmadan null doner (zaman saldırısı fail-safe).
+     * Prepared statement ile SQL injection korumasi.
+     *
+     * @param string $token 32 karakter hex takip tokeni
+     * @return array|null Sipariş kaydi veya null
+     */
+    public function findByToken(string $token): ?array
+    {
+        if (!preg_match(self::TAKIP_TOKEN_REGEX, $token)) {
+            return null;
+        }
+
+        $sql = "SELECT * FROM {$this->table} WHERE takip_token = ? LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$token]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ?: null;
     }
 }

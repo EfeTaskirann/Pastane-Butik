@@ -90,12 +90,13 @@ function logout() {
 
 // Şifre değiştir
 function changePassword($userId, $newPassword) {
-    // Şifre gücü kontrolü
-    if (strlen($newPassword) < 8) {
-        return ['success' => false, 'error' => 'Şifre en az 8 karakter olmalıdır.'];
+    // Şifre gücü kontrolü — min 12 karakter
+    if (strlen($newPassword) < 12) {
+        return ['success' => false, 'error' => 'Şifre en az 12 karakter olmalıdır.'];
     }
 
-    $hash = password_hash($newPassword, PASSWORD_DEFAULT, ['cost' => 12]);
+    // Bcrypt cost 12: 2026 standartlarında ~250ms hash süresi, brute-force direncini maksimize eder.
+    $hash = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
     db()->update('admin_kullanicilar', ['sifre_hash' => $hash], 'id = :id', ['id' => $userId]);
 
     return ['success' => true];

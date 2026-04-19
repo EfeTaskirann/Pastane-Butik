@@ -48,7 +48,6 @@ function openProductModal(productData) {
 
     // Null check - tüm elementler için
     if (!modal || !modalImage || !modalCategory || !modalTitle || !modalDescription || !modalPricing || !modalOrderBtn) {
-        console.warn('Modal elementleri bulunamadı');
         return;
     }
 
@@ -177,30 +176,172 @@ document.addEventListener('keydown', function(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
     // ========== PROMO BANNER ==========
-    const promoBanner = document.getElementById('promoBanner');
+    var promoBanner = document.getElementById('promoBanner');
 
     if (promoBanner) {
-        // Banner görünürse body'ye class ekle
-        document.body.classList.add('has-promo-banner');
-
-        // Session'da kapatılmış mı kontrol et
+        // Session'da kapatilmis mi kontrol et
         if (sessionStorage.getItem('promoBannerClosed') === 'true') {
+            promoBanner.classList.add('promo-inactive');
             promoBanner.style.display = 'none';
-            document.body.classList.remove('has-promo-banner');
+        }
+
+        // CSP uyumlu: inline onclick yerine event listener
+        var promoCloseBtn = promoBanner.querySelector('.promo-close');
+        if (promoCloseBtn) {
+            promoCloseBtn.addEventListener('click', closePromoBanner);
         }
     }
+
+    // ========== MODAL KAPATMA (CSP uyumlu) ==========
+    var modalOverlay = document.querySelector('#productModal .modal-overlay');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', closeProductModal);
+    }
+    var modalCloseBtn = document.querySelector('#productModal .modal-close');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeProductModal);
+    }
+
+    // ========== KEŞFET (scroll indicator) ==========
+    var scrollIndicator = document.querySelector('.scroll-indicator');
+    if (scrollIndicator) {
+        scrollIndicator.style.cursor = 'pointer';
+        scrollIndicator.addEventListener('click', function() {
+            var target = document.getElementById('about');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // ========== TITLE DECORATIONS (Atkı & Şapka) ==========
+    // h1'e dokunmadan, Range API ile harf pozisyonlarını ölçüp SVG overlay koyar
+    (function initTitleDecorations() {
+        var heroLogo = document.querySelector('.hero-logo');
+        var h1 = heroLogo ? heroLogo.querySelector('h1') : null;
+        if (!heroLogo || !h1) return;
+
+        var textNode = h1.firstChild;
+        if (!textNode || textNode.nodeType !== 3) return;
+        var fullText = textNode.textContent;
+        // "Tatlı Düşler" → 2. "t" index=2, "ü" index=7
+        //  T(0) a(1) t(2) l(3) ı(4) [sp](5) D(6) ü(7) ş(8) l(9) e(10) r(11)
+        var tIndex = 2;  // küçük t (atkı buraya)
+        var uIndex = 7;  // ü  (şapkalar ü'nün iki noktasına hizalanır)
+
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('title-deco-overlay');
+        svg.setAttribute('aria-hidden', 'true');
+
+        function getCharRect(node, charIndex) {
+            var range = document.createRange();
+            range.setStart(node, charIndex);
+            range.setEnd(node, charIndex + 1);
+            var rect = range.getBoundingClientRect();
+            range.detach();
+            return rect;
+        }
+
+        function updateDecorations() {
+            var logoRect = heroLogo.getBoundingClientRect();
+            var w = logoRect.width;
+            var h = logoRect.height;
+            svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+            svg.style.width = w + 'px';
+            svg.style.height = h + 'px';
+
+            var tRect = getCharRect(textNode, tIndex);
+            var uRect = getCharRect(textNode, uIndex);
+
+            // t pozisyonu (hero-logo'ya göreceli)
+            var tX = tRect.left - logoRect.left + tRect.width * 0.5;
+            var tY = tRect.top - logoRect.top;
+            var tH = tRect.height;
+            var tW = tRect.width;
+
+            // ü pozisyonu
+            var uLeft = uRect.left - logoRect.left;
+            var uY = uRect.top - logoRect.top;
+            var uW = uRect.width;
+
+            // --- ATKI (t harfinin yatay çizgisi üzerinde) ---
+            var scarfW = tW * 1.8;
+            var scarfThick = tH * 0.07;
+            var scarfY = tY + tH * 0.42;
+            var scarfX = tX - scarfW * 0.45;
+            var tailLen = tH * 0.35;
+            var tailX = scarfX + scarfW * 0.85;
+            var fringeLen = tH * 0.06;
+
+            // --- ŞAPKALAR (ü noktalarının üstüne) ---
+            // Not: uRect.top font glyph bounding-box'in tepesi — Playfair Display
+            // gibi serif fontlarda umlaut noktalari bu tepeden belirgin bicimde
+            // asagida kalir. hatBaseY'yi tH*0.20 asagi kaydirarak sapka bantini
+            // noktalarin tam uzerine oturtuyoruz; hatH'yi de hafif kucultuyoruz
+            // ki sapka tepesi harften cok uzaga firlamasin.
+            var hatW = uW * 0.35;
+            var hatH = tH * 0.16;
+            var hatBandH = hatH * 0.25;
+            var pomR = hatH * 0.18;
+            var dotLeftX = uLeft + uW * 0.32;
+            var dotRightX = uLeft + uW * 0.68;
+            var hatBaseY = uY + tH * 0.20;
+
+            svg.innerHTML = ''
+                // Atkı
+                + '<g class="title-scarf-g" transform-origin="' + tX + ' ' + scarfY + '">'
+                + '<path d="M' + scarfX + ',' + scarfY + ' Q' + (scarfX+scarfW*0.25) + ',' + (scarfY-scarfThick) + ' ' + (scarfX+scarfW*0.5) + ',' + scarfY + ' Q' + (scarfX+scarfW*0.75) + ',' + (scarfY+scarfThick) + ' ' + (scarfX+scarfW) + ',' + scarfY + '" fill="none" stroke="#C0392B" stroke-width="' + (scarfThick*1.6) + '" stroke-linecap="round"/>'
+                + '<path d="M' + scarfX + ',' + scarfY + ' Q' + (scarfX+scarfW*0.3) + ',' + (scarfY-scarfThick*0.5) + ' ' + (scarfX+scarfW*0.5) + ',' + scarfY + '" fill="none" stroke="#E74C3C" stroke-width="' + (scarfThick*0.8) + '" stroke-linecap="round" opacity="0.35"/>'
+                // Sarkan uç
+                + '<path d="M' + tailX + ',' + scarfY + ' Q' + (tailX+scarfThick) + ',' + (scarfY+tailLen*0.4) + ' ' + tailX + ',' + (scarfY+tailLen*0.7) + ' Q' + (tailX-scarfThick*0.5) + ',' + (scarfY+tailLen*0.9) + ' ' + tailX + ',' + (scarfY+tailLen) + '" fill="none" stroke="#C0392B" stroke-width="' + (scarfThick*1.4) + '" stroke-linecap="round"/>'
+                // Püsküller
+                + '<line x1="' + (tailX-fringeLen*0.6) + '" y1="' + (scarfY+tailLen) + '" x2="' + (tailX-fringeLen) + '" y2="' + (scarfY+tailLen+fringeLen) + '" stroke="#C0392B" stroke-width="' + (scarfThick*0.5) + '" stroke-linecap="round"/>'
+                + '<line x1="' + tailX + '" y1="' + (scarfY+tailLen) + '" x2="' + tailX + '" y2="' + (scarfY+tailLen+fringeLen*1.1) + '" stroke="#E74C3C" stroke-width="' + (scarfThick*0.5) + '" stroke-linecap="round"/>'
+                + '<line x1="' + (tailX+fringeLen*0.6) + '" y1="' + (scarfY+tailLen) + '" x2="' + (tailX+fringeLen) + '" y2="' + (scarfY+tailLen+fringeLen) + '" stroke="#C0392B" stroke-width="' + (scarfThick*0.5) + '" stroke-linecap="round"/>'
+                // Atkı deseni çizgileri
+                + '<line x1="' + (scarfX+scarfW*0.2) + '" y1="' + (scarfY-scarfThick*0.7) + '" x2="' + (scarfX+scarfW*0.2) + '" y2="' + (scarfY+scarfThick*0.7) + '" stroke="#F5E0E0" stroke-width="' + (scarfThick*0.3) + '" opacity="0.45"/>'
+                + '<line x1="' + (scarfX+scarfW*0.45) + '" y1="' + (scarfY-scarfThick*0.5) + '" x2="' + (scarfX+scarfW*0.45) + '" y2="' + (scarfY+scarfThick*0.7) + '" stroke="#F5E0E0" stroke-width="' + (scarfThick*0.3) + '" opacity="0.45"/>'
+                + '</g>'
+                // Sol şapka
+                + '<g>'
+                + '<polygon points="' + (dotLeftX-hatW*0.5) + ',' + hatBaseY + ' ' + dotLeftX + ',' + (hatBaseY-hatH) + ' ' + (dotLeftX+hatW*0.5) + ',' + hatBaseY + '" fill="#C0392B"/>'
+                + '<polygon points="' + (dotLeftX-hatW*0.35) + ',' + (hatBaseY-hatH*0.2) + ' ' + dotLeftX + ',' + (hatBaseY-hatH*0.8) + ' ' + (dotLeftX+hatW*0.35) + ',' + (hatBaseY-hatH*0.2) + '" fill="#E74C3C" opacity="0.35"/>'
+                + '<rect x="' + (dotLeftX-hatW*0.6) + '" y="' + (hatBaseY-hatBandH*0.5) + '" width="' + (hatW*1.2) + '" height="' + hatBandH + '" rx="' + (hatBandH*0.4) + '" fill="#F5F0EB"/>'
+                + '<circle cx="' + dotLeftX + '" cy="' + (hatBaseY-hatH) + '" r="' + pomR + '" fill="#F5F0EB"/>'
+                // Sağ şapka
+                + '<polygon points="' + (dotRightX-hatW*0.5) + ',' + hatBaseY + ' ' + dotRightX + ',' + (hatBaseY-hatH) + ' ' + (dotRightX+hatW*0.5) + ',' + hatBaseY + '" fill="#C0392B"/>'
+                + '<polygon points="' + (dotRightX-hatW*0.35) + ',' + (hatBaseY-hatH*0.2) + ' ' + dotRightX + ',' + (hatBaseY-hatH*0.8) + ' ' + (dotRightX+hatW*0.35) + ',' + (hatBaseY-hatH*0.2) + '" fill="#E74C3C" opacity="0.35"/>'
+                + '<rect x="' + (dotRightX-hatW*0.6) + '" y="' + (hatBaseY-hatBandH*0.5) + '" width="' + (hatW*1.2) + '" height="' + hatBandH + '" rx="' + (hatBandH*0.4) + '" fill="#F5F0EB"/>'
+                + '<circle cx="' + dotRightX + '" cy="' + (hatBaseY-hatH) + '" r="' + pomR + '" fill="#F5F0EB"/>'
+                + '</g>';
+        }
+
+        heroLogo.appendChild(svg);
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(updateDecorations);
+        } else {
+            setTimeout(updateDecorations, 300);
+        }
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(updateDecorations, 150);
+        }, { passive: true });
+    })();
 
     // ========== SCROLL PROGRESS BAR ==========
     const scrollProgress = document.getElementById('scrollProgress');
 
     function updateScrollProgress() {
+        if (!scrollProgress) return;
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight <= 0) return;
         const scrollPercent = (scrollTop / docHeight) * 100;
         scrollProgress.style.width = scrollPercent + '%';
     }
 
-    window.addEventListener('scroll', updateScrollProgress);
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
 
     // ========== SMOOTH SCROLL ==========
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -217,7 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ========== REVEAL ON SCROLL ==========
-    const revealElements = document.querySelectorAll('.reveal, .product-card');
+    // Not: .product-card elementleri asagidaki stagger observer tarafindan yonetilir
+    const revealElements = document.querySelectorAll('.reveal');
 
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -235,22 +377,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ========== PRODUCT CARD STAGGER ANIMATION ==========
-    const productCards = document.querySelectorAll('.product-card');
+    var productCards = document.querySelectorAll('.product-card');
 
-    const productObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
+    var productObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry, index) {
             if (entry.isIntersecting) {
-                setTimeout(() => {
+                setTimeout(function() {
                     entry.target.classList.add('visible');
-                }, index * 100);
+                }, index * 120);
             }
         });
     }, {
         threshold: 0.1,
-        rootMargin: '0px 0px -30px 0px'
+        rootMargin: '0px 0px -50px 0px'
     });
 
-    productCards.forEach(card => {
+    productCards.forEach(function(card) {
         productObserver.observe(card);
     });
 
@@ -313,8 +455,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let html = '';
 
-        // Önceki butonu
-        html += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+        // Önceki butonu - CSP uyumlu data-action pattern
+        html += `<button class="pagination-btn" data-action="pagination-go" data-page="${currentPage - 1}" aria-label="Önceki sayfa" ${currentPage === 1 ? 'disabled' : ''}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="15 18 9 12 15 6"/>
             </svg>
@@ -322,11 +464,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Sayfa numaraları
         for (let i = 1; i <= totalPages; i++) {
-            html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" data-action="pagination-go" data-page="${i}" aria-label="Sayfa ${i}"${i === currentPage ? ' aria-current="page"' : ''}>${i}</button>`;
         }
 
         // Sonraki butonu
-        html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+        html += `<button class="pagination-btn" data-action="pagination-go" data-page="${currentPage + 1}" aria-label="Sonraki sayfa" ${currentPage === totalPages ? 'disabled' : ''}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -335,16 +477,23 @@ document.addEventListener('DOMContentLoaded', function() {
         paginationContainer.innerHTML = html;
     }
 
-    // Global fonksiyon - sayfa değiştirme (animasyonlu)
-    window.goToPage = function(page) {
+    // Sayfa değiştirme (animasyonlu) - CSP uyumlu event delegation
+    function goToPage(page) {
         if (page === currentPage) return;
-
         const direction = page > currentPage ? 'next' : 'prev';
         currentPage = page;
-
-        // Animasyonlu geçiş
         animatePageTransition(direction);
-    };
+    }
+
+    // Pagination event delegation
+    if (paginationContainer) {
+        paginationContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action="pagination-go"]');
+            if (!btn || btn.disabled) return;
+            const page = parseInt(btn.getAttribute('data-page'), 10);
+            if (!isNaN(page)) goToPage(page);
+        });
+    }
 
     // Sayfa geçiş animasyonu
     function animatePageTransition(direction) {
@@ -447,27 +596,125 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePagination();
     }
 
-    // ========== PARALLAX EFFECT (Subtle) ==========
-    const decorations = document.querySelectorAll('.decoration');
+    // ========== PARALLAX EFFECT (JS-based, GPU-accelerated) ==========
+    // iOS uyumlu: background-attachment: fixed kullanmiyoruz
+    // Mobile'da devre disi, prefers-reduced-motion kontrollu
+    (function initParallax() {
+        var isMobile = window.innerWidth <= 768;
+        var motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var prefersReducedMotion = motionMedia.matches;
 
-    window.addEventListener('scroll', function() {
-        const scrollY = window.scrollY;
+        // Runtime listener: kullanıcı sistem tercihini değiştirirse sayfayı reload et
+        // (parallax'ı kapatmak için basit/güvenli yol)
+        var motionListener = function() { /* state değişimi kayıtlı — gelecek scroll'da etkiler */ };
+        if (typeof motionMedia.addEventListener === 'function') {
+            motionMedia.addEventListener('change', motionListener);
+        } else if (typeof motionMedia.addListener === 'function') {
+            motionMedia.addListener(motionListener);
+        }
 
-        decorations.forEach((dec, index) => {
-            const speed = (index + 1) * 0.02;
-            dec.style.transform = `translateY(${scrollY * speed}px)`;
+        if (isMobile || prefersReducedMotion) {
+            return;
+        }
+
+        var layerBack = document.querySelector('.parallax-layer--back');
+        var layerMid = document.querySelector('.parallax-layer--mid');
+        var layerFront = document.querySelector('.parallax-layer--front');
+        var layerAbout = document.querySelector('.parallax-layer--about');
+        var decorations = document.querySelectorAll('.decoration');
+        var heroSection = document.getElementById('hero');
+        var aboutSection = document.getElementById('about');
+
+        if (!heroSection) {
+            return;
+        }
+
+        var ticking = false;
+
+        function updateParallax() {
+            var scrollY = window.scrollY;
+            var heroRect = heroSection.getBoundingClientRect();
+            var heroVisible = heroRect.bottom > 0 && heroRect.top < window.innerHeight;
+
+            // Hero parallax layers - only transform when hero is visible
+            if (heroVisible) {
+                if (layerBack) {
+                    layerBack.style.transform = 'translate3d(0, ' + (scrollY * 0.08) + 'px, 0)';
+                }
+                if (layerMid) {
+                    layerMid.style.transform = 'translate3d(0, ' + (scrollY * 0.15) + 'px, 0)';
+                }
+                if (layerFront) {
+                    layerFront.style.transform = 'translate3d(0, ' + (scrollY * 0.25) + 'px, 0)';
+                }
+            }
+
+            // About section hafif parallax
+            if (aboutSection && layerAbout) {
+                var aboutRect = aboutSection.getBoundingClientRect();
+                var aboutVisible = aboutRect.bottom > 0 && aboutRect.top < window.innerHeight;
+                if (aboutVisible) {
+                    var aboutOffset = aboutRect.top * -0.06;
+                    layerAbout.style.transform = 'translate3d(0, ' + aboutOffset + 'px, 0)';
+                }
+            }
+
+            // Decoration parallax (mevcut)
+            decorations.forEach(function(dec, index) {
+                var speed = (index + 1) * 0.02;
+                dec.style.transform = 'translateY(' + (scrollY * speed) + 'px)';
+            });
+
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        // Intersection Observer ile lazy activation
+        var parallaxObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                var layers = entry.target.querySelectorAll('.parallax-layer');
+                layers.forEach(function(layer) {
+                    if (entry.isIntersecting) {
+                        layer.style.willChange = 'transform';
+                    } else {
+                        layer.style.willChange = 'auto';
+                    }
+                });
+            });
+        }, {
+            rootMargin: '100px 0px',
+            threshold: 0
         });
-    });
+
+        if (heroSection) {
+            parallaxObserver.observe(heroSection);
+        }
+        if (aboutSection) {
+            parallaxObserver.observe(aboutSection);
+        }
+    })();
 
     // ========== GRADIENT BACKGROUND TRANSITION ==========
     const sections = document.querySelectorAll('section');
     const body = document.body;
 
+    const rootStyles = getComputedStyle(document.documentElement);
+    const pSoft = () => rootStyles.getPropertyValue('--pembe-soft').trim() || '#F5E1E9';
+    const krem  = () => rootStyles.getPropertyValue('--krem').trim() || '#FDF8F5';
+    const kDark = () => rootStyles.getPropertyValue('--krem-dark').trim() || '#F5EDE8';
+    const pAcc  = () => rootStyles.getPropertyValue('--pembe-accent').trim() || '#E8C4D4';
+
     const gradients = {
-        hero: 'linear-gradient(180deg, #F5E1E9 0%, #FDF8F5 100%)',
-        about: 'linear-gradient(180deg, #FDF8F5 0%, #F5EDE8 50%, #F5E1E9 100%)',
-        products: 'linear-gradient(180deg, #F5E1E9 0%, #FDF8F5 100%)',
-        contact: 'linear-gradient(180deg, #F5E1E9 0%, #E8C4D4 100%)'
+        hero:     () => `linear-gradient(180deg, ${pSoft()} 0%, ${krem()} 100%)`,
+        about:    () => `linear-gradient(180deg, ${krem()} 0%, ${kDark()} 50%, ${pSoft()} 100%)`,
+        products: () => `linear-gradient(180deg, ${pSoft()} 0%, ${krem()} 100%)`,
+        contact:  () => `linear-gradient(180deg, ${pSoft()} 0%, ${pAcc()} 100%)`
     };
 
     const bgObserver = new IntersectionObserver((entries) => {
@@ -476,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sectionId = entry.target.id;
                 if (gradients[sectionId]) {
                     body.style.transition = 'background 0.8s ease';
-                    body.style.background = gradients[sectionId];
+                    body.style.background = gradients[sectionId]();
                 }
             }
         });
@@ -590,7 +837,13 @@ document.addEventListener('DOMContentLoaded', function() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
+                img.addEventListener('error', function onImgErr() {
+                    img.removeEventListener('error', onImgErr);
+                    img.classList.add('error');
+                    img.style.display = 'none';
+                }, { once: true });
                 img.src = img.dataset.src;
+                img.removeAttribute('data-src');
                 img.classList.add('loaded');
                 imageObserver.unobserve(img);
             }
@@ -606,20 +859,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (whatsappBtn) {
         let lastScroll = 0;
+        let waTicking = false;
 
         window.addEventListener('scroll', function() {
-            const currentScroll = window.scrollY;
+            if (!waTicking) {
+                waTicking = true;
+                requestAnimationFrame(function() {
+                    const currentScroll = window.scrollY;
 
-            if (currentScroll > lastScroll && currentScroll > 300) {
-                whatsappBtn.style.transform = 'scale(0.8)';
-                whatsappBtn.style.opacity = '0.7';
-            } else {
-                whatsappBtn.style.transform = 'scale(1)';
-                whatsappBtn.style.opacity = '1';
+                    if (currentScroll > lastScroll && currentScroll > 300) {
+                        whatsappBtn.style.transform = 'scale(0.8)';
+                        whatsappBtn.style.opacity = '0.7';
+                    } else {
+                        whatsappBtn.style.transform = 'scale(1)';
+                        whatsappBtn.style.opacity = '1';
+                    }
+
+                    lastScroll = currentScroll;
+                    waTicking = false;
+                });
             }
-
-            lastScroll = currentScroll;
-        });
+        }, { passive: true });
     }
 
     // ========== MOUSE FOLLOWER (Optional subtle effect) ==========

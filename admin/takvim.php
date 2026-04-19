@@ -75,7 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } catch (Exception $e) {
             setFlash('error', 'Durum güncellenirken hata oluştu: ' . $e->getMessage());
         }
-        header('Location: takvim.php?tarih=' . ($_POST['tarih'] ?? date('Y-m-d')));
+        $redirectTarih = $_POST['tarih'] ?? date('Y-m-d');
+        // Tarih format dogrulama (YYYY-MM-DD) — header injection ve open redirect onlemi
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $redirectTarih)) {
+            $redirectTarih = date('Y-m-d');
+        }
+        header('Location: takvim.php?tarih=' . urlencode($redirectTarih));
         exit;
     }
 }
@@ -771,7 +776,7 @@ $kategoriLabels = [
 }
 </style>
 
-<h2 style="margin-bottom: 1.5rem;">Takvim & Sipariş Yönetimi</h2>
+<h2 class="u-mb-5">Takvim & Sipariş Yönetimi</h2>
 
 <div class="takvim-container">
     <!-- Takvim -->
@@ -851,24 +856,26 @@ $kategoriLabels = [
     <!-- Sağ Panel -->
     <div>
         <!-- Seçili Gün Bilgisi -->
-        <div class="sidebar-panel" style="margin-bottom: 1rem;">
+        <div class="sidebar-panel u-mb-4">
             <div class="panel-header">
                 <h3><?= date('d', strtotime($seciliTarih)) ?> <?= $ayIsimleri[(int)date('n', strtotime($seciliTarih))] ?> <?= date('Y', strtotime($seciliTarih)) ?></h3>
                 <span class="yogunluk-badge <?= $yogunluk['class'] ?>"><?= $yogunluk['durum'] ?></span>
             </div>
             <div class="panel-body">
-                <div style="text-align: center; margin-bottom: 1rem;">
-                    <div style="font-size: 2rem; font-weight: 600; color: <?= $yogunluk['renk'] ?>;"><?= $gunToplamPuan ?></div>
-                    <small style="color: var(--admin-text-light);">/ 100 puan</small>
+                <div class="u-tr-header-center">
+                    <?php /* Dinamik renk — PHP uretimi, CSS custom property ile */ ?>
+                    <div class="u-text-2xl u-font-semibold" style="--u-renk: <?= e($yogunluk['renk']) ?>; color: var(--u-renk);"><?= $gunToplamPuan ?></div>
+                    <small class="u-text-admin-light">/ 100 puan</small>
                 </div>
                 <div class="puan-bar">
-                    <div class="puan-bar-fill" style="width: <?= min($gunToplamPuan, 100) ?>%; background: <?= $yogunluk['renk'] ?>;"></div>
+                    <?php /* Dinamik genislik + renk — style ile CSS custom property atar */ ?>
+                    <div class="puan-bar-fill u-progress-fill--colored" style="--u-progress: <?= (int)min($gunToplamPuan, 100) ?>%; --u-progress-color: <?= e($yogunluk['renk']) ?>;"></div>
                 </div>
             </div>
         </div>
 
         <!-- Sipariş Ekle -->
-        <div class="sidebar-panel" style="margin-bottom: 1rem;">
+        <div class="sidebar-panel u-mb-4">
             <div class="panel-header">
                 <h3>Sipariş Ekle</h3>
             </div>
@@ -904,7 +911,7 @@ $kategoriLabels = [
                         <div class="form-group">
                             <label>Birim Fiyat (₺)</label>
                             <input type="number" name="birim_fiyat" id="birimFiyat" step="0.01" min="0" placeholder="0.00">
-                            <small style="color: var(--admin-text-light);">Özel sipariş için manuel girin</small>
+                            <small class="u-text-admin-light">Özel sipariş için manuel girin</small>
                         </div>
                         <div class="form-group">
                             <label>Ödeme Tipi</label>
@@ -932,7 +939,7 @@ $kategoriLabels = [
                     <div class="form-group">
                         <label>Telefon Numarası</label>
                         <input type="tel" name="telefon" placeholder="05XX XXX XX XX" pattern="[0-9]{10,11}">
-                        <small style="color: var(--admin-text-light);">Sadakat programı için gerekli</small>
+                        <small class="u-text-admin-light">Sadakat programı için gerekli</small>
                     </div>
 
                     <div class="form-group">
@@ -945,7 +952,7 @@ $kategoriLabels = [
                         <textarea name="notlar" rows="2" placeholder="Sipariş notları..."></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Sipariş Ekle</button>
+                    <button type="submit" class="btn btn-primary u-w-100">Sipariş Ekle</button>
                 </form>
             </div>
         </div>
@@ -957,11 +964,11 @@ $kategoriLabels = [
             </div>
             <div class="panel-body">
                 <?php if (empty($gunSiparisleri)): ?>
-                    <p style="text-align: center; color: var(--admin-text-light);">Bu tarihte sipariş yok.</p>
+                    <p class="u-text-center u-text-admin-light">Bu tarihte sipariş yok.</p>
                 <?php else: ?>
                     <div class="siparis-listesi">
                         <?php foreach ($gunSiparisleri as $index => $siparis):
-                            $teslimEdildi = ($siparis['durum'] ?? '') === 'teslim_edildi';
+                            $teslimEdildi = (bool)($siparis['tamamlandi'] ?? false);
                             $durumClass = $teslimEdildi ? 'tamamlandi' : '';
                             $durumLabels = [
                                 'beklemede' => 'Beklemede',
@@ -971,30 +978,30 @@ $kategoriLabels = [
                                 'iptal' => 'İptal'
                             ];
                         ?>
-                            <div class="siparis-item <?= $durumClass ?>" onclick="openSiparisModal(<?= $index ?>)">
+                            <div class="siparis-item <?= $durumClass ?>" data-action="open-siparis-modal" data-index="<?= $index ?>" role="button" tabindex="0">
                                 <div class="siparis-info">
                                     <strong>
-                                        <?= $kategoriLabels[$siparis['kategori']] ?? $siparis['kategori'] ?> x<?= $siparis['kisi_sayisi'] ?? 1 ?>
-                                        <?php if ($siparis['durum'] && $siparis['durum'] !== 'beklemede'): ?>
-                                            <span class="siparis-durum-badge <?= $teslimEdildi ? 'tamamlandi' : 'devam' ?>"><?= $durumLabels[$siparis['durum']] ?? $siparis['durum'] ?></span>
+                                        <?= $kategoriLabels[$siparis['kategori']] ?? $siparis['kategori'] ?> x<?= $siparis['adet'] ?? 1 ?>
+                                        <?php if ($teslimEdildi): ?>
+                                            <span class="siparis-durum-badge tamamlandi">Teslim Edildi</span>
                                         <?php endif; ?>
                                     </strong>
-                                    <?php if ($siparis['ad_soyad']): ?>
-                                        <small><?= e($siparis['ad_soyad']) ?></small>
+                                    <?php if ($siparis['musteri_adi'] ?? ''): ?>
+                                        <small><?= e($siparis['musteri_adi']) ?></small>
                                     <?php endif; ?>
-                                    <?php if ($siparis['notlar'] || ($siparis['ozel_istekler'] ?? '')): ?>
+                                    <?php if ($siparis['notlar'] || ($siparis['adres'] ?? '')): ?>
                                         <div class="siparis-ozet">
                                             <?= $siparis['notlar'] ? mb_substr(e($siparis['notlar']), 0, 30) . (mb_strlen($siparis['notlar']) > 30 ? '...' : '') : '' ?>
-                                            <?= ($siparis['ozel_istekler'] ?? '') ? '📍' : '' ?>
+                                            <?= ($siparis['adres'] ?? '') ? '📍' : '' ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <span class="siparis-puan"><?= ($siparis['puan'] ?? 0) * ($siparis['kisi_sayisi'] ?? 1) ?> p</span>
-                                <form method="POST" style="display: inline;" onclick="event.stopPropagation();">
+                                <span class="siparis-puan"><?= ($siparis['puan'] ?? 0) * ($siparis['adet'] ?? 1) ?> p</span>
+                                <form method="POST" class="siparis-sil-form u-d-inline" data-action="stop-propagation">
                                     <?= csrfTokenField() ?>
                                     <input type="hidden" name="action" value="sil">
                                     <input type="hidden" name="id" value="<?= $siparis['id'] ?>">
-                                    <button type="submit" class="btn-sil" onclick="return confirm('Siparişi silmek istediğinize emin misiniz?')">
+                                    <button type="submit" class="btn-sil" data-action="confirm-siparis-sil">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="3 6 5 6 21 6"/>
                                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -1015,7 +1022,7 @@ $kategoriLabels = [
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitle">Sipariş Detayı</h3>
-            <button class="modal-close" onclick="closeSiparisModal()">
+            <button type="button" class="modal-close" data-action="close-siparis-modal" aria-label="Kapat">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1033,7 +1040,7 @@ $kategoriLabels = [
                         </svg>
                         Devam Ediyor
                     </span>
-                    <span class="modal-durum-badge tamamlandi" id="modalDurumTamamlandi" style="display: none;">
+                    <span class="modal-durum-badge tamamlandi u-hidden" id="modalDurumTamamlandi">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
@@ -1054,14 +1061,14 @@ $kategoriLabels = [
                 <div class="modal-detail-label">Puan</div>
                 <div class="modal-detail-value">
                     <span class="modal-puan-badge" id="modalPuan"></span>
-                    <small id="modalPuanNot" style="display: none; margin-left: 0.5rem; color: #4caf50;">(Sayılmıyor)</small>
+                    <small id="modalPuanNot" class="u-badge-link-success">(Sayılmıyor)</small>
                 </div>
             </div>
             <div class="modal-detail-row" id="modalFiyatRow">
                 <div class="modal-detail-label">Tutar</div>
                 <div class="modal-detail-value">
-                    <span id="modalBirimFiyat" style="color: #666;"></span>
-                    <strong id="modalToplamTutar" style="font-size: 1.1rem; color: var(--admin-primary); margin-left: 0.5rem;"></strong>
+                    <span id="modalBirimFiyat" class="u-text-soft"></span>
+                    <strong id="modalToplamTutar" class="u-edit-icon"></strong>
                 </div>
             </div>
             <div class="modal-detail-row" id="modalOdemeRow">
@@ -1072,31 +1079,31 @@ $kategoriLabels = [
                 <div class="modal-detail-label">Kanal</div>
                 <div class="modal-detail-value" id="modalKanal"></div>
             </div>
-            <div class="modal-detail-row" id="modalMusteriRow" style="display: none;">
+            <div class="modal-detail-row u-hidden" id="modalMusteriRow">
                 <div class="modal-detail-label">Müşteri</div>
                 <div class="modal-detail-value" id="modalMusteri"></div>
             </div>
-            <div class="modal-detail-row" id="modalTelefonRow" style="display: none;">
+            <div class="modal-detail-row u-hidden" id="modalTelefonRow">
                 <div class="modal-detail-label">Telefon</div>
                 <div class="modal-detail-value" id="modalTelefon"></div>
             </div>
-            <div class="modal-detail-row" id="modalAdresRow" style="display: none;">
+            <div class="modal-detail-row u-hidden" id="modalAdresRow">
                 <div class="modal-detail-label">Adres</div>
                 <div class="modal-detail-value notlar" id="modalAdres"></div>
             </div>
-            <div class="modal-detail-row" id="modalNotlarRow" style="display: none;">
+            <div class="modal-detail-row u-hidden" id="modalNotlarRow">
                 <div class="modal-detail-label">Notlar</div>
                 <div class="modal-detail-value notlar" id="modalNotlar"></div>
             </div>
         </div>
         <div class="modal-footer">
-            <form method="POST" id="modalDurumForm" style="display: inline;">
+            <form method="POST" id="modalDurumForm" class="u-d-inline">
                 <?= csrfTokenField() ?>
                 <input type="hidden" name="action" value="durum_degistir">
                 <input type="hidden" name="id" id="modalSiparisId">
                 <input type="hidden" name="durum" id="modalDurumValue">
                 <input type="hidden" name="tarih" value="<?= $seciliTarih ?>">
-                <select id="modalDurumSelect" onchange="document.getElementById('modalDurumValue').value = this.value;" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-right: 0.5rem;">
+                <select id="modalDurumSelect" class="u-select-minimal">
                     <option value="beklemede">Beklemede</option>
                     <option value="onaylandi">Onaylandı</option>
                     <option value="hazirlaniyor">Hazırlanıyor</option>
@@ -1107,145 +1114,200 @@ $kategoriLabels = [
                     Durumu Güncelle
                 </button>
             </form>
-            <button class="btn btn-secondary" onclick="closeSiparisModal()">Kapat</button>
+            <button type="button" class="btn btn-secondary" data-action="close-siparis-modal">Kapat</button>
         </div>
     </div>
 </div>
 
 <script nonce="<?= getCspNonce() ?>">
-// Sipariş verileri
-const siparisler = <?= json_encode(array_values($gunSiparisleri), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const kategoriLabels = <?= json_encode($kategoriLabels, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+(function() {
+    'use strict';
+    // Sipariş verileri
+    const siparisler = <?= json_encode(array_values($gunSiparisleri), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+    const kategoriLabels = <?= json_encode($kategoriLabels, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+    const kategoriFiyatlari = <?= json_encode($kategoriFiyatlari, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
-function openSiparisModal(index) {
-    const siparis = siparisler[index];
-    if (!siparis) return;
+    const siparisModal = document.getElementById('siparisModal');
 
-    const durum = siparis.durum || 'beklemede';
-    const teslimEdildi = durum === 'teslim_edildi';
-    const kisiSayisi = parseInt(siparis.kisi_sayisi) || 1;
-    const puan = parseFloat(siparis.puan) || 0;
+    function openSiparisModal(index) {
+        const siparis = siparisler[index];
+        if (!siparis) return;
 
-    document.getElementById('modalKategori').textContent = kategoriLabels[siparis.kategori] || siparis.kategori;
-    document.getElementById('modalAdet').textContent = kisiSayisi;
-    document.getElementById('modalPuan').textContent = (puan * kisiSayisi) + ' puan';
+        const durum = siparis.durum || 'beklemede';
+        const teslimEdildi = durum === 'teslim_edildi';
+        const kisiSayisi = parseInt(siparis.adet) || 1;
+        const puan = parseFloat(siparis.puan) || 0;
 
-    // Fiyat bilgileri
-    const birimFiyat = parseFloat(siparis.birim_fiyat) || 0;
-    const toplamTutar = parseFloat(siparis.toplam_tutar) || 0;
-    document.getElementById('modalBirimFiyat').textContent = kisiSayisi > 1 ? `${birimFiyat.toFixed(2)} ₺ x ${kisiSayisi} =` : '';
-    document.getElementById('modalToplamTutar').textContent = `${toplamTutar.toFixed(2)} ₺`;
+        document.getElementById('modalKategori').textContent = kategoriLabels[siparis.kategori] || siparis.kategori;
+        document.getElementById('modalAdet').textContent = kisiSayisi;
+        document.getElementById('modalPuan').textContent = (puan * kisiSayisi) + ' puan';
 
-    // Ödeme tipi
-    const odemeTipleri = {'online': 'Online (Site)', 'fiziksel': 'Fiziksel (Mağaza)'};
-    document.getElementById('modalOdemeTipi').textContent = odemeTipleri[siparis.odeme_tipi] || siparis.odeme_tipi || 'Online';
+        // Fiyat bilgileri
+        const birimFiyat = parseFloat(siparis.birim_fiyat) || 0;
+        const toplamTutar = parseFloat(siparis.toplam_tutar) || 0;
+        document.getElementById('modalBirimFiyat').textContent = kisiSayisi > 1 ? `${birimFiyat.toFixed(2)} ₺ x ${kisiSayisi} =` : '';
+        document.getElementById('modalToplamTutar').textContent = `${toplamTutar.toFixed(2)} ₺`;
 
-    // Kanal
-    const kanallar = {'site': 'Web Sitesi', 'telefon': 'Telefon', 'cafe': 'Cafe/Mağaza'};
-    document.getElementById('modalKanal').textContent = kanallar[siparis.kanal] || siparis.kanal || 'Web Sitesi';
+        // Ödeme tipi
+        const odemeTipleri = {'online': 'Online (Site)', 'fiziksel': 'Fiziksel (Mağaza)'};
+        document.getElementById('modalOdemeTipi').textContent = odemeTipleri[siparis.odeme_tipi] || siparis.odeme_tipi || 'Online';
 
-    // Durum gösterimi
-    document.getElementById('modalDurumDevam').style.display = teslimEdildi ? 'none' : 'inline-flex';
-    document.getElementById('modalDurumTamamlandi').style.display = teslimEdildi ? 'inline-flex' : 'none';
-    document.getElementById('modalPuanNot').style.display = teslimEdildi ? 'inline' : 'none';
+        // Kanal
+        const kanallar = {'site': 'Web Sitesi', 'telefon': 'Telefon', 'cafe': 'Cafe/Mağaza'};
+        document.getElementById('modalKanal').textContent = kanallar[siparis.kanal] || siparis.kanal || 'Web Sitesi';
 
-    // Form - mevcut durumu seç
-    document.getElementById('modalSiparisId').value = siparis.id;
-    document.getElementById('modalDurumSelect').value = durum;
-    document.getElementById('modalDurumValue').value = durum;
+        // Durum gösterimi
+        document.getElementById('modalDurumDevam').style.display = teslimEdildi ? 'none' : 'inline-flex';
+        document.getElementById('modalDurumTamamlandi').style.display = teslimEdildi ? 'inline-flex' : 'none';
+        document.getElementById('modalPuanNot').style.display = teslimEdildi ? 'inline' : 'none';
 
-    // Müşteri
-    const musteriRow = document.getElementById('modalMusteriRow');
-    if (siparis.ad_soyad) {
-        document.getElementById('modalMusteri').textContent = siparis.ad_soyad;
-        musteriRow.style.display = 'flex';
-    } else {
-        musteriRow.style.display = 'none';
-    }
+        // Form - mevcut durumu seç
+        document.getElementById('modalSiparisId').value = siparis.id;
+        document.getElementById('modalDurumSelect').value = durum;
+        document.getElementById('modalDurumValue').value = durum;
 
-    // Telefon
-    const telefonRow = document.getElementById('modalTelefonRow');
-    if (siparis.telefon) {
-        document.getElementById('modalTelefon').textContent = siparis.telefon;
-        telefonRow.style.display = 'flex';
-    } else {
-        telefonRow.style.display = 'none';
-    }
-
-    // Adres (ozel_istekler alanında)
-    const adresRow = document.getElementById('modalAdresRow');
-    if (siparis.ozel_istekler) {
-        document.getElementById('modalAdres').textContent = siparis.ozel_istekler;
-        adresRow.style.display = 'flex';
-    } else {
-        adresRow.style.display = 'none';
-    }
-
-    // Notlar
-    const notlarRow = document.getElementById('modalNotlarRow');
-    if (siparis.notlar) {
-        document.getElementById('modalNotlar').textContent = siparis.notlar;
-        notlarRow.style.display = 'flex';
-    } else {
-        notlarRow.style.display = 'none';
-    }
-
-    document.getElementById('siparisModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeSiparisModal() {
-    document.getElementById('siparisModal').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-// Modal dışına tıklayınca kapat
-document.getElementById('siparisModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeSiparisModal();
-    }
-});
-
-// ESC tuşuyla kapat
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeSiparisModal();
-    }
-});
-
-// Kategori fiyatları
-const kategoriFiyatlari = <?= json_encode($kategoriFiyatlari, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-
-// Özel sipariş puan göster/gizle ve fiyat otomatik doldur
-document.getElementById('kategoriSelect').addEventListener('change', function() {
-    const ozelGroup = document.getElementById('ozelPuanGroup');
-    const birimFiyatInput = document.getElementById('birimFiyat');
-    const kategori = this.value;
-
-    if (kategori === 'ozel') {
-        ozelGroup.classList.add('show');
-        birimFiyatInput.value = '';
-        birimFiyatInput.placeholder = 'Manuel girin';
-        birimFiyatInput.required = true;
-    } else {
-        ozelGroup.classList.remove('show');
-        birimFiyatInput.value = kategoriFiyatlari[kategori] || '';
-        birimFiyatInput.placeholder = '0.00';
-        birimFiyatInput.required = false;
-    }
-});
-
-// Sayfa yüklendiğinde ilk kategori için fiyat ayarla
-document.addEventListener('DOMContentLoaded', function() {
-    const kategoriSelect = document.getElementById('kategoriSelect');
-    const birimFiyatInput = document.getElementById('birimFiyat');
-    if (kategoriSelect && birimFiyatInput) {
-        const kategori = kategoriSelect.value;
-        if (kategori !== 'ozel') {
-            birimFiyatInput.value = kategoriFiyatlari[kategori] || '';
+        // Müşteri
+        const musteriRow = document.getElementById('modalMusteriRow');
+        if (siparis.musteri_adi) {
+            document.getElementById('modalMusteri').textContent = siparis.musteri_adi;
+            musteriRow.style.display = 'flex';
+        } else {
+            musteriRow.style.display = 'none';
         }
+
+        // Telefon
+        const telefonRow = document.getElementById('modalTelefonRow');
+        if (siparis.telefon) {
+            document.getElementById('modalTelefon').textContent = siparis.telefon;
+            telefonRow.style.display = 'flex';
+        } else {
+            telefonRow.style.display = 'none';
+        }
+
+        // Adres (ozel_istekler alanında)
+        const adresRow = document.getElementById('modalAdresRow');
+        if (siparis.adres) {
+            document.getElementById('modalAdres').textContent = siparis.adres;
+            adresRow.style.display = 'flex';
+        } else {
+            adresRow.style.display = 'none';
+        }
+
+        // Notlar
+        const notlarRow = document.getElementById('modalNotlarRow');
+        if (siparis.notlar) {
+            document.getElementById('modalNotlar').textContent = siparis.notlar;
+            notlarRow.style.display = 'flex';
+        } else {
+            notlarRow.style.display = 'none';
+        }
+
+        if (siparisModal) siparisModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-});
+
+    function closeSiparisModal() {
+        if (siparisModal) siparisModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Event delegation (CSP uyumlu — inline onclick yerine)
+    document.addEventListener('click', function(e) {
+        // Siparis item tıklama (modal aç)
+        const openTrigger = e.target.closest('[data-action="open-siparis-modal"]');
+        if (openTrigger && !e.target.closest('.siparis-sil-form')) {
+            const idx = parseInt(openTrigger.dataset.index, 10);
+            if (!isNaN(idx)) openSiparisModal(idx);
+            return;
+        }
+        // Silme butonu (form içinde) — bubbling'i durdur ki parent modal açmasın
+        const stopTrigger = e.target.closest('[data-action="stop-propagation"]');
+        if (stopTrigger) {
+            e.stopPropagation();
+        }
+        // Modal kapat butonu
+        if (e.target.closest('[data-action="close-siparis-modal"]')) {
+            closeSiparisModal();
+        }
+    });
+
+    // Klavye ile siparis item açma (erişilebilirlik)
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-action="open-siparis-modal"]')) {
+            e.preventDefault();
+            const idx = parseInt(e.target.dataset.index, 10);
+            if (!isNaN(idx)) openSiparisModal(idx);
+        }
+    });
+
+    // Silme onay dialog'u (submit öncesi confirm)
+    document.addEventListener('submit', function(e) {
+        if (e.target.matches('.siparis-sil-form')) {
+            if (!window.confirm('Siparişi silmek istediğinize emin misiniz?')) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Durum select değişince hidden input'u güncelle
+    const durumSelect = document.getElementById('modalDurumSelect');
+    const durumValueInput = document.getElementById('modalDurumValue');
+    if (durumSelect && durumValueInput) {
+        durumSelect.addEventListener('change', function() {
+            durumValueInput.value = this.value;
+        });
+    }
+
+    // Modal dışına tıklayınca kapat
+    if (siparisModal) {
+        siparisModal.addEventListener('click', function(e) {
+            if (e.target === this) closeSiparisModal();
+        });
+    }
+
+    // ESC tuşuyla kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSiparisModal();
+    });
+
+    // Özel sipariş puan göster/gizle ve fiyat otomatik doldur
+    const kategoriSelect = document.getElementById('kategoriSelect');
+    if (kategoriSelect) {
+        kategoriSelect.addEventListener('change', function() {
+            const ozelGroup = document.getElementById('ozelPuanGroup');
+            const birimFiyatInput = document.getElementById('birimFiyat');
+            const kategori = this.value;
+
+            if (kategori === 'ozel') {
+                if (ozelGroup) ozelGroup.classList.add('show');
+                if (birimFiyatInput) {
+                    birimFiyatInput.value = '';
+                    birimFiyatInput.placeholder = 'Manuel girin';
+                    birimFiyatInput.required = true;
+                }
+            } else {
+                if (ozelGroup) ozelGroup.classList.remove('show');
+                if (birimFiyatInput) {
+                    birimFiyatInput.value = kategoriFiyatlari[kategori] || '';
+                    birimFiyatInput.placeholder = '0.00';
+                    birimFiyatInput.required = false;
+                }
+            }
+        });
+    }
+
+    // Sayfa yüklendiğinde ilk kategori için fiyat ayarla
+    document.addEventListener('DOMContentLoaded', function() {
+        const ks = document.getElementById('kategoriSelect');
+        const bf = document.getElementById('birimFiyat');
+        if (ks && bf) {
+            const kategori = ks.value;
+            if (kategori !== 'ozel') {
+                bf.value = kategoriFiyatlari[kategori] || '';
+            }
+        }
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

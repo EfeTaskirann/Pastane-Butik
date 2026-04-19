@@ -1,0 +1,239 @@
+{
+  "results": [
+    {
+      "id": "T3-01",
+      "status": "PASS",
+      "note": "Login formu (#username + #password) render oldu"
+    },
+    {
+      "id": "T3-02",
+      "status": "PASS",
+      "note": "Hesap kilitlendi (deneme #2 sonrasi)"
+    },
+    {
+      "id": "T3-03",
+      "status": "PASS",
+      "note": "Dashboard'a yonlendirildi: http://localhost/pastane/admin/dashboard.php"
+    },
+    {
+      "id": "T3-04",
+      "status": "PASS",
+      "note": "urun=True kat=True msg=True"
+    },
+    {
+      "id": "T3-05",
+      "status": "PASS",
+      "note": "table=1 card=2"
+    },
+    {
+      "id": "T3-06",
+      "status": "PASS",
+      "note": "Logout sonrasi URL: http://localhost/pastane/admin/index.php, login form var: 1"
+    },
+    {
+      "id": "T3-07",
+      "status": "PASS",
+      "note": "Urun satiri: 6, thumbnail: 6"
+    },
+    {
+      "id": "T3-08",
+      "status": "PASS",
+      "note": "#urun-kategori-filtre select: 1"
+    },
+    {
+      "id": "T3-09",
+      "status": "PASS",
+      "note": "#urun-arama input: 1"
+    },
+    {
+      "id": "T3-10",
+      "status": "PASS",
+      "note": "DB kaydi: 1, URL: http://localhost/pastane/admin/urunler.php, hata: ''"
+    },
+    {
+      "id": "T3-11",
+      "status": "PARTIAL",
+      "note": "secureUploadImage fn: True (live upload edilmedi, kod mevcut)"
+    },
+    {
+      "id": "T3-12",
+      "status": "PARTIAL",
+      "note": "Dosya boyut kontrolu kod icinde: True"
+    },
+    {
+      "id": "T3-13",
+      "status": "PARTIAL",
+      "note": "MIME whitelist kontrolu kod icinde: True"
+    },
+    {
+      "id": "T3-14",
+      "status": "PASS",
+      "note": "Porsiyon fiyat inputu: 4"
+    },
+    {
+      "id": "T3-15",
+      "status": "PASS",
+      "note": "cafe_menusu=1 hazirlanma_suresi=1 stok_durumu=1"
+    },
+    {
+      "id": "T3-16",
+      "status": "PASS",
+      "note": "Pre-filled isim: 'Test Urun QA'"
+    },
+    {
+      "id": "T3-17",
+      "status": "PASS",
+      "note": "Toggle form input sayisi: 1"
+    },
+    {
+      "id": "T3-18",
+      "status": "SKIP",
+      "note": "Sortable element: 0 (drag-drop headless Playwright'ta guvenilmez)"
+    },
+    {
+      "id": "T3-19",
+      "status": "PARTIAL",
+      "note": "DB before=1 after=1"
+    },
+    {
+      "id": "T3-20",
+      "status": "PASS",
+      "note": "Kategori satir: 4, urun kolonu: 1"
+    },
+    {
+      "id": "T3-21",
+      "status": "FAIL",
+      "note": "DB slug='' (otomatik olusturuldu)"
+    },
+    {
+      "id": "T3-22",
+      "status": "PARTIAL",
+      "note": "Duplicate engellenme: count=0 (1 = engelli), hata_mesaji=True"
+    },
+    {
+      "id": "T3-23",
+      "status": "SKIP",
+      "note": "Test kategori yok (T3-21 FAIL)"
+    },
+    {
+      "id": "T3-24",
+      "status": "FAIL",
+      "note": "Cat-sil: Error"
+    },
+    {
+      "id": "T3-25",
+      "status": "PARTIAL",
+      "note": "Mesaj satir: 0, seed mesaj goruldu: False"
+    },
+    {
+      "id": "T3-26",
+      "status": "PASS",
+      "note": "DB okundu degeri: 1 (UI toggle ayri test gerekli)"
+    },
+    {
+      "id": "T3-27",
+      "status": "PARTIAL",
+      "note": "Silme kodu mesajlar.php'de mevcut: True; test kaydı DB'den temizlendi"
+    },
+    {
+      "id": "T3-28",
+      "status": "PARTIAL",
+      "note": "Filtre widget'i: 0"
+    },
+    {
+      "id": "T3-29",
+      "status": "PASS",
+      "note": "table=0, empty_state=True"
+    },
+    {
+      "id": "T3-30",
+      "status": "SKIP",
+      "note": "Musteri duzenle - gercek musteri kaydi gerekli (DB'de musteri yok)"
+    },
+    {
+      "id": "T3-31",
+      "status": "PASS",
+      "note": "Masa liste: 5"
+    },
+    {
+      "id": "T3-32",
+      "status": "FAIL",
+      "note": "Masa eklendi, qr_token uzunlugu: 0"
+    },
+    {
+      "id": "T3-33",
+      "status": "PASS",
+      "note": "QR link/buton: 1"
+    },
+    {
+      "id": "T3-34",
+      "status": "PARTIAL",
+      "note": "QR PNG endpoint'i var (QrKodService); download testi headless'de yapılmadı"
+    },
+    {
+      "id": "T3-35",
+      "status": "FAIL",
+      "note": "Aktif et: IndexError"
+    },
+    {
+      "id": "T3-36",
+      "status": "FAIL",
+      "note": "Kapat: IndexError"
+    },
+    {
+      "id": "T3-37",
+      "status": "PASS",
+      "note": "grid=1, day cells=0"
+    },
+    {
+      "id": "T3-38",
+      "status": "PARTIAL",
+      "note": "Puan hesaplama logic'i takvim JS'de; live UI click DB insert kontrolu ayri test"
+    },
+    {
+      "id": "T3-39",
+      "status": "PARTIAL",
+      "note": "Gun notu inputu takvim.php'de mevcut; form submit + DB kontrolu ayri test"
+    },
+    {
+      "id": "T3-40",
+      "status": "PARTIAL",
+      "note": "canvas=0, card=0"
+    },
+    {
+      "id": "T3-41",
+      "status": "PARTIAL",
+      "note": "Date input: 0 (2 = aralik)"
+    },
+    {
+      "id": "T3-42",
+      "status": "PARTIAL",
+      "note": "Raporlar.php musteri ibareleri icerir"
+    },
+    {
+      "id": "T3-43",
+      "status": "PARTIAL",
+      "note": "En cok satan/top X ibareleri gorduldu"
+    },
+    {
+      "id": "T3-44",
+      "status": "PARTIAL",
+      "note": "canvas=False chart.js_ref=False"
+    },
+    {
+      "id": "T3-45",
+      "status": "PARTIAL",
+      "note": "Export linki: 0"
+    },
+    {
+      "id": "T3-46",
+      "status": "PASS",
+      "note": "Tema kart: 2, buton: 2"
+    },
+    {
+      "id": "T3-47",
+      "status": "PARTIAL",
+      "note": "Sayfada tema secenekleri: yaz=True kis=True (gercek anahtarlama ayri test)"
+    }
+  ]
+}

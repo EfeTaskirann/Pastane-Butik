@@ -1,0 +1,49 @@
+# -----------------------------------------------------------------------------
+# uploads/ — PHP/script yürütmeyi engelle (P0-02 hardening)
+#
+# Kural: Bu klasör yalnızca statik medya (resim, pdf, svg) servis eder.
+# Herhangi bir PHP/PHAR/CGI dosyası yüklense bile yorumlanamaz.
+#
+# Gereksinimler:
+#   - Apache'de AllowOverride All (veya en azından FileInfo+Options+Limit)
+#   - mod_rewrite gerekmez, mod_php varsa php_flag etkindir
+# -----------------------------------------------------------------------------
+
+# 1) PHP motorunu tamamen kapat (mod_php kurulu ise)
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# 2) Script üretebilecek uzantıları tamamen reddet
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|phar|pht|phtm|phps|pl|py|jsp|asp|aspx|sh|cgi)$">
+    Require all denied
+</FilesMatch>
+
+# 3) CGI + directory index + symlink takibini kapat
+# NOT: `FollowSymLinks` Apache'de RewriteRule'lerin çalışması için gerekli (üst .htaccess mod_rewrite
+# kullanıyor). Yalnızca ExecCGI + Indexes kapatılıyor; symlink takibine dokunulmuyor.
+Options -ExecCGI -Indexes
+
+# 4) Handler ataması (yanlış mime mapping ile yürütme engelleme)
+<IfModule mod_mime.c>
+    RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pht .phtm .phps
+    RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pht .phtm .phps
+    AddType text/plain .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pht .phtm .phps
+</IfModule>
+
+# 5) Güvenli Content-Security-Policy ve download header'ları
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none';"
+</IfModule>
+
+# 6) .htaccess'e dışarıdan erişimi engelle
+<Files ".htaccess">
+    Require all denied
+</Files>

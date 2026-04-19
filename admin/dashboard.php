@@ -22,7 +22,7 @@ $allMessages = $mesajService->getAllOrdered();
 $recentMessages = array_slice($allMessages, 0, 5);
 ?>
 
-<h2 style="margin-bottom: 1.5rem;">Dashboard</h2>
+<h2 class="u-mb-5">Dashboard</h2>
 
 <!-- İstatistik Kartları -->
 <div class="stats-grid">
@@ -68,14 +68,14 @@ $recentMessages = array_slice($allMessages, 0, 5);
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+<div class="u-grid-auto-400">
     <!-- Son Ürünler -->
     <div class="card">
         <div class="card-header">
             <h3>Son Eklenen Ürünler</h3>
             <a href="urunler.php" class="btn btn-sm btn-secondary">Tümünü Gör</a>
         </div>
-        <div class="card-body" style="padding: 0;">
+        <div class="card-body u-p-0">
             <?php if (empty($recentProducts)): ?>
                 <div class="empty-state">
                     <p>Henüz ürün eklenmemiş.</p>
@@ -85,11 +85,11 @@ $recentMessages = array_slice($allMessages, 0, 5);
                     <tbody>
                     <?php foreach ($recentProducts as $product): ?>
                         <tr>
-                            <td style="width: 60px;">
+                            <td class="u-w-60px">
                                 <?php if ($product['gorsel']): ?>
-                                    <img src="../uploads/products/<?= e($product['gorsel']) ?>" class="product-thumb" alt="<?= e($product['ad']) ?>">
+                                    <img src="../uploads/products/<?= e($product['gorsel']) ?>" class="product-thumb" alt="<?= e($product['isim']) ?>" loading="lazy" decoding="async">
                                 <?php else: ?>
-                                    <div class="product-thumb" style="background: #F5E1E9; display: flex; align-items: center; justify-content: center;">
+                                    <div class="product-thumb u-bg-product-thumb">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6F5C" stroke-width="2">
                                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                                             <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -99,10 +99,10 @@ $recentMessages = array_slice($allMessages, 0, 5);
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <strong><?= e($product['ad']) ?></strong><br>
-                                <small style="color: var(--admin-text-light);"><?= formatPrice($product['fiyat']) ?></small>
+                                <strong><?= e($product['isim']) ?></strong><br>
+                                <small class="u-text-admin-light"><?= formatPrice($product['fiyat']) ?></small>
                             </td>
-                            <td style="text-align: right;">
+                            <td class="u-text-right">
                                 <span class="status <?= $product['aktif'] ? 'status-active' : 'status-inactive' ?>">
                                     <?= $product['aktif'] ? 'Aktif' : 'Pasif' ?>
                                 </span>
@@ -121,7 +121,7 @@ $recentMessages = array_slice($allMessages, 0, 5);
             <h3>Son Mesajlar</h3>
             <a href="mesajlar.php" class="btn btn-sm btn-secondary">Tümünü Gör</a>
         </div>
-        <div class="card-body" style="padding: 0;">
+        <div class="card-body u-p-0">
             <?php if (empty($recentMessages)): ?>
                 <div class="empty-state">
                     <p>Henüz mesaj yok.</p>
@@ -133,11 +133,11 @@ $recentMessages = array_slice($allMessages, 0, 5);
                         <tr>
                             <td>
                                 <strong><?= e($message['ad']) ?></strong><br>
-                                <small style="color: var(--admin-text-light);">
+                                <small class="u-text-admin-light">
                                     <?= e(mb_substr($message['mesaj'], 0, 50)) ?>...
                                 </small>
                             </td>
-                            <td style="text-align: right;">
+                            <td class="u-text-right">
                                 <?php if (!$message['okundu']): ?>
                                     <span class="status status-unread">Yeni</span>
                                 <?php endif; ?>

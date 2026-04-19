@@ -11,13 +11,29 @@ export function initSmoothScroll() {
     anchor.addEventListener('click', (e) => {
       const href = anchor.getAttribute('href');
 
-      // Skip if just '#'
-      if (href === '#') return;
+      // Skip if just '#' or empty
+      if (!href || href === '#') return;
 
-      const target = document.querySelector(href);
+      // CSS.escape ile ID icinde ozel karakterleri guvenli hale getir —
+      // aksi halde querySelector DOMException firlatabilir.
+      const id = href.slice(1);
+      let target = null;
+      try {
+        target = document.getElementById(id) || document.querySelector(`#${CSS.escape(id)}`);
+      } catch (_err) {
+        target = null;
+      }
+
       if (target) {
         e.preventDefault();
         scrollToElement(target);
+
+        // Skip-link entegrasyonu: hedefe klavye odagi tasi (WCAG).
+        // Native <main>/<section> focus alamaz -> tabindex="-1" otomatik ekle.
+        if (!target.hasAttribute('tabindex')) {
+          target.setAttribute('tabindex', '-1');
+        }
+        target.focus({ preventScroll: true });
 
         // Update URL hash without scrolling
         history.pushState(null, '', href);
@@ -65,15 +81,24 @@ export function initScrollToTopButton() {
   const btn = document.querySelector('[data-scroll-top]');
   if (!btn) return;
 
-  // Show/hide button based on scroll position
+  // Scroll listener rAF ile throttle edilir + son durum cache'lenir
+  // -> 60Hz'de classList mutation'dan kacinir (CLAUDE.md performans pattern).
+  let ticking = false;
+  let lastVisible = false;
+
   window.addEventListener(
     'scroll',
     () => {
-      if (window.pageYOffset > 300) {
-        btn.classList.add('is-visible');
-      } else {
-        btn.classList.remove('is-visible');
-      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const shouldShow = window.pageYOffset > 300;
+        if (shouldShow !== lastVisible) {
+          btn.classList.toggle('is-visible', shouldShow);
+          lastVisible = shouldShow;
+        }
+        ticking = false;
+      });
     },
     { passive: true }
   );

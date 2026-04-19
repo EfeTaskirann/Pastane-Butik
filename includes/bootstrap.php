@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Application Bootstrap
  *
@@ -52,10 +54,32 @@ if (!class_exists('JWT', false)) {
     }
 }
 
+// Sentry — native client (library-free). SENTRY_DSN boşsa no-op.
+if (!class_exists('Sentry', false) && file_exists(BASE_PATH . '/includes/Sentry.php')) {
+    require_once BASE_PATH . '/includes/Sentry.php';
+}
+if (class_exists('Sentry', false)) {
+    Sentry::init();
+}
+
+// Metrics — Prometheus uyumlu file-backed counter/gauge/histogram
+if (!class_exists('Metrics', false) && file_exists(BASE_PATH . '/includes/Metrics.php')) {
+    require_once BASE_PATH . '/includes/Metrics.php';
+}
+
 // Helper fonksiyonlar
 // helpers.php Composer files autoload ile de yüklenir ama require_once ile çift yükleme engellenir
 require_once BASE_PATH . '/includes/helpers.php';
 require_once BASE_PATH . '/includes/functions.php';
+
+// I18n — Composer files autoload ile de yuklenir; fallback require_once
+if (!class_exists('I18n', false) && file_exists(BASE_PATH . '/includes/i18n.php')) {
+    require_once BASE_PATH . '/includes/i18n.php';
+}
+// ?lang=xx yakala, aktif locale'i belleke yukle (session yoksa cookie/default kullanir)
+if (class_exists('I18n', false)) {
+    I18n::load();
+}
 
 // ============================================
 // GLOBAL ERROR/EXCEPTION HANDLER

@@ -18,9 +18,23 @@ use Pastane\Exceptions\ValidationException;
 class UrunService extends BaseService
 {
     /**
-     * Arama için minimum karakter sayısı
+     * Arama icin minimum karakter sayisi
      */
     private const MIN_SEARCH_LENGTH = 2;
+
+    /**
+     * Cache TTL sabitleri (saniye)
+     */
+    private const CACHE_TTL_CAFE_MENU = 300;
+    private const CACHE_TTL_ACTIVE    = 300;  // aktif ürün listesi (menü)
+    private const CACHE_TTL_FEATURED  = 600;  // öne çıkan ürünler
+
+    /**
+     * Cache key sabitleri
+     */
+    private const CACHE_KEY_CAFE_MENU = 'cafe_menu_urunleri';
+    private const CACHE_KEY_ACTIVE_ALL = 'urunler:aktif:all';
+    private const CACHE_KEY_FEATURED   = 'urunler:one-cikan';
 
     /**
      * @var UrunRepository
@@ -51,23 +65,45 @@ class UrunService extends BaseService
     /**
      * Get active products
      *
+     * Hot path: menü listesi — filtresiz (kategori_id=null, limit=null) çağrı
+     * 5 dk cache'lenir. Parametreli çağrılar cache edilmez (DB'ye direkt).
+     *
      * @param int|null $kategoriId
      * @param int|null $limit
      * @return array
      */
     public function getActive(?int $kategoriId = null, ?int $limit = null): array
     {
+        // Sadece filtresiz varsayılan sorguyu cache'le (parametrik cache key şişkinliğini önler)
+        if ($kategoriId === null && $limit === null) {
+            return $this->cacheRemember(
+                self::CACHE_KEY_ACTIVE_ALL,
+                fn () => $this->urunRepository->getActive(null, null),
+                self::CACHE_TTL_ACTIVE
+            );
+        }
+
         return $this->urunRepository->getActive($kategoriId, $limit);
     }
 
     /**
      * Get featured products
      *
+     * Hot path: homepage için — varsayılan limit (6) cache'lenir.
+     *
      * @param int $limit
      * @return array
      */
     public function getFeatured(int $limit = 6): array
     {
+        if ($limit === 6) {
+            return $this->cacheRemember(
+                self::CACHE_KEY_FEATURED,
+                fn () => $this->urunRepository->getFeatured(6),
+                self::CACHE_TTL_FEATURED
+            );
+        }
+
         return $this->urunRepository->getFeatured($limit);
     }
 
@@ -123,6 +159,24 @@ class UrunService extends BaseService
     }
 
     /**
+     * Cafe menusu urunlerini getir (QR Menu icin)
+     *
+     * Sadece cafe_menusu=1 ve aktif=1 olan urunleri doner.
+     * Sonuc 300 saniye cache'lenir. Urun guncelleme/silme/toggle
+     * islemlerinde cache otomatik olarak temizlenir.
+     *
+     * @return array Cafe menusundeki aktif urunler (kategori bilgisi ile)
+     */
+    public function getCafeMenuUrunleri(): array
+    {
+        return $this->cacheRemember(
+            self::CACHE_KEY_CAFE_MENU,
+            fn () => $this->urunRepository->getCafeMenuUrunleri(),
+            self::CACHE_TTL_CAFE_MENU
+        );
+    }
+
+    /**
      * Create product
      *
      * @param array $data
@@ -131,8 +185,8 @@ class UrunService extends BaseService
     public function create(array $data): array
     {
         // Generate slug if not provided
-        if (empty($data['slug']) && !empty($data['ad'])) {
-            $data['slug'] = $this->generateSlug($data['ad']);
+        if (empty($data['slug']) && !empty($data['isim'])) {
+            $data['slug'] = $this->generateSlug($data['isim']);
         }
 
         // Set default values
@@ -154,8 +208,8 @@ class UrunService extends BaseService
     public function update(int|string $id, array $data): array
     {
         // Regenerate slug if name changed
-        if (!empty($data['ad']) && empty($data['slug'])) {
-            $data['slug'] = $this->generateSlug($data['ad'], (int)$id);
+        if (!empty($data['isim']) && empty($data['slug'])) {
+            $data['slug'] = $this->generateSlug($data['isim'], (int)$id);
         }
 
         $result = parent::update($id, $data);
@@ -276,7 +330,7 @@ class UrunService extends BaseService
     protected function validateCreate(array $data): void
     {
         $this->validate($data, [
-            'ad' => 'required|string|min:2|max:255',
+            'isim' => 'required|string|min:2|max:255',
             'fiyat' => 'required|numeric',
             'kategori_id' => 'required|integer',
         ]);
@@ -295,8 +349,8 @@ class UrunService extends BaseService
 
         $rules = [];
 
-        if (isset($data['ad'])) {
-            $rules['ad'] = 'string|min:2|max:255';
+        if (isset($data['isim'])) {
+            $rules['isim'] = 'string|min:2|max:255';
         }
 
         if (isset($data['fiyat'])) {
@@ -309,12 +363,29 @@ class UrunService extends BaseService
     }
 
     /**
-     * Ürün cache'ini temizle
+     * Urun cache'ini temizle
+     *
+     * Menü listesi, cafe menüsü ve öne çıkan ürün cache'lerini invalidate eder.
+     * Create / update / delete / toggleActive / updateOrder sonrası çağrılır.
      *
      * @return void
      */
     protected function clearCache(): void
     {
-        $this->clearCacheKeys('products_active');
+        $this->clearCacheKeys(
+            'products_active',
+            self::CACHE_KEY_CAFE_MENU,
+            self::CACHE_KEY_ACTIVE_ALL,
+            self::CACHE_KEY_FEATURED
+        );
+
+        try {
+            $kategoriler = db()->fetchAll('SELECT id FROM kategoriler');
+            $cache = \Cache::getInstance();
+            foreach ($kategoriler as $k) {
+                $cache->forget('products_active_' . $k['id']);
+            }
+        } catch (\Throwable) {
+        }
     }
 }

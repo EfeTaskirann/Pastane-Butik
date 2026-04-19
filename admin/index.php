@@ -128,7 +128,7 @@ if (!empty($username) && isAccountLocked($username)) {
                            <?= $locked ? 'disabled' : '' ?>>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;"
+                <button type="submit" class="btn btn-primary u-w-100"
                         <?= $locked ? 'disabled' : '' ?>>
                     <?= $locked ? 'Hesap Kilitli' : 'Giriş Yap' ?>
                 </button>
@@ -142,8 +142,8 @@ if (!empty($username) && isAccountLocked($username)) {
                 Güvenli bağlantı
             </div>
 
-            <p style="margin-top: 1rem; font-size: 0.8rem;">
-                <a href="../index.php" style="color: var(--admin-primary);">&larr; Siteye Dön</a>
+            <p class="u-mt-hint">
+                <a href="../index.php" class="u-text-admin-primary">&larr; Siteye Dön</a>
             </p>
         </div>
     </div>

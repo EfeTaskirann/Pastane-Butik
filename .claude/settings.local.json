@@ -31,7 +31,28 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nGüvenlik ve performans iyileştirmeleri \\(Faz 2\\)\n\n- db.php: $where SQL injection koruması eklendi\n  - validateWhereClause\\(\\) metodu ile tehlikeli keyword kontrolü\n  - updateSafe\\(\\) ve deleteSafe\\(\\) metotları eklendi\n  - Eksik tablolar ALLOWED_TABLES''a eklendi\n\n- RateLimiter.php: Fail-closed güvenlik modeli\n  - DB hatalarında istekler varsayılan olarak reddedilir\n  - Hata loglama eklendi\n\n- main.js: XSS ve performans düzeltmeleri\n  - innerHTML yerine textContent/DOM API kullanıldı\n  - escapeHtml\\(\\) ve sanitizeAttribute\\(\\) helper''ları eklendi\n  - Sparkle animasyonu requestAnimationFrame ile optimize edildi\n  - Tab visibility kontrolü eklendi \\(arka planda duraklatma\\)\n  - DOM null check''leri eklendi\n\n- iletisim.php: CSRF token zorunlu yapıldı\n\n- admin/header.php: Logout GET''ten POST+CSRF''ye taşındı\n\n- index.php: N+1 query kaldırıldı \\(JOIN verisi kullanılıyor\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(./vendor/bin/phpstan:*)",
+      "Bash(git stash:*)",
+      "Bash(git update-ref:*)",
+      "Bash(python admin_screenshots.py:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m playwright:*)",
+      "Bash(python:*)",
+      "Bash(where:*)",
+      "Bash(php -r \":*)",
+      "Bash(c:/xampp/mysql/bin/mysql -u root pastane_db -e \":*)",
+      "Bash(cat /c/xampp/htdocs/pastane/storage/cache/active_theme*)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/main.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/modules/animations.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/modules/forms.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/modules/lazy-load.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/modules/navigation.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/modules/smooth-scroll.js)",
+      "Bash(node -c /c/xampp/htdocs/pastane/assets/js/themes/theme-winter.js)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(powershell -Command \"Get-Item ''C:\\\\xampp\\\\htdocs\\\\pastane\\\\assets\\\\js\\\\themes\\\\theme-winter.js'' | Select-Object LastWriteTime, Length\")"
     ]
   }
 }

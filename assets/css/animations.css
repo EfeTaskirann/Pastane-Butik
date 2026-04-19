@@ -748,9 +748,24 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        /* will-change permanent GPU layer riskini kaldir */
+        will-change: auto !important;
+        /* backdrop-filter/scroll-behavior de motion duyarli */
+        scroll-behavior: auto !important;
     }
 
     .parallax-element {
         transform: none !important;
+    }
+
+    /* Infinite dekoratif efektleri tamamen kaldir (opacity: 0 degil —
+       bazilarinin baslangic state'i zaten opacity: 0, bu yuzden kapanik tut). */
+    .sparkle,
+    .star-sparkle,
+    .sugar-dust,
+    .magic-dust,
+    .light-orb,
+    .decoration-blob {
+        animation: none !important;
     }
 }

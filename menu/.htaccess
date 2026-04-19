@@ -1,0 +1,13 @@
+# Menu dizini - kendi routing'i
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /menu/
+
+    # Var olan dosya/dizinlere dokunma
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Diger her seyi index.php'ye yonlendir
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>

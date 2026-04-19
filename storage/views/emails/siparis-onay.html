@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siparis Onayi</title>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; background-color:#f7f1ec; color:#3d2b1f;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f7f1ec; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #d9a7c2 0%, #f3cfc6 100%); padding: 32px 24px; text-align:center;">
+                            <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:0.5px;">{{site_adi}}</h1>
+                            <p style="margin:8px 0 0; color:#ffffff; font-size:15px; opacity:0.95;">Siparisiniz basariyla alindi</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 28px 24px 8px;">
+                            <h2 style="margin:0 0 8px; color:#3d2b1f; font-size:20px; font-weight:600;">Merhaba {{musteri_adi}},</h2>
+                            <p style="margin:0; color:#5a4a3f; font-size:15px; line-height:1.6;">
+                                Sevdiklerinize tat katacak siparisiniz titizlikle hazirlanmak uzere alindi. Asagida siparis detaylarinizi bulabilirsiniz.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 16px 24px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf3ee; border-radius:8px; padding:16px;">
+                                <tr>
+                                    <td style="padding:6px 12px; color:#7a6658; font-size:13px; width:50%;">Siparis Numarasi</td>
+                                    <td style="padding:6px 12px; color:#3d2b1f; font-size:14px; font-weight:600; text-align:right;">#{{siparis_no}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:6px 12px; color:#7a6658; font-size:13px;">Tarih</td>
+                                    <td style="padding:6px 12px; color:#3d2b1f; font-size:14px; font-weight:600; text-align:right;">{{siparis_tarihi}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:6px 12px; color:#7a6658; font-size:13px;">Telefon</td>
+                                    <td style="padding:6px 12px; color:#3d2b1f; font-size:14px; text-align:right;">{{telefon}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:6px 12px; color:#7a6658; font-size:13px;">Teslimat Adresi</td>
+                                    <td style="padding:6px 12px; color:#3d2b1f; font-size:14px; text-align:right;">{{adres}}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 8px 24px 16px;">
+                            <h3 style="margin:16px 0 12px; color:#3d2b1f; font-size:16px; font-weight:600; border-bottom:2px solid #f3cfc6; padding-bottom:8px;">Siparis Kalemleri</h3>
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color:#faf3ee;">
+                                        <th align="left" style="padding:10px 12px; color:#7a6658; font-size:12px; font-weight:600; text-transform:uppercase;">Urun</th>
+                                        <th align="center" style="padding:10px 12px; color:#7a6658; font-size:12px; font-weight:600; text-transform:uppercase;">Adet</th>
+                                        <th align="right" style="padding:10px 12px; color:#7a6658; font-size:12px; font-weight:600; text-transform:uppercase;">Tutar</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="color:#3d2b1f; font-size:14px;">
+                                    {{{urun_listesi}}}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 8px 24px 24px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="right" style="padding:12px; background-color:#d9a7c2; border-radius:8px;">
+                                        <span style="color:#ffffff; font-size:14px; font-weight:500;">Toplam Tutar:</span>
+                                        <span style="color:#ffffff; font-size:20px; font-weight:700; margin-left:12px;">{{toplam_tutar}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 0 24px 24px;">
+                            <p style="margin:0; color:#5a4a3f; font-size:14px; line-height:1.6;">
+                                Siparisiniz hakkinda herhangi bir sorunuz olursa bize ulasmaktan cekinmeyin. Iyi gunler dileriz.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color:#faf3ee; padding: 18px 24px; text-align:center; border-top:1px solid #f3cfc6;">
+                            <p style="margin:0 0 4px; color:#7a6658; font-size:12px;">
+                                Bu e-posta otomatik olarak gonderilmistir, lutfen yanit vermeyin.
+                            </p>
+                            <p style="margin:0; color:#7a6658; font-size:12px;">
+                                &copy; {{yil}} {{site_adi}} &mdash; Tum haklari saklidir.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

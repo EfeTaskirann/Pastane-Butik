@@ -1,0 +1,605 @@
+# =============================================================================
+# OpenAPI — Admin, Monitoring, 2FA ve Health Endpoint'leri (ek paths)
+# =============================================================================
+# Bu dosya Sprint 3 Backend tarafından Tech Lead'in `docs/api/openapi.yaml`
+# çekirdek spesifikasyonuna EK olarak yazılmıştır. Merge sırasında:
+#   1) `paths:` altındaki tüm node'lar ana dosyaya kopyalanır
+#   2) Yeni tag'ler (`Admin`, `Monitoring`, `2FA`) ana `tags:` listesine eklenir
+#   3) Bu dosya Tech Lead tarafından sürüm dondurulduğunda silinebilir
+#
+# Ortak schema'lar (`Hata`, `Success`, `PaginationMeta` vb.) ana dosyada tanımlı;
+# bu dosya $ref ile ana dosyaya referans verir. Merge sonrası tüm $ref'ler
+# aynı dokümanda resolve olur.
+#
+# YAML syntax validation:
+#   php -r "var_dump(yaml_parse(file_get_contents('docs/api/openapi-endpoints-admin.yaml')));"
+#   # PHP yaml extension yoksa: https://editor.swagger.io (paste & validate)
+#
+# @package Pastane\Docs\Api
+# @since 2.1.0-sprint3
+# =============================================================================
+
+openapi: 3.0.3
+info:
+  title: Tatlı Düşler Pastanesi API — Admin Endpoints Eki
+  version: 1.0.0-admin-ext
+  description: |
+    Admin panel, monitoring ve 2FA endpoint'leri. Ana spec: `openapi.yaml`.
+
+tags:
+  - name: Admin - Activity Log
+    description: Denetim/audit kayıtları (SecurityAudit)
+  - name: Admin - Ayarlar
+    description: Sistem ayarları (key-value store, tip-aware)
+  - name: Admin - Backup
+    description: Veritabanı yedekleme ve geri yükleme
+  - name: Admin - 2FA
+    description: İki faktörlü kimlik doğrulama (TOTP)
+  - name: Monitoring
+    description: Prometheus metrics ve health check
+
+paths:
+  # ===========================================================================
+  # ADMIN — ACTIVITY LOG (SecurityAudit)
+  # ===========================================================================
+  /admin/activity-log:
+    get:
+      tags: [Admin - Activity Log]
+      summary: Denetim kayıtlarını listele
+      description: |
+        `SecurityAudit` tablosundan aktivite kayıtlarını filtrelenebilir şekilde
+        döndürür. Admin rolü zorunlu. Sayfalama destekler.
+
+        **Filtreler:**
+        - `user_id` : Belirli kullanıcı
+        - `action`  : login, logout, create, update, delete, failed_login vb.
+        - `from` / `to`: ISO 8601 tarih aralığı
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          description: Audit action type (log event name)
+          schema:
+            type: string
+            example: login_success
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+            example: "2026-04-01T00:00:00Z"
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+            example: "2026-04-17T23:59:59Z"
+      responses:
+        '200':
+          description: Kayıt listesi (pagination meta dahil)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      kayitlar:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            user_id:
+                              type: integer
+                              nullable: true
+                            action:
+                              type: string
+                            ip_adresi:
+                              type: string
+                              example: "127.0.0.1"
+                            user_agent:
+                              type: string
+                            detay:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                      pagination:
+                        $ref: 'openapi.yaml#/components/schemas/PaginationMeta'
+        '401':
+          description: Yetkisiz (token yok/geçersiz)
+        '403':
+          description: Erişim yasaklandı (admin rolü gerekli)
+
+  # ===========================================================================
+  # ADMIN — AYARLAR (Settings key-value store)
+  # ===========================================================================
+  /admin/ayarlar:
+    get:
+      tags: [Admin - Ayarlar]
+      summary: Tüm ayarları listele (tip-aware, grup'a göre filtrelenebilir)
+      description: |
+        `AyarService::getAll()` veya `getGroup($grup)` döndürür. 5 dk cache'li
+        (`ayarlar:all`). Dönen değerler tip-aware cast edilmiştir (int, bool,
+        string, json).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: grup
+          in: query
+          description: "Grup filtresi (ör. genel, iletisim, siparis, odeme)"
+          required: false
+          schema:
+            type: string
+            example: iletisim
+      responses:
+        '200':
+          description: Ayar map'i
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    additionalProperties: true
+                    example:
+                      site_baslik: "Tatlı Düşler Butik Pastane"
+                      siparis_minimum_tutar: 200
+                      kapida_odeme_aktif: true
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı (admin)
+
+  /admin/ayarlar/{anahtar}:
+    post:
+      tags: [Admin - Ayarlar]
+      summary: Ayarı güncelle veya oluştur (upsert)
+      description: |
+        `AyarService::set($anahtar, $deger, $tip, $grup)` ile upsert. Cache
+        otomatik invalidate. Tip dönüşümü için geçerli değerler:
+        `string | int | bool | json`.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: anahtar
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z0-9_]+$'
+          example: site_baslik
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deger]
+              properties:
+                deger:
+                  description: Yeni değer (tip'e göre serialize edilir)
+                  oneOf:
+                    - type: string
+                    - type: integer
+                    - type: boolean
+                    - type: object
+                tip:
+                  type: string
+                  enum: [string, int, bool, json]
+                  default: string
+                grup:
+                  type: string
+                  example: genel
+                aciklama:
+                  type: string
+                  example: Site başlığı (browser title)
+      responses:
+        '200':
+          description: Kaydedildi
+          content:
+            application/json:
+              schema:
+                $ref: 'openapi.yaml#/components/schemas/Success'
+        '400':
+          description: Geçersiz tip veya değer
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı
+
+    delete:
+      tags: [Admin - Ayarlar]
+      summary: Ayarı sil
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: anahtar
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Silindi
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı
+        '404':
+          description: Ayar bulunamadı
+
+  # ===========================================================================
+  # ADMIN — BACKUP
+  # ===========================================================================
+  /admin/backup/create:
+    post:
+      tags: [Admin - Backup]
+      summary: Yeni veritabanı yedeği oluştur
+      description: |
+        `bin/cron/db-backup.php` scriptinin sağladığı yedekleme akışını tetikler.
+        Geriye dosya adı + boyut + hash döner. Yedekler
+        `storage/backups/pastane_YYYY-MM-DD_HHMMSS.sql.gz` olarak yazılır.
+
+        Rate limit: admin başına 2 req/dk (yazma yükü ağır).
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Yedek başarıyla oluşturuldu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      dosya:
+                        type: string
+                        example: pastane_2026-04-17_120345.sql.gz
+                      boyut_byte:
+                        type: integer
+                      sha256:
+                        type: string
+                        example: "a3f5...ef"
+                      olusturulma:
+                        type: string
+                        format: date-time
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı (admin gerekli)
+        '429':
+          description: Rate limit aşıldı
+        '500':
+          description: Sunucu hatası (mysqldump fail)
+
+  /admin/backup:
+    get:
+      tags: [Admin - Backup]
+      summary: Mevcut yedekleri listele
+      description: "`storage/backups/` dizinindeki tüm yedek dosyalarını döndürür."
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Yedek listesi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      yedekler:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            dosya:
+                              type: string
+                            boyut_byte:
+                              type: integer
+                            olusturulma:
+                              type: string
+                              format: date-time
+                            sha256:
+                              type: string
+                              nullable: true
+                      toplam:
+                        type: integer
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı
+
+  # ===========================================================================
+  # MONITORING — METRICS (Prometheus)
+  # ===========================================================================
+  /admin/metrics:
+    get:
+      tags: [Monitoring]
+      summary: Prometheus text-format metrics
+      description: |
+        `Metrics::render()` çıktısını `text/plain; version=0.0.4` olarak sunar.
+        Prometheus scrape endpoint olarak kullanılır.
+
+        **İçerdiği metrikler:**
+        - `pastane_http_requests_total{method, status}` (counter)
+        - `pastane_cache_operations_total{key, result}` (counter — hit/miss)
+        - `pastane_db_query_duration_seconds_bucket{...}` (histogram)
+        - `pastane_uptime_seconds` (gauge)
+        - `pastane_orders_created_total{kanal}` (counter)
+
+        **Güvenlik:** Production'da IP allow-list veya basic-auth ile korunmalı.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Prometheus exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # TYPE pastane_cache_operations_total counter
+                  pastane_cache_operations_total{key="urunler:aktif:all",result="hit"} 142
+                  pastane_cache_operations_total{key="urunler:aktif:all",result="miss"} 3
+                  # TYPE pastane_uptime_seconds gauge
+                  pastane_uptime_seconds 86432
+        '401':
+          description: Yetkisiz
+        '403':
+          description: Erişim yasaklandı
+
+  # ===========================================================================
+  # MONITORING — HEALTH CHECK (liveness / readiness / detailed)
+  # ===========================================================================
+  /health:
+    get:
+      tags: [Monitoring]
+      summary: Kapsamlı health check (detailed)
+      description: |
+        Tüm alt bileşenleri kontrol eder: database, cache, file system,
+        background jobs. Load balancer health probe için fazla ağır olabilir —
+        onun yerine `/health/live` kullanılmalıdır.
+
+        **Kimlik doğrulama:** Açık (public). Canlı ortamda IP kısıtı uygulanmalı.
+      responses:
+        '200':
+          description: Tüm bileşenler sağlıklı
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  status:
+                    type: string
+                    enum: [ok, degraded, down]
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                            enum: [ok, down]
+                          latency_ms:
+                            type: number
+                      cache:
+                        type: object
+                      filesystem:
+                        type: object
+                      storage_writable:
+                        type: boolean
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Servis bozuk (database down, filesystem read-only vb.)
+
+  /health/live:
+    get:
+      tags: [Monitoring]
+      summary: Liveness probe (lightweight)
+      description: |
+        Process ayakta mı kontrolü. DB/cache check YAPMAZ. Kubernetes
+        `livenessProbe` için uygun.
+      responses:
+        '200':
+          description: Process canlı
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: alive
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /health/ready:
+    get:
+      tags: [Monitoring]
+      summary: Readiness probe (DB + migrations)
+      description: |
+        Uygulama trafik almaya hazır mı? DB bağlantısı + kritik tablolar
+        mevcut mu kontrol eder. Kubernetes `readinessProbe` için uygun.
+      responses:
+        '200':
+          description: Hazır
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+                  database:
+                    type: string
+                    example: connected
+                  migrations_current:
+                    type: boolean
+        '503':
+          description: Hazır değil (DB bağlantısı yok veya migration eksik)
+
+  # ===========================================================================
+  # ADMIN — 2FA (Two-Factor Authentication)
+  # ===========================================================================
+  /admin/2fa/enable:
+    post:
+      tags: [Admin - 2FA]
+      summary: 2FA kurulumunu başlat (secret + QR URI döner)
+      description: |
+        `TwoFactorAuth::generateSecret()` ile yeni bir TOTP secret üretir ve
+        `otpauth://` URI'sini QR kod için döndürür. Bu aşamada 2FA henüz AKTİF
+        DEĞİL — kullanıcı `/2fa/verify` ile ilk kodu doğrulayana kadar secret
+        geçici olarak session'da tutulur.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Secret + QR URI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      secret:
+                        type: string
+                        description: Base32 secret (manuel giriş için)
+                        example: "JBSWY3DPEHPK3PXP"
+                      qr_uri:
+                        type: string
+                        description: otpauth:// URI — QR kod üretimi için
+                        example: "otpauth://totp/Pastane:admin?secret=JBSWY3DPEHPK3PXP&issuer=Pastane"
+                      backup_codes:
+                        type: array
+                        items:
+                          type: string
+                        description: Tek kullanımlık kurtarma kodları (8 adet)
+        '401':
+          description: Yetkisiz
+        '409':
+          description: 2FA zaten aktif
+
+  /admin/2fa/verify:
+    post:
+      tags: [Admin - 2FA]
+      summary: 2FA kurulumunu doğrula ve aktifleştir
+      description: |
+        `/2fa/enable` sonrası alınan secret ile üretilmiş ilk TOTP kodunu
+        doğrular. Başarılıysa `users.two_factor_secret` kolonu kalıcı yazılır
+        ve 2FA aktif hale gelir.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  example: "123456"
+                  description: TOTP kodu (6 haneli)
+      responses:
+        '200':
+          description: 2FA başarıyla aktifleştirildi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "2FA aktifleştirildi"
+        '400':
+          description: Geçersiz kod veya enable akışı başlatılmamış
+        '401':
+          description: Yetkisiz
+        '422':
+          description: Validation hatası (kod formatı)
+
+  /admin/2fa/disable:
+    post:
+      tags: [Admin - 2FA]
+      summary: 2FA devre dışı bırak
+      description: |
+        Aktif 2FA'yı kapatır. Güvenlik için mevcut TOTP kodu veya backup kodu
+        doğrulaması zorunludur.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  description: Mevcut TOTP kodu veya backup recovery kodu
+                  example: "123456"
+      responses:
+        '200':
+          description: 2FA devre dışı bırakıldı
+        '400':
+          description: Geçersiz kod
+        '401':
+          description: Yetkisiz
+        '409':
+          description: 2FA zaten devre dışı

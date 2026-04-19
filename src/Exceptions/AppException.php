@@ -224,7 +224,10 @@ class AppException
 
         $message = self::$debug ? e_safe($e->getMessage()) : self::getPublicMessage($statusCode);
 
-        // Debug modda detaylı bilgi
+        // Debug modda detaylı bilgi.
+        // NOT: Inline style ZORUNLU — fatal error handler'ı; uygulama bootstrap'i
+        // başarısız olmuş olabilir, dış stylesheet yüklemek güvenli değil.
+        // Bu standalone (self-contained) hata sayfasıdır; CSS pipeline yok.
         $debugInfo = '';
         if (self::$debug) {
             $debugInfo = sprintf(

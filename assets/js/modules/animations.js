@@ -4,21 +4,32 @@
  */
 
 export function initAnimations() {
-  // Check for reduced motion preference
-  const prefersReducedMotion = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  ).matches;
+  // Reduced-motion tercihine runtime'da da abone ol —
+  // kullanici isletim sistemi ayarini degistirirse tekrar degerlendir.
+  const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  if (prefersReducedMotion) {
-    // Remove animation classes for users who prefer reduced motion
-    document
-      .querySelectorAll('[data-animate]')
-      .forEach((el) => el.classList.add('no-animate'));
-    return;
+  const apply = () => {
+    if (mql.matches) {
+      // Remove animation classes for users who prefer reduced motion
+      document
+        .querySelectorAll('[data-animate]')
+        .forEach((el) => el.classList.add('no-animate'));
+    } else {
+      document
+        .querySelectorAll('[data-animate].no-animate')
+        .forEach((el) => el.classList.remove('no-animate'));
+      initScrollAnimations();
+    }
+  };
+
+  apply();
+
+  if (typeof mql.addEventListener === 'function') {
+    mql.addEventListener('change', apply);
+  } else if (typeof mql.addListener === 'function') {
+    // Safari < 14 fallback
+    mql.addListener(apply);
   }
-
-  // Initialize scroll animations
-  initScrollAnimations();
 }
 
 /**
@@ -99,18 +110,39 @@ export function animateCounter(element, target, duration = 2000) {
 
 /**
  * Typing animation
+ *
+ * Reduced-motion aktifse tum metni aninda yazar.
+ * Cancel fonksiyonu dondurur — caller unmount ederse setTimeout temizlenir.
  */
 export function typeWriter(element, text, speed = 50) {
-  let index = 0;
   element.textContent = '';
+
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  if (prefersReducedMotion) {
+    element.textContent = text;
+    return () => {};
+  }
+
+  let index = 0;
+  let timerId = null;
 
   function type() {
     if (index < text.length) {
       element.textContent += text.charAt(index);
       index++;
-      setTimeout(type, speed);
+      timerId = setTimeout(type, speed);
     }
   }
 
   type();
+
+  return () => {
+    if (timerId !== null) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+  };
 }

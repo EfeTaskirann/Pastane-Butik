@@ -26,7 +26,7 @@ class KategoriValidator extends BaseValidator
         if ($this->scenario === 'update') {
             // Update: hiçbir alan zorunlu değil ama gönderilen alanlar valide edilir
             return [
-                'ad' => ['nullable', 'string', 'min:2', 'max:100'],
+                'isim' => ['nullable', 'string', 'min:2', 'max:100'],
                 'slug' => ['nullable', 'string', 'max:100'],
                 'aciklama' => ['nullable', 'string', 'max:500'],
                 'resim' => ['nullable', 'string', 'max:255'],
@@ -36,7 +36,7 @@ class KategoriValidator extends BaseValidator
         }
 
         return [
-            'ad' => ['required', 'string', 'min:2', 'max:100'],
+            'isim' => ['required', 'string', 'min:2', 'max:100'],
             'slug' => ['nullable', 'string', 'max:100'],
             'aciklama' => ['nullable', 'string', 'max:500'],
             'resim' => ['nullable', 'string', 'max:255'],
@@ -48,9 +48,9 @@ class KategoriValidator extends BaseValidator
     protected function messages(): array
     {
         return [
-            'ad.required' => 'Kategori adı zorunludur.',
-            'ad.min' => 'Kategori adı en az 2 karakter olmalıdır.',
-            'ad.max' => 'Kategori adı en fazla 100 karakter olabilir.',
+            'isim.required' => 'Kategori adı zorunludur.',
+            'isim.min' => 'Kategori adı en az 2 karakter olmalıdır.',
+            'isim.max' => 'Kategori adı en fazla 100 karakter olabilir.',
         ];
     }
 }

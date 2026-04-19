@@ -1,0 +1,133 @@
+Tatlı Düşler — Third-Party Credits & Licenses
+================================================================================
+
+This file lists all third-party libraries, fonts, icons, and assets bundled or
+referenced by this product. Each entry shows:  Library  —  Version  —  License
+—  URL. Please preserve this attribution per the respective upstream licenses.
+
+Last updated: 2026-04-20
+
+--------------------------------------------------------------------------------
+RUNTIME JAVASCRIPT DEPENDENCIES (composer.json / package.json "dependencies")
+--------------------------------------------------------------------------------
+
+  Chart.js                — ^4.4.1  — MIT             — https://www.chartjs.org/
+  Flatpickr               — ^4.6.13 — MIT             — https://flatpickr.js.org/
+  SortableJS              — ^1.15.2 — MIT             — https://sortablejs.github.io/Sortable/
+  SweetAlert2             — ^11.10.5 — MIT            — https://sweetalert2.github.io/
+
+--------------------------------------------------------------------------------
+BUILD-TIME DEVELOPMENT DEPENDENCIES (package.json "devDependencies")
+--------------------------------------------------------------------------------
+
+These are used only at build time and are NOT shipped in the production bundle.
+
+  @vitejs/plugin-legacy   — ^5.0.0  — MIT             — https://github.com/vitejs/vite
+  Autoprefixer            — ^10.4.17 — MIT            — https://github.com/postcss/autoprefixer
+  cssnano                 — ^6.0.3  — MIT             — https://cssnano.co/
+  ESLint                  — ^8.56.0 — MIT             — https://eslint.org/
+  PostCSS                 — ^8.4.35 — MIT             — https://postcss.org/
+  postcss-import          — ^16.0.1 — MIT             — https://github.com/postcss/postcss-import
+  Prettier                — ^3.2.5  — MIT             — https://prettier.io/
+  rimraf                  — ^5.0.5  — ISC             — https://github.com/isaacs/rimraf
+  Sass (dart-sass)        — ^1.71.0 — MIT             — https://sass-lang.com/
+  Stylelint               — ^16.2.1 — MIT             — https://stylelint.io/
+  stylelint-config-standard-scss — ^13.0.0 — MIT      — https://github.com/stylelint-scss
+  Terser                  — ^5.27.0 — BSD-2-Clause    — https://terser.org/
+  Vite                    — ^5.1.3  — MIT             — https://vitejs.dev/
+  vite-bundle-analyzer    — ^0.9.0  — MIT             — https://github.com/nonzzz/vite-bundle-analyzer
+  vite-plugin-compression — ^0.5.1  — MIT             — https://github.com/vbenjs/vite-plugin-compression
+
+--------------------------------------------------------------------------------
+PHP DEVELOPMENT DEPENDENCIES (composer.json "require-dev")
+--------------------------------------------------------------------------------
+
+  PHPUnit                 — ^10.0   — BSD-3-Clause    — https://phpunit.de/
+  PHPStan                 — ^1.10   — MIT             — https://phpstan.org/
+  PHP_CodeSniffer         — ^3.7    — BSD-3-Clause    — https://github.com/squizlabs/PHP_CodeSniffer
+
+Optional (suggested for contributors):
+  friendsofphp/php-cs-fixer — *     — MIT             — https://cs.symfony.com/
+  captainhook/captainhook   — *     — MIT             — https://captainhookphp.github.io/captainhook/
+
+--------------------------------------------------------------------------------
+FONTS (referenced via Google Fonts, not bundled)
+--------------------------------------------------------------------------------
+
+  Playfair Display        — 1.201  — SIL OFL 1.1      — https://fonts.google.com/specimen/Playfair+Display
+                                                       https://scripts.sil.org/OFL
+  Poppins                 — 2.001  — SIL OFL 1.1      — https://fonts.google.com/specimen/Poppins
+
+Fonts are loaded from fonts.googleapis.com / fonts.gstatic.com via `<link>` tags.
+They are NOT redistributed with the source package.
+
+--------------------------------------------------------------------------------
+THIRD-PARTY CDNS REFERENCED AT RUNTIME
+--------------------------------------------------------------------------------
+
+  SweetAlert2 (CDN fallback) — cdn.jsdelivr.net — MIT — https://sweetalert2.github.io/
+      Used by menu/sepet.php when Vite bundle is unavailable.
+
+  Swagger UI              — 5.17.14 — Apache-2.0      — https://swagger.io/tools/swagger-ui/
+      Loaded by public/api-docs/index.html for OpenAPI browsing (non-production).
+
+  Google Charts QR API    — live   — Google ToS       — https://developers.google.com/chart/infographics/docs/qr_codes
+      Used by includes/TwoFactorAuth.php + src/Services/QrKodService.php for QR
+      code image generation. Replaceable with a self-hosted library if desired.
+
+--------------------------------------------------------------------------------
+INTERNAL PHP HELPER CLASSES
+--------------------------------------------------------------------------------
+
+The following helper classes under `includes/` are original work by the Tatlı
+Düşler author and fall under the main license (see LICENSE.txt):
+
+  JWT.php                 — Minimal JWT encoder/decoder
+  RateLimiter.php         — In-memory + DB-backed rate limiter
+  SecurityAudit.php       — Security event recorder
+  TwoFactorAuth.php       — TOTP implementation (RFC 6238)
+  PasswordPolicy.php      — Password policy validator
+  Logger.php              — PSR-3 compatible logger
+  Cache.php               — File + Redis cache driver
+  Migration.php           — Schema migration runner
+  HealthCheck.php         — Liveness/readiness probes
+  EmailService.php        — SMTP + PHPMailer adapter
+  SmsService.php          — SMS driver abstraction
+  Metrics.php             — Prometheus exposition format
+  Sentry.php              — Envelope-based Sentry client
+
+These files are released under the same terms as the main product.
+
+--------------------------------------------------------------------------------
+ICONS
+--------------------------------------------------------------------------------
+
+This product uses inline SVG icons (authored by the project) and Unicode
+emoji/symbols for UI indicators. No FontAwesome, Heroicons, or Feather icon
+libraries are bundled.
+
+--------------------------------------------------------------------------------
+IMAGES / DEMO CONTENT
+--------------------------------------------------------------------------------
+
+Product demo images in `uploads/products/` (if any are seeded by `bin/db-seed.php`
+or shipped in the marketing preview) are either:
+  (a) Original photography by Tatlı Düşler (licensed to CodeCanyon buyer
+      under the accompanying LICENSE.txt for in-project use only — may not be
+      redistributed separately), or
+  (b) Free-license stock photography — source and license noted inline.
+
+Marketing preview images (marketing/*.png, marketing/*.jpg) are original work.
+
+--------------------------------------------------------------------------------
+LICENSE COMPATIBILITY NOTE
+--------------------------------------------------------------------------------
+
+All bundled third-party code is under permissive licenses (MIT / BSD / ISC / OFL
+/ Apache-2.0) that are compatible with CodeCanyon distribution. No GPL/AGPL
+copyleft code is included.
+
+If you add additional third-party dependencies during customization, please
+update this file accordingly and check license compatibility.
+
+================================================================================

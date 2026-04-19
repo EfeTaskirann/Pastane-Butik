@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Veritabanı Bağlantısı (PDO)
  */
@@ -38,6 +40,16 @@ class Database {
         'password_history',
         'siparis_puan_ayarlari',
         'kategori_fiyatlari',
+        'site_temalari',
+        'masalar',
+        'masa_oturumlari',
+        'masa_siparisleri',
+        'masa_siparis_kalemleri',
+        'odeme_islemleri',
+        'security_events',
+        'api_tokens',
+        'user_sessions',
+        'password_resets',
     ];
 
     /**

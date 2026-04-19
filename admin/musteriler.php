@@ -283,7 +283,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 </style>
 
-<h2 style="margin-bottom: 1.5rem;">Kayıtlı Müşteriler</h2>
+<h2 class="u-mb-5">Kayıtlı Müşteriler</h2>
 
 <!-- İstatistik Kartları -->
 <div class="musteri-stats">
@@ -372,7 +372,7 @@ require_once __DIR__ . '/includes/header.php';
                     <th>Müşteri</th>
                     <th>Telefon</th>
                     <th>Adres</th>
-                    <th style="text-align: center;">Sipariş</th>
+                    <th class="u-text-center">Sipariş</th>
                     <th>Hediye Durumu</th>
                     <th>Son Sipariş</th>
                 </tr>
@@ -388,7 +388,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="musteri-info">
                                 <div class="musteri-avatar"><?= e($ilkHarf) ?></div>
                                 <div>
-                                    <div class="name"><?= $musteri['isim'] ? e($musteri['isim']) : '<em style="color: #999;">İsim yok</em>' ?></div>
+                                    <div class="name"><?= $musteri['isim'] ? e($musteri['isim']) : '<em class="u-text-muted-3">İsim yok</em>' ?></div>
                                 </div>
                             </div>
                         </td>
@@ -399,10 +399,10 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if ($musteri['adres']): ?>
                                 <div class="adres-text" title="<?= e($musteri['adres']) ?>"><?= e($musteri['adres']) ?></div>
                             <?php else: ?>
-                                <em style="color: #999;">-</em>
+                                <em class="u-text-muted-3">-</em>
                             <?php endif; ?>
                         </td>
-                        <td style="text-align: center;">
+                        <td class="u-text-center">
                             <span class="siparis-badge"><?= $musteri['siparis_sayisi'] ?></span>
                         </td>
                         <td>
@@ -418,7 +418,8 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="sonraki-hediye">
                                 <?= $sonrakiHediyeIcin ?> sipariş sonra hediye
                                 <span class="progress">
-                                    <span class="progress-fill" style="width: <?= $hedijeProgress ?>%"></span>
+                                    <?php /* Dinamik progress genisligi — PHP uretimi, CSS custom property ile */ ?>
+                                    <span class="progress-fill u-progress-fill" style="--u-progress: <?= (int)$hedijeProgress ?>%;"></span>
                                 </span>
                             </div>
                         </td>
@@ -426,7 +427,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if ($musteri['son_siparis_tarihi']): ?>
                                 <?= date('d.m.Y', strtotime($musteri['son_siparis_tarihi'])) ?>
                             <?php else: ?>
-                                <em style="color: #999;">-</em>
+                                <em class="u-text-muted-3">-</em>
                             <?php endif; ?>
                         </td>
                     </tr>

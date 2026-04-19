@@ -16,16 +16,26 @@ export function initAccessibility() {
 
 /**
  * Skip to main content link
+ *
+ * CLAUDE.md Sprint 3 dersi: <main>/<section> native olarak focus alamaz.
+ * tabindex="-1" yoksa ekle; focus({preventScroll}) + scrollIntoView sırası
+ * çift jump'u onler.
  */
 function initSkipLink() {
   const skipLink = document.querySelector('[data-skip-link]');
   const mainContent = document.getElementById('main-content');
 
   if (skipLink && mainContent) {
+    // Ensure target is programmatically focusable (WCAG skip-link pattern)
+    if (!mainContent.hasAttribute('tabindex')) {
+      mainContent.setAttribute('tabindex', '-1');
+    }
+
     skipLink.addEventListener('click', (e) => {
       e.preventDefault();
-      mainContent.focus();
-      mainContent.scrollIntoView();
+      // preventScroll: focus() browsera göre jump edebilir; scrollIntoView tek kaynak olsun
+      mainContent.focus({ preventScroll: true });
+      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
 }
@@ -120,19 +130,28 @@ function initKeyboardNavigation() {
 
 /**
  * Focus trap for modals/dialogs
+ *
+ * Her Tab'da canli olarak odaklanabilir elementleri yeniden hesaplar —
+ * boylece modal icerigi dinamik degisse bile trap calisir.
+ * initFocusTrap cagrisinda aktif oge saklanir ve Escape ile restore edilir.
  */
 export function initFocusTrap(container) {
-  const focusableElements = container.querySelectorAll(
-    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  );
+  const FOCUSABLE_SELECTOR =
+    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), summary, [role="button"]:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-  if (focusableElements.length === 0) return;
-
-  const firstFocusable = focusableElements[0];
-  const lastFocusable = focusableElements[focusableElements.length - 1];
+  // Remember the element that had focus before the trap activated.
+  const previouslyFocused =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   container.addEventListener('keydown', (e) => {
     if (e.key !== 'Tab') return;
+
+    // Recompute each time — modal contents may have changed
+    const focusableElements = container.querySelectorAll(FOCUSABLE_SELECTOR);
+    if (focusableElements.length === 0) return;
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
 
     if (e.shiftKey) {
       if (document.activeElement === firstFocusable) {
@@ -146,6 +165,13 @@ export function initFocusTrap(container) {
       }
     }
   });
+
+  // Restore focus when the container is hidden/removed.
+  return () => {
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      previouslyFocused.focus();
+    }
+  };
 }
 
 /**
@@ -182,17 +208,27 @@ function initAriaLiveRegions() {
 
 /**
  * Announce message to screen readers
+ *
+ * Birbirini izleyen cagrilarda onceki setTimeout iptal edilir —
+ * aksi halde mesajlar cakisir ve ekran okuyucu bazen sonuncuyu atlar.
  */
+let announceTimer = null;
 export function announce(message, priority = 'polite') {
   const announcer = document.getElementById('aria-announcer');
   if (!announcer) return;
+
+  if (announceTimer) {
+    clearTimeout(announceTimer);
+    announceTimer = null;
+  }
 
   announcer.setAttribute('aria-live', priority);
   announcer.textContent = '';
 
   // Small delay to ensure the change is announced
-  setTimeout(() => {
+  announceTimer = setTimeout(() => {
     announcer.textContent = message;
+    announceTimer = null;
   }, 100);
 }
 

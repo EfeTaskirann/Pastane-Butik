@@ -1,0 +1,82 @@
+# ============================================================================
+# docker-compose.blue.yml — Blue Slot (Production Blue-Green)
+# ----------------------------------------------------------------------------
+# Bu dosya production'da nginx LB arkasındaki BLUE slot'u tanımlar.
+# Aynı MySQL + Redis container'larını paylaşır (external network ile).
+#
+# İlk kurulum:
+#   docker network create pastane-network
+#   docker compose -f docker-compose.yml up -d db redis
+#   docker compose -f docker-compose.blue.yml up -d
+#
+# Deploy:
+#   bin/deploy.sh deploy blue <image_tag>
+#
+# Çıkış:
+#   docker compose -f docker-compose.blue.yml down
+#
+# Port: 8081 (nginx upstream: pastane-blue:80)
+# Image: IMAGE_TAG env var (örn. v1.2.0). Fallback: latest (CI dışı yasak).
+# ============================================================================
+
+version: '3.8'
+
+services:
+  app:
+    image: pastane:${IMAGE_TAG:-latest}
+    container_name: pastane-blue
+    hostname: pastane-blue
+    restart: unless-stopped
+    ports:
+      - "${BLUE_PORT:-8081}:80"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_SLOT=blue
+      - APP_NAME=${APP_NAME:-Tatlı Düşler}
+      - APP_URL=${APP_URL:-https://tatlidusler.com}
+      - DB_HOST=${DB_HOST:-pastane-db}
+      - DB_DATABASE=${DB_DATABASE:-pastane}
+      - DB_USERNAME=${DB_USERNAME:-pastane}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD required}
+      - REDIS_HOST=${REDIS_HOST:-pastane-redis}
+      - CACHE_DRIVER=${CACHE_DRIVER:-redis}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=production
+      - SENTRY_RELEASE=${IMAGE_TAG:-unknown}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      - METRICS_TOKEN=${METRICS_TOKEN:?METRICS_TOKEN required}
+      - HEALTH_TOKEN=${HEALTH_TOKEN:?HEALTH_TOKEN required}
+    volumes:
+      - uploads:/var/www/html/uploads
+      - storage:/var/www/html/storage
+    networks:
+      - pastane-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+        labels: "service=pastane-blue"
+    labels:
+      - "slot=blue"
+      - "traefik.enable=false"    # nginx-lb üzerinden
+
+volumes:
+  uploads:
+    external: true
+    name: pastane_uploads
+  storage:
+    external: true
+    name: pastane_storage
+
+networks:
+  pastane-network:
+    external: true
+    name: pastane-network

@@ -1,0 +1,706 @@
+/* =============================================
+   KIS TEMASI — Tatli Dusler
+   Kar yagisi, buzlu cam efektleri, sicak kis lezzetleri
+
+   NOT: Bu tema, mevcut renk degiskenlerini (--pembe-soft, --kahve vb.)
+   kis paleti ile override eder. Degisken adlari orijinal temadan
+   kalmistir — "pembe-soft" kis temasinda buz mavisi, "kahve" soguk
+   gri-mavi tonuna donusur. Icerik mevsimseldir, adlar orijinaldir.
+
+   Strateji:
+   1. :root CSS variable override -> tum mevcut bilesenler otomatik renk degistirir
+   2. [data-theme="kis"] prefix -> !important kullanmadan specificity artisi
+   3. Dekoratif katmanlar (kar yagisi, buzlu cam)
+   ============================================= */
+
+/* ---------- Renk Paleti Override ----------
+   NOT: :root yerine body[data-theme="kis"] scope — dark mode (html[data-theme="dark"])
+   ve yaz temasi (body[data-theme="yaz"]) ile cakismamasi icin. Tum kis overrides'lari
+   yalnizca body'de kis temasi aktifken uygulanir.
+   ------------------------------------------- */
+body[data-theme="kis"] {
+    --pembe-soft: #E8EFF5;       /* buz lavanta-mavisi */
+    --pembe-accent: #B8CCE0;     /* celik mavi */
+    --pembe-medium: #8BACC4;     /* kis mavisi */
+    --krem: #F5F8FC;             /* buz beyaz-krem */
+    --krem-dark: #E8EDF3;        /* soguk gri-krem */
+    --kahve: #6B7B8D;            /* soguk arduvaz */
+    --kahve-light: #8B9BAB;      /* acik arduvaz */
+    --kirmizi-soft: #B8C4D4;     /* buzlu gri-mavi */
+    --yesil-soft: #A5BFC4;       /* buzlu teal */
+
+    /* WCAG AA — krem arka plana karsi >= 4.5:1 kontrast hedeflendi */
+    --text-primary: #2D3E4F;     /* koyu mavi-gri (10.5:1 on krem) */
+    --text-secondary: #4A5D6D;   /* 6.47:1 on krem (onceki #6B7F8D = 3.84:1 FAIL) */
+    --text-light: #5F7180;       /* 4.58:1 on krem (onceki #94A3AF = 2.38:1 FAIL) */
+
+    /* Kis ozel tokenlar */
+    --winter-frost: rgba(255, 255, 255, 0.15);
+    --winter-ice: #D4E4F0;
+    --winter-snow: #FAFCFF;
+    --winter-gold: #D4A574;      /* sicak aksan (firin sicakligi) */
+    --winter-cinnamon: #A67C52;
+
+    /* Altin override — soguk altin */
+    --gold-primary: #B8A88A;
+    --gold-light: #C8BBA0;
+    --gold-shimmer: linear-gradient(135deg, #B8A88A, #D8CCBA, #B8A88A);
+
+    /* Glassmorphism — kis icin daha yogun frost */
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-blur: 14px;
+
+    /* Pasta (cake) SVG kis palet — buzlu pastel, kranberry aksan */
+    --tier-light: #EAF3F8;       /* kar beyazi */
+    --tier-mid:   #C4D9E7;       /* buz */
+    --tier-dark:  #7A9DC0;       /* celik mavi */
+    --tier-base:  #D4E4F0;
+    --cream:      #FFFFFF;
+    --cream-shade:#DCEAF2;
+    --berry:      #B84A6A;       /* kranberry */
+    --berry-dark: #8A3548;
+    --leaf:       #6D8B6F;       /* cam yesili */
+    --dot-pink:   #D8A0B0;
+    --dot-green:  #A0C0A0;
+    --sparkle:    #FFFFFF;
+    --contact:    rgba(60, 80, 110, 0.20);
+
+    /* Cupcake kis palet — buzlu mavi + kranberry */
+    --cup-stroke:       #1A2A3C;
+    --cup-wrap:         #A8C4D9;    /* buzlu mavi kagit */
+    --cup-wrap-dark:    #7A9DC0;
+    --cup-wrap-edge:    #D4E4F0;    /* kar beyazi bant */
+    --cup-wrap-shadow:  #4A6585;
+    --cup-cake:         #A88968;    /* ballita vanilya (firin sicakligi) */
+    --cup-cake-shade:   #6B5338;
+    --cup-frost:        #F5F8FC;    /* krem beyazi swirl */
+    --cup-frost-mid:    #D4E4F0;
+    --cup-sprinkle:     #B84A6A;
+    --cup-cherry:       #C03048;    /* kranberry */
+    --cup-cherry-shade: #6B1E2A;
+    --cup-cherry-light: #E88498;
+    --cup-leaf:         #6D8B6F;
+    --cup-cheek:        #FFC4D0;    /* ayazdan pembelesmis yanak */
+    --cup-shadow:       rgba(60, 80, 110, 0.25);
+}
+
+/*
+ * NOT: .bg-gradient-1/2/3 siniflari zaten CSS degiskenlerini kullaniyor,
+ * bu yuzden section arka planlari yukaridaki :root override ile
+ * otomatik olarak kissal tonlara donusur. Ekstra override gerekmez.
+ */
+
+/* ---------- Buzlu Cam (Frosted Glass) Kartlar ---------- */
+[data-theme="kis"] .product-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    border: 1px solid rgba(212, 228, 240, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 2px 12px rgba(139, 172, 196, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="kis"] .product-card:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(212, 228, 240, 0.15);
+    box-shadow:
+        0 8px 32px rgba(139, 172, 196, 0.2),
+        0 0 20px rgba(212, 228, 240, 0.1),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+/* Frost kenar efekti — hover'da eriyor gibi gecis */
+[data-theme="kis"] .product-card::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.7) 0%,
+        rgba(212, 228, 240, 0.4) 25%,
+        rgba(184, 204, 224, 0.2) 50%,
+        rgba(212, 228, 240, 0.4) 75%,
+        rgba(255, 255, 255, 0.7) 100%
+    );
+    -webkit-mask:
+        linear-gradient(#fff 0 0) padding-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.7;
+    transition: opacity 0.6s ease, filter 0.6s ease, inset 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+    filter: blur(0px);
+}
+
+[data-theme="kis"] .product-card:hover::after {
+    opacity: 0.2;
+    filter: blur(2px);
+    inset: 2px;
+}
+
+/* ---------- Sparkle -> Kar Tanesi Donusumu ---------- */
+[data-theme="kis"] .sparkle {
+    background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(184, 204, 224, 0.4) 50%,
+        transparent 70%
+    );
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+}
+
+[data-theme="kis"] .sparkle::before {
+    background: linear-gradient(
+        to bottom, transparent, rgba(255, 255, 255, 0.8), transparent
+    );
+}
+
+[data-theme="kis"] .sparkle::after {
+    background: linear-gradient(
+        to right, transparent, rgba(255, 255, 255, 0.8), transparent
+    );
+}
+
+/* ---------- Isik Kureleri -> Soguk Mavi ---------- */
+[data-theme="kis"] .light-orb-1 {
+    background: radial-gradient(circle, rgba(232, 239, 245, 0.6) 0%, transparent 70%);
+}
+
+[data-theme="kis"] .light-orb-2 {
+    background: radial-gradient(circle, rgba(212, 228, 240, 0.5) 0%, transparent 70%);
+}
+
+/* ---------- Dekoratif Bloblar -> Buz Efekti ---------- */
+[data-theme="kis"] .decoration-blob {
+    background: var(--winter-ice);
+    opacity: 0.15;
+}
+
+/* ---------- Hero Logo Pariltisi ---------- */
+[data-theme="kis"] .hero-logo h1 {
+    text-shadow:
+        0 0 10px rgba(107, 123, 141, 0.08),
+        0 0 25px rgba(184, 204, 224, 0.15),
+        0 0 50px rgba(212, 228, 240, 0.08);
+}
+
+/* ---------- Scroll Progress Bar ---------- */
+[data-theme="kis"] .scroll-progress {
+    background: linear-gradient(90deg, #E8EFF5 0%, #8BACC4 50%, #D4A574 100%);
+}
+
+/* ---------- Promosyon Banner ---------- */
+[data-theme="kis"] .promo-banner {
+    background: linear-gradient(135deg, #8BACC4 0%, #6B7B8D 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- Butonlar ---------- */
+[data-theme="kis"] .btn-primary,
+[data-theme="kis"] .product-order-btn {
+    background: linear-gradient(135deg, #8BACC4 0%, #6B7B8D 100%);
+    border-color: #8BACC4;
+}
+
+[data-theme="kis"] .btn-primary:hover,
+[data-theme="kis"] .product-order-btn:hover {
+    background: linear-gradient(135deg, #7B9CB4 0%, #5B6B7D 100%);
+    box-shadow: 0 4px 15px rgba(139, 172, 196, 0.3);
+}
+
+[data-theme="kis"] .btn-secondary {
+    background: var(--pembe-soft);
+    color: var(--text-primary);
+}
+
+/* ---------- Kategori Filtre Butonlari ---------- */
+[data-theme="kis"] .filter-btn.active,
+[data-theme="kis"] .filter-btn:hover {
+    color: #8BACC4;
+}
+
+[data-theme="kis"] .filter-btn.active::after,
+[data-theme="kis"] .filter-btn:hover::after {
+    background: #8BACC4;
+}
+
+/* Footer temel renk — detayli siluet asagida */
+
+/* ---------- Takvim Renkleri ---------- */
+[data-theme="kis"] .calendar-day.bos {
+    background: #E8EFF5;
+}
+
+[data-theme="kis"] .calendar-day.uygun {
+    background: #B8D4E3;
+}
+
+[data-theme="kis"] .calendar-day.yogun {
+    background: #8BACC4;
+    color: #fff;
+}
+
+[data-theme="kis"] .calendar-day.dolu {
+    background: #6B8BA4;
+    color: #fff;
+}
+
+/* ---------- Iletisim Formu ---------- */
+[data-theme="kis"] .contact-form input:focus,
+[data-theme="kis"] .contact-form textarea:focus {
+    border-color: #8BACC4;
+    box-shadow: 0 0 0 3px rgba(139, 172, 196, 0.15);
+}
+
+/* ---------- WhatsApp Butonu Buz Halkasi ---------- */
+[data-theme="kis"] .whatsapp-float {
+    box-shadow:
+        0 4px 20px rgba(37, 211, 102, 0.4),
+        0 0 0 4px rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- Modal -> Buzlu Cam ---------- */
+[data-theme="kis"] .modal-content {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ---------- FAQ Accordion ---------- */
+[data-theme="kis"] .faq-item {
+    border-color: var(--winter-ice);
+}
+
+[data-theme="kis"] .faq-item:hover {
+    background: rgba(232, 239, 245, 0.3);
+}
+
+/* ---------- Section Baslik Dekorasyonu ----------
+   animations.css .section-header h2::before/::after ile sparkle var.
+   Tema bunu kar tanesiyle degistiriyor (override, cakisma yok).
+   ------------------------------------------------ */
+[data-theme="kis"] .section-header h2::before {
+    content: '\2744'; /* snowflake */
+    color: #8BACC4;
+    font-size: 0.6em;
+    animation: iceCrystalSpin 6s linear infinite;
+}
+
+[data-theme="kis"] .section-header h2::after {
+    content: '\2744'; /* snowflake */
+    color: #8BACC4;
+    font-size: 0.6em;
+    animation: iceCrystalSpin 6s linear infinite;
+    animation-delay: 1.5s;
+}
+
+@keyframes iceCrystalSpin {
+    0% { transform: translateY(-50%) rotate(0deg) scale(1); }
+    50% { transform: translateY(-50%) rotate(180deg) scale(1.15); }
+    100% { transform: translateY(-50%) rotate(360deg) scale(1); }
+}
+
+/* =============================================
+   KAR YAGISI KATMANI
+   ============================================= */
+.winter-snowfall {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.snowflake {
+    position: absolute;
+    top: -20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    opacity: 0;
+    text-shadow: 0 0 6px rgba(184, 204, 224, 0.6);
+    animation: snowfall linear infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes snowfall {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) translateX(0) rotate(0deg);
+    }
+    10% {
+        opacity: 1;
+    }
+    85% {
+        opacity: 0.6;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) translateX(var(--drift, 30px)) rotate(var(--rotation, 360deg));
+    }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .snowflake {
+        font-size: 0.7rem;
+    }
+
+    /* Mobilde backdrop-filter tamamen kaldir (GPU yuku) */
+    [data-theme="kis"] .product-card {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    [data-theme="kis"] .modal-content {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
+
+/* =============================================
+   KÖPEK KIZAĞI — SABİT KIZAK + KAYAN YOL
+   ============================================= */
+
+/* Arka plan — karlı dağlar + çam ağaçları */
+.winter-scene-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.winter-scene-bg svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Kızak sahnesi — soldan gelip sağa giden */
+.winter-sled-static {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    animation: sledDrive 10s ease-in-out infinite;
+}
+
+.winter-scene-svg {
+    width: 500px;
+    height: auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Köpek koşma animasyonu — hafif zıplama + sallanma */
+.sled-dog {
+    animation: dogRun 0.4s ease-in-out infinite alternate;
+    transform-origin: 36px 60px;
+}
+
+.sled-dog-1 { animation-delay: 0s; }
+.sled-dog-2 { animation-delay: 0.2s; }
+
+@keyframes dogRun {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-2.5px) rotate(-1.2deg); }
+}
+
+/* Kızak sürüş animasyonu — soldan gel, ortada dur, sağa git */
+@keyframes sledDrive {
+    0%   { left: -350px; }
+    20%  { left: calc(50% - 250px); }
+    65%  { left: calc(50% - 250px); }
+    85%  { left: calc(100% + 50px); }
+    100% { left: calc(100% + 50px); }
+}
+
+/* Konteyner büyüt — kızak sahnesine yer aç */
+[data-theme="kis"] .delivery-animation-container {
+    max-width: 560px;
+    height: 130px;
+    overflow: hidden;
+}
+
+/* Mevcut truck animasyonunu devre dışı bırak */
+[data-theme="kis"] .delivery-truck {
+    animation: none;
+    position: static;
+    width: auto;
+    height: auto;
+}
+
+/* Mevcut yol çizgisini gizle */
+[data-theme="kis"] .delivery-truck-scene::after {
+    display: none;
+}
+
+/* ---------- Kurt Bacak Koşma Animasyonu ---------- */
+.wolf-leg-1,
+.wolf-leg-2,
+.wolf-leg-3,
+.wolf-leg-4 {
+    transform-box: fill-box;
+    transform-origin: top center;
+    animation: wolfRun 0.6s ease-in-out infinite alternate;
+}
+
+.wolf-leg-2 { animation-delay: -0.15s; }
+.wolf-leg-3 { animation-delay: -0.3s; }
+.wolf-leg-4 { animation-delay: -0.45s; }
+
+@keyframes wolfRun {
+    0%   { transform: rotate(-8deg); }
+    100% { transform: rotate(8deg); }
+}
+
+/* =============================================
+   SECTION DIVIDER — BUZ SARKITLARI (Icicle)
+   ============================================= */
+[data-theme="kis"] section {
+    position: relative;
+}
+
+[data-theme="kis"] section + section::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 28' preserveAspectRatio='none'%3E%3Cpath d='M0 0h120v4c-3 0-4 1-5 8-1 6-2 10-5 10s-4-4-5-10c-1-7-2-8-5-8s-4 1-5 8c-1 6-2 10-5 10s-4-4-5-10C84 5 83 4 80 4s-4 1-5 8c-1 6-2 10-5 10s-4-4-5-10c-1-7-2-8-5-8s-4 1-5 8c-1 6-2 10-5 10s-4-4-5-10c-1-7-2-8-5-8s-4 1-5 8c-1 6-2 10-5 10S21 18 20 12c-1-7-2-8-5-8s-4 1-5 8c-1 6-2 10-5 10S1 18 0 12V0z' fill='rgba(212,228,240,0.35)'/%3E%3C/svg%3E") repeat-x;
+    background-size: 120px 28px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* =============================================
+   FOOTER — KARLA KAPLI SEHIR SİLUETİ
+   ============================================= */
+[data-theme="kis"] footer {
+    background: linear-gradient(135deg, #2D3E4F 0%, #1E2D3D 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="kis"] footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23D4E4F0' stop-opacity='0.15'/%3E%3Cstop offset='1' stop-color='%232D3E4F' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='80' fill='url(%23sky)'/%3E%3Cpath d='M0 80 L0 55 L40 55 L40 35 L55 35 L55 30 L60 25 L65 30 L65 35 L80 35 L80 50 L100 50 L100 40 L110 40 L110 20 L120 15 L130 20 L130 40 L150 40 L150 55 L180 55 L180 45 L200 45 L200 25 L210 25 L210 15 L215 10 L220 15 L220 25 L240 25 L240 45 L260 45 L260 55 L290 55 L290 35 L300 35 L300 18 L305 12 L310 18 L310 35 L330 35 L330 50 L360 50 L360 40 L380 40 L380 55 L410 55 L410 30 L420 30 L420 20 L430 15 L440 20 L440 30 L460 30 L460 50 L490 50 L490 55 L520 55 L520 35 L540 35 L540 22 L545 18 L550 22 L550 35 L570 35 L570 55 L600 55 L600 45 L620 45 L620 30 L630 30 L630 15 L635 8 L640 15 L640 30 L660 30 L660 45 L680 45 L680 55 L710 55 L710 40 L730 40 L730 55 L760 55 L760 35 L770 35 L770 20 L780 15 L790 20 L790 35 L810 35 L810 55 L840 55 L840 45 L860 45 L860 25 L870 25 L870 18 L875 12 L880 18 L880 25 L900 25 L900 45 L920 45 L920 55 L950 55 L950 35 L970 35 L970 50 L1000 50 L1000 40 L1020 40 L1020 55 L1050 55 L1050 30 L1060 30 L1060 15 L1065 10 L1070 15 L1070 30 L1090 30 L1090 50 L1120 50 L1120 55 L1150 55 L1150 40 L1170 40 L1170 55 L1200 55 L1200 80Z' fill='%231A2A38' opacity='0.7'/%3E%3Cpath d='M0 80 L0 62 L60 62 L60 55 L80 55 L80 62 L160 62 L160 58 L170 58 L170 52 L180 52 L180 58 L200 58 L200 62 L300 62 L300 55 L320 55 L320 62 L400 62 L400 58 L420 58 L420 62 L500 62 L500 56 L510 56 L510 50 L520 50 L520 56 L540 56 L540 62 L640 62 L640 55 L660 55 L660 62 L740 62 L740 58 L760 58 L760 62 L860 62 L860 56 L870 56 L870 50 L880 50 L880 56 L900 56 L900 62 L1000 62 L1000 58 L1020 58 L1020 62 L1100 62 L1100 55 L1120 55 L1120 62 L1200 62 L1200 80Z' fill='%231E2D3D'/%3E%3Ccircle cx='55' cy='30' r='1' fill='%23FFD93D' opacity='0.7'/%3E%3Ccircle cx='120' cy='18' r='1' fill='%23FFD93D' opacity='0.5'/%3E%3Ccircle cx='215' cy='13' r='1' fill='%23FFD93D' opacity='0.6'/%3E%3Ccircle cx='305' cy='15' r='1' fill='%23FFD93D' opacity='0.5'/%3E%3Ccircle cx='430' cy='18' r='1' fill='%23FFD93D' opacity='0.7'/%3E%3Ccircle cx='545' cy='20' r='1' fill='%23FFD93D' opacity='0.5'/%3E%3Ccircle cx='635' cy='12' r='1' fill='%23FFD93D' opacity='0.6'/%3E%3Ccircle cx='780' cy='18' r='1' fill='%23FFD93D' opacity='0.5'/%3E%3Ccircle cx='875' cy='15' r='1' fill='%23FFD93D' opacity='0.7'/%3E%3Ccircle cx='1065' cy='13' r='1' fill='%23FFD93D' opacity='0.5'/%3E%3Cpath d='M0 60 Q10 57 20 60 Q30 57 40 60 Q50 57 60 60 Q70 57 80 60 Q90 57 100 60 Q110 57 120 60 Q130 57 140 60 Q150 57 160 60 Q170 57 180 60 Q190 57 200 60 Q210 57 220 60 Q230 57 240 60 Q250 57 260 60 Q270 57 280 60 Q290 57 300 60 Q310 57 320 60 Q330 57 340 60 Q350 57 360 60 Q370 57 380 60 Q390 57 400 60 Q410 57 420 60 Q430 57 440 60 Q450 57 460 60 Q470 57 480 60 Q490 57 500 60 Q510 57 520 60 Q530 57 540 60 Q550 57 560 60 Q570 57 580 60 Q590 57 600 60 Q610 57 620 60 Q630 57 640 60 Q650 57 660 60 Q670 57 680 60 Q690 57 700 60 Q710 57 720 60 Q730 57 740 60 Q750 57 760 60 Q770 57 780 60 Q790 57 800 60 Q810 57 820 60 Q830 57 840 60 Q850 57 860 60 Q870 57 880 60 Q890 57 900 60 Q910 57 920 60 Q930 57 940 60 Q950 57 960 60 Q970 57 980 60 Q990 57 1000 60 Q1010 57 1020 60 Q1030 57 1040 60 Q1050 57 1060 60 Q1070 57 1080 60 Q1090 57 1100 60 Q1110 57 1120 60 Q1130 57 1140 60 Q1150 57 1160 60 Q1170 57 1180 60 Q1190 57 1200 60 L1200 62 L0 62Z' fill='%23E8EFF5' opacity='0.25'/%3E%3C/svg%3E") no-repeat center top;
+    background-size: 100% 80px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+[data-theme="kis"] .footer-content {
+    position: relative;
+    z-index: 2;
+}
+
+[data-theme="kis"] .footer-bottom {
+    position: relative;
+    z-index: 2;
+}
+
+/* =============================================
+   GENEL ATMOSFER — SICAK IC MEKAN KONTRAST
+   ============================================= */
+/* Koyu mavi-gri arka plan tonlari */
+[data-theme="kis"] .bg-gradient-1 {
+    background: linear-gradient(180deg, #E0EAF2 0%, #EEF3F8 50%, #F5F8FC 100%);
+}
+
+[data-theme="kis"] .bg-gradient-2 {
+    background: linear-gradient(180deg, #F5F8FC 0%, #EAF0F5 50%, #E0EAF2 100%);
+}
+
+[data-theme="kis"] .bg-gradient-3 {
+    background: linear-gradient(180deg, #E0EAF2 0%, #D4E4F0 100%);
+}
+
+/* About section — sicak ahsap doku hissi */
+[data-theme="kis"] .about {
+    background: linear-gradient(
+        180deg,
+        #F5F0EB 0%,
+        #EDE5DC 30%,
+        #F0E8E0 60%,
+        #E8E0D8 100%
+    );
+    position: relative;
+}
+
+[data-theme="kis"] .about::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            rgba(166, 124, 82, 0.02) 0px,
+            rgba(166, 124, 82, 0.04) 2px,
+            transparent 2px,
+            transparent 12px
+        );
+    pointer-events: none;
+}
+
+/* Sicak aydinlatma efekti — ince glow */
+[data-theme="kis"] .about .about-text {
+    position: relative;
+}
+
+[data-theme="kis"] .about .about-text::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(212, 165, 116, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* =============================================
+   CAM BUGUSU EFEKTİ (Breath efekti)
+   ============================================= */
+.winter-breath-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    background: radial-gradient(
+        ellipse at 50% 100%,
+        rgba(212, 228, 240, 0.06) 0%,
+        transparent 50%
+    );
+    animation: breathFog 8s ease-in-out infinite;
+}
+
+@keyframes breathFog {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+}
+
+/* =============================================
+   KIS TEMASI — BACKGROUND LAYERS & TEXTURES
+   ============================================= */
+
+/* Hero: Buzlu kis gradient overlay */
+[data-theme="kis"] .hero {
+    background:
+        radial-gradient(ellipse 130% 80% at 25% 15%, rgba(212, 228, 240, 0.4) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 70% at 75% 85%, rgba(184, 204, 224, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 50% 40%, rgba(250, 252, 255, 0.5) 0%, transparent 65%),
+        linear-gradient(180deg, var(--pembe-soft) 0%, var(--krem) 100%);
+}
+
+[data-theme="kis"] .hero::before {
+    background:
+        radial-gradient(circle 500px at 25% 20%, rgba(250, 252, 255, 0.6) 0%, transparent 65%),
+        radial-gradient(circle 350px at 80% 70%, rgba(212, 228, 240, 0.25) 0%, transparent 55%);
+}
+
+[data-theme="kis"] .hero::after {
+    background:
+        linear-gradient(175deg, transparent 0%, transparent 35%, rgba(245, 248, 252, 0.6) 65%, rgba(250, 252, 255, 0.85) 100%);
+}
+
+/* Parallax katmanlari — buzlu mavi tonlar */
+[data-theme="kis"] .parallax-layer--back {
+    background:
+        radial-gradient(circle 320px at 10% 20%, rgba(184, 204, 224, 0.2) 0%, transparent 100%),
+        radial-gradient(circle 280px at 90% 75%, rgba(212, 228, 240, 0.22) 0%, transparent 100%);
+}
+
+[data-theme="kis"] .parallax-layer--mid {
+    background:
+        radial-gradient(circle 220px at 55% 25%, rgba(212, 228, 240, 0.18) 0%, transparent 100%),
+        radial-gradient(circle 200px at 30% 80%, rgba(139, 172, 196, 0.08) 0%, transparent 100%);
+}
+
+/* Kar tanesi SVG pattern */
+[data-theme="kis"] .parallax-layer--front {
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='40' y1='10' x2='40' y2='30' stroke='%23B8CCE0' stroke-width='0.5' opacity='0.15'/%3E%3Cline x1='30' y1='15' x2='50' y2='25' stroke='%23B8CCE0' stroke-width='0.5' opacity='0.15'/%3E%3Cline x1='50' y1='15' x2='30' y2='25' stroke='%23B8CCE0' stroke-width='0.5' opacity='0.15'/%3E%3Cline x1='35' y1='12' x2='35' y2='18' stroke='%23D4E4F0' stroke-width='0.3' opacity='0.12'/%3E%3Cline x1='45' y1='12' x2='45' y2='18' stroke='%23D4E4F0' stroke-width='0.3' opacity='0.12'/%3E%3Ccircle cx='40' cy='20' r='1.5' fill='none' stroke='%23B8CCE0' stroke-width='0.3' opacity='0.1'/%3E%3Ccircle cx='15' cy='60' r='1' fill='%23D4E4F0' opacity='0.08'/%3E%3Ccircle cx='65' cy='55' r='0.8' fill='%23D4E4F0' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    opacity: 0.6;
+}
+
+/* Buzlu cam section texture */
+[data-theme="kis"] .section-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10 L55 25 L50 40 L45 25 Z' fill='none' stroke='%23B8CCE0' stroke-width='0.3' opacity='0.15'/%3E%3Cpath d='M42 25 L58 25' stroke='%23D4E4F0' stroke-width='0.3' opacity='0.1'/%3E%3Cpath d='M0 70 Q25 65 50 70 Q75 75 100 70' fill='none' stroke='%23D4E4F0' stroke-width='0.3' opacity='0.12'/%3E%3Ccircle cx='20' cy='50' r='15' fill='none' stroke='%23E8EFF5' stroke-width='0.2' opacity='0.08'/%3E%3Ccircle cx='80' cy='45' r='10' fill='none' stroke='%23E8EFF5' stroke-width='0.2' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 100px 100px;
+    opacity: 0.3;
+}
+
+/* About parallax — soguk tonlar */
+[data-theme="kis"] .parallax-layer--about {
+    background:
+        radial-gradient(circle 300px at 65% 25%, rgba(212, 228, 240, 0.15) 0%, transparent 100%),
+        radial-gradient(circle 250px at 25% 75%, rgba(184, 204, 224, 0.1) 0%, transparent 100%);
+}
+
+/* ---------- Erisilebilirlik ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .snowflake {
+        animation: none !important;
+        display: none !important;
+    }
+
+    [data-theme="kis"] .section-header h2::before,
+    [data-theme="kis"] .section-header h2::after {
+        animation: none;
+    }
+
+    .sled-dog {
+        animation: none;
+    }
+
+    .winter-breath-overlay {
+        animation: none;
+        display: none;
+    }
+
+    [data-theme="kis"] section + section::before {
+        display: none;
+    }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    [data-theme="kis"] section + section::before {
+        height: 18px;
+        background-size: 80px 18px;
+    }
+
+    [data-theme="kis"] footer::before {
+        height: 50px;
+        background-size: 100% 50px;
+    }
+
+    .winter-breath-overlay {
+        display: none;
+    }
+}

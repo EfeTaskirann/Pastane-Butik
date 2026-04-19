@@ -184,8 +184,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @test
+     *
+     * `kategoriler` tablosunda kolon adı `isim` (CLAUDE.md kolon adı uyumsuzluğu dersi).
+     * `ad` alanı DB'de mevcut değildir — validator `isim` bekler.
      */
-    public function kategori_create_requires_ad(): void
+    public function kategori_create_requires_isim(): void
     {
         $validator = new KategoriValidator('create');
 
@@ -195,15 +198,17 @@ class ValidatorTest extends TestCase
 
     /**
      * @test
+     *
+     * DB şeması: `kategoriler.isim` (VARCHAR(100), NOT NULL). Bkz. database.sql.
      */
     public function kategori_create_accepts_valid_data(): void
     {
         $validator = new KategoriValidator('create');
 
         $result = $validator->validate([
-            'ad' => 'Pastalar',
+            'isim' => 'Pastalar',
         ]);
 
-        $this->assertEquals('Pastalar', $result['ad']);
+        $this->assertEquals('Pastalar', $result['isim']);
     }
 }

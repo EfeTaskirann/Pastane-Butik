@@ -1,0 +1,277 @@
+/**
+ * Form Validator Component Styles
+ *
+ * Inline error state styling (CSP uyumlu, pure CSS).
+ * Kullanim: <input class="form-control" data-validate="required|email">
+ *           <small class="field-error" role="alert">Hata mesaji</small>
+ */
+
+/* ----- Hata mesaji ----- */
+.field-error {
+    display: block;
+    color: #a5281b;
+    font-size: 12.5px;
+    line-height: 1.4;
+    margin: 4px 0 0;
+    min-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 160ms ease, transform 160ms ease;
+    pointer-events: none;
+}
+
+.field-error.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Icon prefix (decorative) */
+.field-error.is-visible::before {
+    content: "\26A0"; /* U+26A0 WARNING SIGN */
+    margin-right: 4px;
+    font-size: 12px;
+    color: #a5281b;
+}
+
+/* ----- Input hata durumu ----- */
+.form-control.is-invalid,
+input.is-invalid,
+select.is-invalid,
+textarea.is-invalid {
+    border-color: #a5281b !important;
+    background-color: #fff6f5;
+    box-shadow: 0 0 0 2px rgba(165, 40, 27, 0.1);
+}
+
+.form-control.is-invalid:focus,
+input.is-invalid:focus,
+select.is-invalid:focus,
+textarea.is-invalid:focus {
+    outline: none;
+    border-color: #a5281b !important;
+    box-shadow: 0 0 0 3px rgba(165, 40, 27, 0.2);
+}
+
+/* ----- Motion reduction ----- */
+@media (prefers-reduced-motion: reduce) {
+    .field-error {
+        transition: none;
+    }
+}
+
+/* ----- 2FA / Ayarlar sayfalari yardimci stiller ----- */
+.two-fa-qr-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.two-fa-qr {
+    max-width: 256px;
+    width: 100%;
+    height: auto;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    background: #fff;
+    padding: 8px;
+}
+
+.two-fa-manual {
+    margin-top: 12px;
+}
+
+.two-fa-manual .input-group {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.two-fa-manual .input-group .form-control {
+    flex: 1 1 auto;
+    font-family: ui-monospace, "Cascadia Mono", "Fira Code", monospace;
+    letter-spacing: 1px;
+}
+
+.two-fa-disable-details > summary {
+    cursor: pointer;
+    padding: 8px 12px;
+    background: #fff6f5;
+    border: 1px solid #f3c7c2;
+    border-radius: 6px;
+    color: #933;
+    font-weight: 500;
+    user-select: none;
+}
+
+.two-fa-disable-details[open] > summary {
+    margin-bottom: 8px;
+}
+
+.backup-codes-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+.backup-codes-list li {
+    background: #f7f4ee;
+    padding: 10px 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: ui-monospace, "Cascadia Mono", "Fira Code", monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    border: 1px dashed #d9cfbc;
+}
+
+.steps-list {
+    padding-left: 20px;
+    margin: 12px 0;
+}
+.steps-list li {
+    margin: 6px 0;
+    line-height: 1.5;
+}
+
+.form-stacked .form-group {
+    margin-bottom: 14px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ----- Settings sayfasi (index.php) ----- */
+.settings-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid #e3e3e3;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.settings-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    font-weight: 500;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+
+.settings-tab:hover {
+    color: #222;
+}
+
+.settings-tab.is-active {
+    color: #8b4a82;
+    border-bottom-color: #8b4a82;
+}
+
+.settings-panel {
+    display: none;
+}
+
+.settings-panel.is-active {
+    display: block;
+}
+
+.settings-row {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) 2fr;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px dashed #eaeaea;
+    align-items: start;
+}
+
+.settings-row:last-child {
+    border-bottom: 0;
+}
+
+.settings-row .settings-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.settings-row .settings-desc {
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+}
+
+/* Toggle switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 160ms ease;
+    cursor: pointer;
+}
+
+.toggle-switch .toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 160ms ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #8b4a82;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: 2px solid #8b4a82;
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .settings-row {
+        grid-template-columns: 1fr;
+    }
+    .settings-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    .settings-tab {
+        white-space: nowrap;
+    }
+    .two-fa-qr {
+        max-width: 220px;
+    }
+}

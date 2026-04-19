@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Configuration Reference - Tatli Dusler Pastane</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th, td { border: 1px solid #d0d0d0; padding: 9px 11px; text-align: left; vertical-align: top; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  td.required { color: #d32f2f; font-weight: 600; }
+  td.optional { color: #388e3c; font-weight: 600; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .warn { background: #ffebee; border-left: 4px solid #d32f2f; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Configuration Reference</h1>
+  <div class="subtitle">Every environment variable, SMTP setup, payment gateway, SMS and caching options explained.</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html">Home</a>
+  <a href="installation.html">Installation</a>
+  <a href="configuration.html" class="active">Configuration</a>
+  <a href="admin-guide.html">Admin Guide</a>
+  <a href="user-guide.html">User Guide</a>
+  <a href="faq.html">FAQ</a>
+</nav>
+
+<h2>About the .env file</h2>
+<p>All environment-specific settings live in a single <code>.env</code> file at the project root. The file is read once at boot and exposed through the <code>env()</code> helper. The shipped <code>.env.example</code> file is an up-to-date reference - never ship an example file with real secrets.</p>
+
+<div class="warn">
+  <strong>Important.</strong> The <code>.env</code> file must be outside the web server's served directory, or at least hidden by <code>.htaccess</code>. The bundled <code>.htaccess</code> already blocks direct access to any file matching <code>.env*</code>. Double-check by visiting <code>https://your-domain.example/.env</code> - you should receive a 403 response.
+</div>
+
+<h2>Application keys</h2>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>APP_ENV</code></td><td><code>production</code></td><td>One of <code>local</code>, <code>dev</code>, <code>staging</code>, <code>production</code>. Controls error verbosity, rate limiter strictness and whether the API documentation is reachable.</td><td class="required">Yes</td></tr>
+  <tr><td><code>APP_URL</code></td><td><code>https://example.com</code></td><td>Canonical base URL used to build absolute links in emails, QR codes and the sitemap. Include the protocol.</td><td class="required">Yes</td></tr>
+  <tr><td><code>APP_DEBUG</code></td><td><code>false</code></td><td>When <code>true</code>, detailed error traces are shown in the browser. Must be <code>false</code> in production.</td><td class="required">Yes</td></tr>
+  <tr><td><code>APP_TIMEZONE</code></td><td><code>Europe/Istanbul</code></td><td>Passed to <code>date_default_timezone_set()</code>. Use any standard PHP time zone identifier.</td><td class="optional">No</td></tr>
+  <tr><td><code>APP_LOCALE</code></td><td><code>tr</code></td><td>Default UI language. Currently <code>tr</code> and <code>en</code> bundles ship with the package.</td><td class="optional">No</td></tr>
+</table>
+
+<h2>Database</h2>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>DB_HOST</code></td><td><code>127.0.0.1</code></td><td>MySQL host. Use <code>127.0.0.1</code> over TCP; <code>localhost</code> switches to a UNIX socket on some distributions.</td><td class="required">Yes</td></tr>
+  <tr><td><code>DB_PORT</code></td><td><code>3306</code></td><td>Standard MySQL port unless overridden on the host.</td><td class="optional">No</td></tr>
+  <tr><td><code>DB_NAME</code></td><td><code>pastane_db</code></td><td>Name of the schema created during installation.</td><td class="required">Yes</td></tr>
+  <tr><td><code>DB_USER</code></td><td><code>pastane_user</code></td><td>MySQL user with <code>ALL PRIVILEGES</code> on <code>DB_NAME</code>.</td><td class="required">Yes</td></tr>
+  <tr><td><code>DB_PASS</code></td><td>(empty)</td><td>Strong password. At minimum 20 characters, mixed case, digits and symbols.</td><td class="required">Yes</td></tr>
+  <tr><td><code>DB_CHARSET</code></td><td><code>utf8mb4</code></td><td>Do not change. Required for full Unicode support including emoji.</td><td class="optional">No</td></tr>
+</table>
+
+<h2>Security tokens</h2>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>JWT_SECRET</code></td><td>(empty)</td><td>Symmetric secret used to sign API tokens. At least 64 hex characters. Rotate yearly.</td><td class="required">Yes</td></tr>
+  <tr><td><code>METRICS_TOKEN</code></td><td>(empty)</td><td>Bearer token required to scrape <code>/api/metrics.php</code>. Provide to your Prometheus server only.</td><td class="required">Yes</td></tr>
+  <tr><td><code>HEALTH_TOKEN</code></td><td>(empty)</td><td>Optional bearer for <code>/api/health</code>. Leave empty to keep it public (recommended for load balancers).</td><td class="optional">No</td></tr>
+  <tr><td><code>API_DOCS_TOKEN</code></td><td>(empty)</td><td>Shared secret that unlocks Swagger UI on staging. Ignored on production (docs are always disabled there).</td><td class="optional">No</td></tr>
+  <tr><td><code>ENCRYPTION_KEY</code></td><td>(empty)</td><td>32-byte key in base64 used to encrypt sensitive columns such as SMS API credentials at rest.</td><td class="required">Yes</td></tr>
+</table>
+
+<div class="note">
+  <strong>Generating secrets.</strong> Run <code>php -r "echo bin2hex(random_bytes(32));"</code> for hex values and <code>php -r "echo base64_encode(random_bytes(32));"</code> for the encryption key.
+</div>
+
+<h2>Mail / SMTP</h2>
+<p>The platform uses the built-in <code>EmailService</code> which can speak SMTP directly via <code>fsockopen</code> or fall back to the bundled PHPMailer wrapper if present. Order confirmation emails, password reset links and administrator notifications all travel through this channel.</p>
+
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>SMTP_HOST</code></td><td>(empty)</td><td>Your SMTP server hostname, e.g. <code>smtp.sendgrid.net</code> or <code>smtp.gmail.com</code>.</td><td class="required">Yes (for email)</td></tr>
+  <tr><td><code>SMTP_PORT</code></td><td><code>587</code></td><td>Use <code>587</code> with STARTTLS or <code>465</code> with implicit SSL.</td><td class="required">Yes (for email)</td></tr>
+  <tr><td><code>SMTP_USER</code></td><td>(empty)</td><td>SMTP login. Many providers expect an API key or an app password here.</td><td class="required">Yes (for email)</td></tr>
+  <tr><td><code>SMTP_PASS</code></td><td>(empty)</td><td>SMTP password or API key. Store carefully.</td><td class="required">Yes (for email)</td></tr>
+  <tr><td><code>SMTP_FROM</code></td><td><code>no-reply@example.com</code></td><td>From address shown to recipients. Must be a verified sender on your provider.</td><td class="required">Yes (for email)</td></tr>
+  <tr><td><code>SMTP_FROM_NAME</code></td><td><code>Tatli Dusler</code></td><td>Display name shown next to the From address.</td><td class="optional">No</td></tr>
+  <tr><td><code>SMTP_SECURE</code></td><td><code>tls</code></td><td>One of <code>tls</code> (STARTTLS on 587), <code>ssl</code> (implicit on 465) or <code>none</code> (discouraged).</td><td class="optional">No</td></tr>
+</table>
+
+<div class="screenshot">
+  <img src="screenshots/config-mail-test.png" alt="Admin panel Send Test Email dialog showing a green success banner" />
+  <figcaption>Figure 1. Sending a test email from Admin &rarr; Settings &rarr; Mail.</figcaption>
+</div>
+
+<h3>Popular provider presets</h3>
+<table>
+  <tr><th>Provider</th><th>Host</th><th>Port</th><th>SMTP_SECURE</th><th>Note</th></tr>
+  <tr><td>SendGrid</td><td><code>smtp.sendgrid.net</code></td><td>587</td><td><code>tls</code></td><td>Username is the literal word <code>apikey</code>; password is the API key.</td></tr>
+  <tr><td>Mailgun</td><td><code>smtp.mailgun.org</code></td><td>587</td><td><code>tls</code></td><td>Verify the domain first in the Mailgun dashboard.</td></tr>
+  <tr><td>Amazon SES</td><td><code>email-smtp.eu-west-1.amazonaws.com</code></td><td>587</td><td><code>tls</code></td><td>Generate dedicated SMTP credentials from the SES console.</td></tr>
+  <tr><td>Gmail (workspace)</td><td><code>smtp.gmail.com</code></td><td>587</td><td><code>tls</code></td><td>Requires an App Password; 2FA must be on.</td></tr>
+</table>
+
+<h2>SMS</h2>
+<p>Transactional SMS (order confirmation, dispatch alert, 2FA fallback) is optional. Three drivers are shipped:</p>
+<ul>
+  <li><code>log</code> - writes SMS bodies to <code>storage/logs/sms.log</code>. Ideal for development.</li>
+  <li><code>netgsm</code> - Turkish carrier integration using the Netgsm HTTP API.</li>
+  <li><code>twilio</code> - global provider using the Twilio REST API.</li>
+</ul>
+
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>SMS_DRIVER</code></td><td><code>log</code></td><td>One of <code>log</code>, <code>netgsm</code>, <code>twilio</code>.</td><td class="optional">No</td></tr>
+  <tr><td><code>SMS_API_KEY</code></td><td>(empty)</td><td>Driver-specific API key. For Twilio it is the auth token; for Netgsm it is the password.</td><td class="required">If driver is not <code>log</code></td></tr>
+  <tr><td><code>SMS_USER</code></td><td>(empty)</td><td>Account identifier (Netgsm user code or Twilio Account SID).</td><td class="required">If driver is not <code>log</code></td></tr>
+  <tr><td><code>SMS_SENDER</code></td><td>(empty)</td><td>Sender ID displayed on the recipient handset. Must be pre-approved by the carrier.</td><td class="required">If driver is not <code>log</code></td></tr>
+</table>
+
+<h2>Payment gateways</h2>
+<p>The order checkout flow can be set to either "Cash on delivery" (default) or an online gateway. The bundled integration is an Iyzico placeholder. You can swap in Stripe, PayTR or any other gateway by extending <code>OdemeService</code>.</p>
+
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>PAYMENT_DRIVER</code></td><td><code>cash</code></td><td>Supported values: <code>cash</code>, <code>iyzico</code>.</td><td class="optional">No</td></tr>
+  <tr><td><code>IYZICO_MODE</code></td><td><code>sandbox</code></td><td><code>sandbox</code> points to Iyzico's test environment; <code>production</code> uses the live endpoint.</td><td class="required">If driver is <code>iyzico</code></td></tr>
+  <tr><td><code>IYZICO_API_KEY</code></td><td>(empty)</td><td>API key from the Iyzico merchant panel.</td><td class="required">If driver is <code>iyzico</code></td></tr>
+  <tr><td><code>IYZICO_SECRET</code></td><td>(empty)</td><td>Secret key from the Iyzico merchant panel.</td><td class="required">If driver is <code>iyzico</code></td></tr>
+</table>
+
+<div class="note">
+  <strong>Where to get Iyzico keys.</strong> Register a merchant account at <code>iyzico.com</code>, complete the KYC flow, and retrieve your sandbox keys from <em>Settings &rarr; Merchant &rarr; Credentials</em>. Live keys are issued only after account verification.
+</div>
+
+<div class="screenshot">
+  <img src="screenshots/config-payment-toggle.png" alt="Settings screen showing payment driver toggled from cash to Iyzico" />
+  <figcaption>Figure 2. Switching the payment driver inside Admin &rarr; Settings &rarr; Payment.</figcaption>
+</div>
+
+<h2>Cache and Redis</h2>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>CACHE_DRIVER</code></td><td><code>file</code></td><td><code>file</code> (writes to <code>storage/cache/</code>), <code>redis</code> or <code>none</code> (disable caching).</td><td class="optional">No</td></tr>
+  <tr><td><code>REDIS_HOST</code></td><td><code>127.0.0.1</code></td><td>Only used when <code>CACHE_DRIVER=redis</code>.</td><td class="optional">No</td></tr>
+  <tr><td><code>REDIS_PORT</code></td><td><code>6379</code></td><td>Only used when <code>CACHE_DRIVER=redis</code>.</td><td class="optional">No</td></tr>
+  <tr><td><code>REDIS_PASSWORD</code></td><td>(empty)</td><td>Required if your Redis instance is password-protected (you should do that).</td><td class="optional">No</td></tr>
+  <tr><td><code>CACHE_PREFIX</code></td><td><code>pastane</code></td><td>Isolate keys when multiple applications share a Redis instance.</td><td class="optional">No</td></tr>
+</table>
+
+<h2>Observability</h2>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Description</th><th>Required</th></tr>
+  <tr><td><code>SENTRY_DSN</code></td><td>(empty)</td><td>Sentry project DSN for error reporting. Leave empty to disable.</td><td class="optional">No</td></tr>
+  <tr><td><code>SENTRY_SAMPLE_RATE</code></td><td><code>1.0</code></td><td>Float between 0 and 1 for sample rate on high-traffic sites.</td><td class="optional">No</td></tr>
+  <tr><td><code>LOG_LEVEL</code></td><td><code>warning</code></td><td>One of <code>debug</code>, <code>info</code>, <code>notice</code>, <code>warning</code>, <code>error</code>, <code>critical</code>.</td><td class="optional">No</td></tr>
+  <tr><td><code>LOG_MAX_SIZE_MB</code></td><td><code>10</code></td><td>Size threshold at which <code>bin/cron/log-rotate.php</code> will rotate a log file.</td><td class="optional">No</td></tr>
+</table>
+
+<h2>Two-factor authentication (admin)</h2>
+<p>2FA is off by default and is enabled per administrator account. The flow is TOTP-based (Google Authenticator, Authy, 1Password) with ten single-use backup codes generated at setup.</p>
+<ol>
+  <li>Log in to the admin panel.</li>
+  <li>Go to <em>Settings &rarr; Security &rarr; 2FA</em>.</li>
+  <li>Scan the QR code with your authenticator app.</li>
+  <li>Enter the 6-digit code to verify. The system then shows your backup codes once - download or print them.</li>
+</ol>
+
+<div class="screenshot">
+  <img src="screenshots/config-2fa-setup.png" alt="2FA setup screen with a QR code and a verification input" />
+  <figcaption>Figure 3. Enrolling an administrator into 2FA.</figcaption>
+</div>
+
+<h2>Putting it all together</h2>
+<p>After any change to <code>.env</code>, the application reloads the new values on the next request - no restart required. However, caching and OPcache may hold on to old values. If you hit an unexpected issue, clear <code>storage/cache/</code> and, if OPcache is active, restart PHP-FPM or Apache.</p>
+
+<pre><code>rm -rf storage/cache/*
+sudo systemctl reload php8.2-fpm # or apache2</code></pre>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

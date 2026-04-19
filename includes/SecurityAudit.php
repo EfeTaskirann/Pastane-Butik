@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Security Audit Logger
  *
@@ -322,8 +324,7 @@ class SecurityAudit
             'details' => $details,
         ]);
 
-        // TODO: Implement email/SMS alerts
-        // Mail::send(config('admin.email'), "Security Alert: {$eventType}", ...);
+        // NOT: E-posta/SMS uyarı entegrasyonu yapılacaksa burada tetiklenebilir
     }
 
     /**

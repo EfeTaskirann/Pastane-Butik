@@ -29,11 +29,18 @@ $router->post('/api/v1/auth/login', function() {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $rateLimitResult = RateLimiter::check('login', $ip);
 
+    // Header'ları her durumda gönder (başarılı + 429) — istemci kalan kotayı görsün.
+    RateLimiter::sendHeaders('login', $ip);
+
     if (!$rateLimitResult['allowed']) {
         SecurityAudit::log(SecurityAudit::RATE_LIMIT_EXCEEDED, null, [
             'action' => 'login',
             'username' => $validated['kullanici_adi'],
         ]);
+
+        if (!headers_sent()) {
+            header('Retry-After: ' . ($rateLimitResult['retry_after'] ?? 60));
+        }
 
         json_error('Çok fazla başarısız deneme. Lütfen bekleyin.', 429);
     }
@@ -200,7 +207,10 @@ $router->post('/api/v1/auth/change-password', function() {
     }
 
     // Hash and update password
-    $hashedPassword = password_hash($validated['yeni_sifre'], PASSWORD_ARGON2ID);
+    // Bcrypt cost 12: 2026 standartlarında ~250ms hash süresi; algoritma tutarlılığı için
+    // PASSWORD_BCRYPT sabitlendi (admin/includes/auth.php ile eşleşir). password_verify()
+    // her iki algoritmayı da desteklediğinden mevcut Argon2id hash'li kullanıcılar etkilenmez.
+    $hashedPassword = password_hash($validated['yeni_sifre'], PASSWORD_BCRYPT, ['cost' => 12]);
 
     db()->update('admin_kullanicilar', [
         'sifre_hash' => $hashedPassword,

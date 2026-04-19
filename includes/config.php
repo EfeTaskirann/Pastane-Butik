@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Konfigürasyon Dosyası
  *
@@ -31,6 +33,9 @@ if (!function_exists('config')) {
             'cache.path' => env('CACHE_PATH', 'storage/cache'),
             'cache.ttl' => 3600,
             'cache.prefix' => 'pastane_',
+
+            // Odeme
+            'odeme.gateway' => env('ODEME_GATEWAY', 'test'),
         ];
 
         if ($key === null) {

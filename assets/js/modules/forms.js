@@ -144,12 +144,18 @@ function showError(input, message) {
   if (!errorEl) {
     errorEl = document.createElement('span');
     errorEl.className = 'form-error';
+    // Her error mesajı için benzersiz id (a11y: aria-describedby referansı)
+    errorEl.id =
+      'form-error-' +
+      (input.id || input.name || Math.random().toString(36).slice(2, 8));
+    errorEl.setAttribute('role', 'alert');
+    errorEl.setAttribute('aria-live', 'polite');
     input.parentNode.appendChild(errorEl);
   }
 
   errorEl.textContent = message;
   input.setAttribute('aria-invalid', 'true');
-  input.setAttribute('aria-describedby', errorEl.id || '');
+  input.setAttribute('aria-describedby', errorEl.id);
 }
 
 /**
@@ -158,6 +164,7 @@ function showError(input, message) {
 function clearError(input) {
   input.classList.remove('is-invalid');
   input.setAttribute('aria-invalid', 'false');
+  input.removeAttribute('aria-describedby');
 
   const errorEl = input.parentNode.querySelector('.form-error');
   if (errorEl) {
@@ -173,12 +180,16 @@ function initAjaxForm(form) {
     e.preventDefault();
 
     const submitBtn = form.querySelector('[type="submit"]');
-    const originalText = submitBtn?.textContent;
+    // innerHTML ile koru (buton içinde icon/SVG olabilir)
+    const originalHtml = submitBtn?.innerHTML;
+    // Çift gönderim kilidi
+    if (submitBtn && submitBtn.disabled) return;
 
     try {
       // Disable submit button
       if (submitBtn) {
         submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-busy', 'true');
         submitBtn.textContent = 'Gönderiliyor...';
       }
 
@@ -245,7 +256,10 @@ function initAjaxForm(form) {
       // Re-enable submit button
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.removeAttribute('aria-busy');
+        if (typeof originalHtml === 'string') {
+          submitBtn.innerHTML = originalHtml;
+        }
       }
     }
   });

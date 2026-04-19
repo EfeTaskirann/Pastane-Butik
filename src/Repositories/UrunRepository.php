@@ -28,7 +28,8 @@ class UrunRepository extends BaseRepository
      * @var array Fillable columns
      */
     protected array $fillable = [
-        'ad',
+        'isim',
+        'slug',
         'aciklama',
         'fiyat',
         'fiyat_4kisi',
@@ -38,6 +39,9 @@ class UrunRepository extends BaseRepository
         'kategori_id',
         'gorsel',
         'aktif',
+        'cafe_menusu',
+        'hazirlanma_suresi',
+        'stok_durumu',
         'sira',
     ];
 
@@ -45,7 +49,7 @@ class UrunRepository extends BaseRepository
      * @var array Sortable columns whitelist
      */
     protected array $sortableColumns = [
-        'id', 'ad', 'fiyat', 'kategori_id', 'aktif', 'sira', 'created_at', 'updated_at',
+        'id', 'isim', 'fiyat', 'kategori_id', 'aktif', 'sira', 'created_at', 'updated_at',
     ];
 
     /**
@@ -62,7 +66,7 @@ class UrunRepository extends BaseRepository
      */
     public function getActive(?int $kategoriId = null, ?int $limit = null): array
     {
-        $sql = "SELECT u.*, k.ad as kategori_adi
+        $sql = "SELECT u.*, k.isim as kategori_adi
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
                 WHERE u.aktif = 1";
@@ -91,7 +95,7 @@ class UrunRepository extends BaseRepository
      */
     public function getAllWithCategory(): array
     {
-        $sql = "SELECT u.*, k.ad as kategori_ad
+        $sql = "SELECT u.*, k.isim as kategori_ad
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
                 ORDER BY u.sira ASC, u.created_at DESC";
@@ -118,7 +122,7 @@ class UrunRepository extends BaseRepository
      */
     public function findWithCategory(int $id): ?array
     {
-        $sql = "SELECT u.*, k.ad as kategori_adi, k.slug as kategori_slug
+        $sql = "SELECT u.*, k.isim as kategori_adi, k.slug as kategori_slug
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
                 WHERE u.id = ?";
@@ -137,7 +141,7 @@ class UrunRepository extends BaseRepository
     {
         // Veritabanında öne çıkan flag'i yok —
         // en düşük sıralı aktif ürünleri "öne çıkan" olarak kabul et
-        $sql = "SELECT u.*, k.ad as kategori_adi
+        $sql = "SELECT u.*, k.isim as kategori_adi
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
                 WHERE u.aktif = 1
@@ -157,10 +161,10 @@ class UrunRepository extends BaseRepository
      */
     public function search(string $query, ?int $kategoriId = null, int $limit = 20): array
     {
-        $sql = "SELECT u.*, k.ad as kategori_adi
+        $sql = "SELECT u.*, k.isim as kategori_adi
                 FROM {$this->table} u
                 LEFT JOIN kategoriler k ON u.kategori_id = k.id
-                WHERE u.aktif = 1 AND (u.ad LIKE ? OR u.aciklama LIKE ?)";
+                WHERE u.aktif = 1 AND (u.isim LIKE ? OR u.aciklama LIKE ?)";
 
         $params = ["%{$query}%", "%{$query}%"];
 
@@ -170,7 +174,7 @@ class UrunRepository extends BaseRepository
         }
 
         $sql .= " ORDER BY
-                  CASE WHEN u.ad LIKE ? THEN 1 ELSE 2 END,
+                  CASE WHEN u.isim LIKE ? THEN 1 ELSE 2 END,
                   u.sira ASC
                   LIMIT " . max(1, (int)$limit);
 
@@ -229,6 +233,28 @@ class UrunRepository extends BaseRepository
         $this->update($id, ['aktif' => $newStatus ? 1 : 0]);
 
         return $newStatus;
+    }
+
+    /**
+     * Cafe menusundeki aktif urunleri getir
+     *
+     * Sadece cafe_menusu=1 ve aktif=1 olan urunleri kategori bilgisiyle doner.
+     * QR Menu sistemi icin optimize edilmis sorgu.
+     *
+     * @return array
+     */
+    public function getCafeMenuUrunleri(): array
+    {
+        $sql = "SELECT u.id, u.isim, u.aciklama, u.fiyat,
+                       u.fiyat_4kisi, u.fiyat_6kisi, u.fiyat_8kisi, u.fiyat_10kisi,
+                       u.gorsel, u.kategori_id, u.hazirlanma_suresi, u.stok_durumu,
+                       k.isim AS kategori_adi, k.slug AS kategori_slug
+                FROM {$this->table} u
+                LEFT JOIN kategoriler k ON u.kategori_id = k.id
+                WHERE u.aktif = 1 AND u.cafe_menusu = 1
+                ORDER BY k.sira ASC, u.sira ASC, u.isim ASC";
+
+        return $this->raw($sql);
     }
 
     /**

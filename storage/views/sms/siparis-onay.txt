@@ -1,0 +1,1 @@
+Merhaba {{musteri_adi}}, siparisiniz alindi. Siparis No: #{{siparis_no}}, Tarih: {{siparis_tarihi}}, Tutar: {{toplam_tutar}}. Tesekkur ederiz - {{site_adi}}

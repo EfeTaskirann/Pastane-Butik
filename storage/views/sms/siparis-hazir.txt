@@ -1,0 +1,1 @@
+Merhaba {{musteri_adi}}, #{{siparis_no}} numarali siparisiniz hazir! Istediginiz zaman teslim alabilirsiniz. - {{site_adi}}

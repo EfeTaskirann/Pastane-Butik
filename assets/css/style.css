@@ -17,10 +17,15 @@
     --kirmizi-soft: #D4A5A5;
     --yesil-soft: #A5C4A5;
 
-    /* Metin Renkleri */
+    /* Altın Aksanlar */
+    --gold-primary: #C5A572;
+    --gold-light: #D4B896;
+    --gold-shimmer: linear-gradient(135deg, #C5A572, #E8D5B5, #C5A572);
+
+    /* Metin Renkleri — WCAG AA kontrast uyumlu (krem #FDF8F5 uzerinde >=4.5) */
     --text-primary: #5C4A42;
-    --text-secondary: #8B7B73;
-    --text-light: #A69B94;
+    --text-secondary: #6B5C53;  /* onceki #8B7B73 AA fail idi (3.73:1) — 5.82:1 */
+    --text-light: #8B7B73;      /* sadece dekoratif veya large text icin */
 
     /* Tipografi */
     --font-primary: 'Playfair Display', Georgia, serif;
@@ -33,6 +38,28 @@
     /* Gölgeler */
     --shadow-soft: 0 4px 20px rgba(139, 111, 92, 0.08);
     --shadow-hover: 0 8px 30px rgba(139, 111, 92, 0.12);
+
+    /* Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-blur: 12px;
+
+    /* Hero Pasta (Cake) tokens — tema override'lari bu degiskenleri degistirir.
+       Light (varsayilan pembe) palet. Dark/yaz/kis + combo'lari ilgili tema
+       CSS dosyalarinda override edilir. */
+    --tier-light: #F7E2E7;       /* en acik pasta kati */
+    --tier-mid:   #EEC3CD;       /* orta */
+    --tier-dark:  #D49AA9;       /* golge/ kenar */
+    --tier-base:  #EAD3D8;       /* kaide */
+    --cream:      #FFFFFF;       /* krema */
+    --cream-shade:#EFE0E4;       /* krema gradient alt */
+    --berry:      #B86A6A;       /* cilek */
+    --berry-dark: #8A4A4A;       /* cilek tohumu */
+    --leaf:       #6F8A5A;       /* yaprak */
+    --dot-pink:   #C98A92;       /* dekoratif sekerleme pembe */
+    --dot-green:  #A6C08A;       /* dekoratif sekerleme yesil */
+    --sparkle:    #FFFFFF;       /* pariltili beyaz */
+    --contact:    rgba(120, 60, 80, 0.18);  /* oturma gelgesi */
 }
 
 /* ---------- Reset & Base ---------- */
@@ -65,14 +92,17 @@ h4 {
     font-family: var(--font-primary);
     font-weight: 600;
     line-height: 1.3;
+    letter-spacing: 0.03em;
 }
 
 h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-size: clamp(2.5rem, 7vw, 5.5rem);
+    letter-spacing: 0.05em;
 }
 
 h2 {
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: 0.04em;
 }
 
 h3 {
@@ -100,10 +130,43 @@ a {
 
 section {
     position: relative;
+    /* iOS Safari: 100dvh dinamik viewport; 100vh fallback desteklenmeyen browserlar icin. */
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
-    padding: 6rem 0;
+    padding: 8rem 0;
+}
+
+/* ---------- Tema Gecis Efektleri ---------- */
+[data-theme] *,
+[data-theme] *::before,
+[data-theme] *::after {
+    transition:
+        background-color 0.5s ease,
+        color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+/* Animasyonlu elementler icin gecis override'i (cakisma onleme) */
+[data-theme] .snowflake,
+[data-theme] .floating-fruit,
+[data-theme] .summer-butterfly,
+[data-theme] .summer-sparkle-dot,
+[data-theme] .winter-breath-overlay,
+[data-theme] .delivery-truck,
+[data-theme] .sled-dog,
+[data-theme] .winter-sled-static {
+    transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-theme] *,
+    [data-theme] *::before,
+    [data-theme] *::after {
+        transition: none;
+    }
 }
 
 /* ---------- Gradient Backgrounds ---------- */
@@ -128,7 +191,9 @@ section {
 
 /* ---------- HERO SECTION ---------- */
 .hero {
+    /* iOS Safari: 100dvh address bar dinamigini handle eder; 100vh fallback. */
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -144,15 +209,44 @@ section {
 
 .hero-logo {
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
 .hero-logo h1 {
     color: var(--kahve);
     letter-spacing: 0.1em;
     margin-bottom: 0.5rem;
+    font-size: clamp(3rem, 8vw, 6rem);
 }
 
-.hero-logo span {
+/* --- Title Decorations: Atkı & Şapka SVG overlay --- */
+
+.title-deco-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    overflow: visible;
+}
+
+.title-scarf-g {
+    animation: scarfSway 4s ease-in-out infinite;
+}
+
+@keyframes scarfSway {
+    0%, 100% { transform: rotate(0deg) translate(0, 0); }
+    25% { transform: rotate(1.5deg) translate(0.5px, 0); }
+    75% { transform: rotate(-1deg) translate(-0.3px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .title-scarf-g { animation: none; }
+}
+
+.hero-logo > span {
     display: block;
     font-family: var(--font-secondary);
     font-size: 1.1rem;
@@ -162,8 +256,24 @@ section {
     text-transform: uppercase;
 }
 
+/* Altın Divider - Hero */
+.hero-gold-divider {
+    width: 80px;
+    height: 2px;
+    margin: 1.5rem auto;
+    background: var(--gold-shimmer);
+    background-size: 200% 100%;
+    border-radius: 2px;
+    animation: shimmerSweep 3s ease-in-out infinite;
+}
+
+@keyframes shimmerSweep {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
 .hero-illustration {
-    max-width: 400px;
+    max-width: 520px;
     margin: 2rem auto;
     opacity: 0;
     transform: translateY(30px);
@@ -182,15 +292,35 @@ section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     color: var(--text-light);
-    font-size: 0.85rem;
-    animation: bounce 2s infinite;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.scroll-indicator::before {
+    content: '';
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--gold-primary));
+    animation: scrollLineGrow 2s ease-in-out infinite;
 }
 
 .scroll-indicator svg {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
+    animation: scrollChevronBounce 2s ease-in-out infinite;
+}
+
+@keyframes scrollLineGrow {
+    0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
+    50% { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes scrollChevronBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(6px); opacity: 1; }
 }
 
 /* ---------- HAKKIMIZDA SECTION ---------- */
@@ -201,13 +331,13 @@ section {
 .about-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    gap: 5rem;
     align-items: center;
 }
 
 .about-text h2 {
     color: var(--kahve);
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .about-text p {
@@ -224,6 +354,66 @@ section {
     height: auto;
 }
 
+/* ---------- Cupcake Karakter (Hikayemiz bolumu) ----------
+   SVG renkleri --cup-* degiskenlerinden gelir. Tema override'lari
+   dark.css, theme-summer.css, theme-winter.css'te + dark-combo'lar.
+   Bob (yumusak yukari-asagi), arm-wave (sol kol sallama), eyes (goz kirpma)
+   animasyonlari prefers-reduced-motion korumali. */
+
+/* Default (light/pembe) cupcake palet */
+:root {
+    --cup-stroke:       #2A1A1F;
+    --cup-wrap:         #E98AA1;    /* kagit kalip ana pembe */
+    --cup-wrap-dark:    #C86A82;    /* pili golge serit */
+    --cup-wrap-edge:    #F2A7BB;    /* ust acik bant */
+    --cup-wrap-shadow:  #A84E66;    /* sag golge */
+    --cup-cake:         #8A5A3C;    /* mafin */
+    --cup-cake-shade:   #5D3A24;
+    --cup-frost:        #F7C0CD;    /* swirl pembe */
+    --cup-frost-mid:    #EDAABC;
+    --cup-sprinkle:     #D84F64;
+    --cup-cherry:       #D9323B;
+    --cup-cherry-shade: #8A1C22;
+    --cup-cherry-light: #FF8A90;
+    --cup-leaf:         #5C8E3D;
+    --cup-cheek:        #FFB3C2;
+    --cup-shadow:       rgba(90, 30, 50, 0.22);
+}
+
+.cupcake-svg {
+    max-width: 360px;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 14px 22px var(--cup-shadow));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .cupcake-svg {
+        animation: cupBob 5s ease-in-out infinite;
+    }
+    .cupcake-svg .cup-arm-l {
+        transform-origin: 92px 260px;
+        animation: cupArmWave 2.8s ease-in-out infinite;
+    }
+    .cupcake-svg .cup-eyes {
+        animation: cupBlink 4.2s infinite;
+    }
+}
+
+@keyframes cupBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+@keyframes cupArmWave {
+    0%, 100% { transform: rotate(0); }
+    50%      { transform: rotate(-14deg); }
+}
+@keyframes cupBlink {
+    0%, 94%, 100% { transform: scaleY(1); }
+    96%           { transform: scaleY(0.12); }
+}
+
 /* ---------- ÜRÜNLER SECTION ---------- */
 .products {
     padding: 8rem 0;
@@ -231,16 +421,27 @@ section {
 
 .section-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 5rem;
 }
 
 .section-header h2 {
     color: var(--kahve);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .section-header p {
     margin: 0 auto;
+}
+
+/* Altın Divider - Section Başlıkları */
+.gold-divider {
+    width: 60px;
+    height: 2px;
+    margin: 1rem auto 1.5rem;
+    background: var(--gold-shimmer);
+    background-size: 200% 100%;
+    border-radius: 2px;
+    animation: shimmerSweep 3s ease-in-out infinite;
 }
 
 /* Kategori Filtreleri */
@@ -271,8 +472,8 @@ section {
     left: 50%;
     width: 0;
     height: 2px;
-    background: var(--pembe-medium);
-    transition: var(--transition-fast);
+    background: var(--gold-primary);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateX(-50%);
 }
 
@@ -290,7 +491,7 @@ section {
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+    gap: 2.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -362,13 +563,18 @@ section {
 
 /* Ürün Kartı */
 .product-card {
-    background: var(--beyaz);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    border: 1px solid var(--glass-border);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: var(--shadow-soft);
-    transition: var(--transition-smooth);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
+    position: relative;
+    cursor: pointer;
 }
 
 .product-card.visible {
@@ -377,8 +583,10 @@ section {
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow:
+        0 12px 40px rgba(139, 111, 92, 0.15),
+        0 0 0 1px var(--glass-border);
 }
 
 .product-image {
@@ -395,7 +603,7 @@ section {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: var(--transition-smooth);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .product-image svg {
@@ -404,8 +612,23 @@ section {
     opacity: 0.8;
 }
 
+/* Image zoom + overlay gradient on hover */
 .product-card:hover .product-image img {
-    transform: scale(1.05);
+    transform: scale(1.1);
+}
+
+.product-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(92, 74, 66, 0.15) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.product-card:hover .product-image::after {
+    opacity: 1;
 }
 
 .product-info {
@@ -429,7 +652,8 @@ section {
 
 .product-description {
     font-size: 0.9rem;
-    color: var(--text-light);
+    /* WCAG AA: --text-light (#8B7B73) body text icin kontrast yetersiz (~3.7:1). --text-secondary (#6B5C53) kullan (5.82:1). */
+    color: var(--text-secondary);
     margin-bottom: 1rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -439,8 +663,9 @@ section {
 
 .product-footer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
 }
 
 .product-price {
@@ -484,7 +709,7 @@ section {
 
 .contact-info h2 {
     color: var(--kahve);
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .contact-info p {
@@ -566,7 +791,10 @@ section {
 
 /* İletişim Formu */
 .contact-form {
-    background: var(--beyaz);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
     padding: 2.5rem;
     border-radius: 20px;
     box-shadow: var(--shadow-soft);
@@ -603,6 +831,14 @@ section {
     background: var(--beyaz);
 }
 
+/* WCAG 2.4.7 — Focus Visible fallback (klavye navigasyonu) */
+.form-group input:focus-visible,
+.form-group textarea:focus-visible {
+    outline: 3px solid var(--gold-primary);
+    outline-offset: 2px;
+    border-color: var(--kahve);
+}
+
 .form-group textarea {
     min-height: 150px;
     resize: vertical;
@@ -622,16 +858,49 @@ section {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shimmer sweep efekti - tum butonlar */
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(197, 165, 114, 0.25),
+        transparent
+    );
+    transition: none;
+    pointer-events: none;
+}
+
+.btn:hover::after {
+    animation: btnShimmer 0.6s ease forwards;
+}
+
+@keyframes btnShimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
 }
 
 .btn-primary {
     background: var(--kahve);
     color: var(--beyaz);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px rgba(139, 111, 92, 0.2);
 }
 
 .btn-primary:hover {
     background: var(--kahve-light);
     transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(139, 111, 92, 0.3);
 }
 
 .btn-secondary {
@@ -641,6 +910,7 @@ section {
 
 .btn-secondary:hover {
     background: var(--pembe-accent);
+    transform: translateY(-2px);
 }
 
 /* WhatsApp Float Button */
@@ -721,12 +991,13 @@ section {
     padding-top: 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    /* WCAG AA: rgba(255,255,255,0.6) on kahve (#8B6F5C) ~1.8:1 FAIL. 0.85 ~5.1:1 PASS. */
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* ---------- TAKVİM SECTION ---------- */
 .calendar-section {
-    padding: 6rem 0;
+    padding: 8rem 0;
     min-height: auto;
 }
 
@@ -861,7 +1132,8 @@ section {
     justify-content: center;
     padding: 3rem;
     gap: 1rem;
-    color: var(--text-light);
+    /* WCAG AA: body text, --text-secondary ile kontrast PASS. */
+    color: var(--text-secondary);
 }
 
 .loading-spinner {
@@ -883,7 +1155,8 @@ section {
     margin-top: 1.5rem;
     text-align: center;
     font-size: 0.85rem;
-    color: var(--text-light);
+    /* WCAG AA: info-metni --text-secondary (kontrast >= 4.5). */
+    color: var(--text-secondary);
 }
 
 .calendar-info strong {
@@ -922,7 +1195,7 @@ section {
 
 .cal-nav-btn:hover:not(:disabled) {
     background: var(--pembe-soft);
-    color: var(--pembe-deep);
+    color: var(--pembe-medium);
 }
 
 .cal-nav-btn:disabled {
@@ -960,6 +1233,13 @@ section {
 
 .cal-month-dropdown:focus {
     outline: none;
+}
+
+/* WCAG 2.4.7 — klavye navigasyonu icin focus-visible fallback. */
+.cal-month-dropdown:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 .calendar-weekdays {
@@ -1130,6 +1410,112 @@ section {
     }
 }
 
+/* =============================================
+   PARALLAX BACKGROUND LAYERS & SECTION TEXTURES
+   ============================================= */
+
+.hero {
+    background:
+        radial-gradient(ellipse 120% 80% at 20% 10%, rgba(232, 196, 212, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 100% 60% at 80% 90%, rgba(212, 165, 184, 0.25) 0%, transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(245, 225, 233, 0.4) 0%, transparent 70%),
+        linear-gradient(180deg, var(--pembe-soft) 0%, var(--krem) 100%);
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle 600px at 30% 20%, rgba(255, 255, 255, 0.45) 0%, transparent 70%),
+        radial-gradient(circle 400px at 75% 75%, rgba(232, 196, 212, 0.2) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(170deg, transparent 0%, transparent 40%, rgba(253, 248, 245, 0.5) 70%, rgba(253, 248, 245, 0.8) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.parallax-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    will-change: transform;
+    z-index: 0;
+}
+
+.parallax-layer--back {
+    background:
+        radial-gradient(circle 300px at 15% 25%, rgba(212, 165, 184, 0.18) 0%, transparent 100%),
+        radial-gradient(circle 250px at 85% 70%, rgba(245, 225, 233, 0.2) 0%, transparent 100%);
+}
+
+.parallax-layer--mid {
+    background:
+        radial-gradient(circle 200px at 60% 30%, rgba(232, 196, 212, 0.15) 0%, transparent 100%),
+        radial-gradient(circle 180px at 25% 75%, rgba(139, 111, 92, 0.06) 0%, transparent 100%);
+    z-index: 1;
+}
+
+.parallax-layer--front {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 25 L25 15 Z' fill='none' stroke='%23E8C4D4' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='10' cy='40' r='3' fill='none' stroke='%23D4A5B8' stroke-width='0.3' opacity='0.15'/%3E%3Ccircle cx='50' cy='45' r='2' fill='none' stroke='%23E8C4D4' stroke-width='0.3' opacity='0.12'/%3E%3C/svg%3E");
+    background-size: 60px 60px;
+    opacity: 0.7;
+    z-index: 1;
+}
+
+.parallax-layer--about {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    will-change: transform;
+    z-index: 0;
+    background:
+        radial-gradient(circle 350px at 70% 30%, rgba(245, 225, 233, 0.15) 0%, transparent 100%),
+        radial-gradient(circle 300px at 20% 80%, rgba(232, 196, 212, 0.1) 0%, transparent 100%);
+}
+
+.section-texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q20 35 40 40 Q60 45 80 40' fill='none' stroke='%23E8C4D4' stroke-width='0.4' opacity='0.5'/%3E%3Cpath d='M0 60 Q20 55 40 60 Q60 65 80 60' fill='none' stroke='%23D4A5B8' stroke-width='0.3' opacity='0.35'/%3E%3Ccircle cx='20' cy='20' r='1' fill='%23D4A5B8' opacity='0.2'/%3E%3Ccircle cx='60' cy='15' r='0.8' fill='%23E8C4D4' opacity='0.15'/%3E%3Ccircle cx='40' cy='70' r='0.6' fill='%23D4A5B8' opacity='0.15'/%3E%3C/svg%3E");
+    background-size: 80px 80px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .parallax-layer,
+    .parallax-layer--about {
+        will-change: auto;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .parallax-layer,
+    .parallax-layer--about {
+        will-change: auto;
+        transform: none !important;
+    }
+
+    .parallax-layer--front {
+        display: none;
+    }
+
+    .section-texture {
+        opacity: 0.2;
+    }
+}
+
 /* ---------- ANİMASYONLAR ---------- */
 @keyframes fadeInUp {
     to {
@@ -1153,13 +1539,110 @@ section {
 /* Fade in on scroll */
 .fade-in {
     opacity: 0;
-    transform: translateY(40px);
-    transition: var(--transition-smooth);
+    transform: translateY(50px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fade-in.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* ---------- LINK HOVER - ALTIN UNDERLINE ---------- */
+a:not(.btn):not(.product-order-btn):not(.whatsapp-float):not(.footer-social a) {
+    position: relative;
+}
+
+.contact-item a,
+.about-text a:not(.btn) {
+    position: relative;
+    display: inline;
+}
+
+.contact-item a::after,
+.about-text a:not(.btn)::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--gold-primary);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contact-item a:hover::after,
+.about-text a:not(.btn):hover::after {
+    width: 100%;
+}
+
+/* ---------- GLASSMORPHISM SECTION HEADER ---------- */
+.section-header-glass {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 2.5rem 3rem;
+    display: inline-block;
+    margin-bottom: 5rem;
+}
+
+/* ---------- PREFERS-REDUCED-MOTION ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .hero-gold-divider,
+    .gold-divider {
+        animation: none;
+    }
+
+    .scroll-indicator::before,
+    .scroll-indicator svg {
+        animation: none;
+    }
+
+    .btn::after {
+        display: none;
+    }
+
+    .product-card {
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: none;
+    }
+
+    .product-card:hover .product-image img {
+        transform: none;
+    }
+
+    .fade-in {
+        transition: opacity 0.3s ease;
+        transform: none;
+    }
+
+    .promo-banner,
+    .promo-badge {
+        animation: none;
+    }
+
+    /* Teslimat kamyoneti (8s cycle) reduce-motion'da dinamik olmamali. */
+    .delivery-truck,
+    .truck-door,
+    .truck-cake {
+        animation: none;
+    }
+
+    /* FAQ ikon rotasyon 0.3s — reduce-motion'da aninda. */
+    .faq-icon {
+        transition: none;
+    }
+
+    /* Calendar gun fade animasyonu. */
+    .calendar-days-grid .calendar-day {
+        animation: none;
+        opacity: 1;
+    }
 }
 
 /* ---------- RESPONSIVE ---------- */
@@ -1182,7 +1665,7 @@ section {
 
 @media (max-width: 768px) {
     section {
-        padding: 4rem 0;
+        padding: 5rem 0;
     }
 
     .container {
@@ -1190,12 +1673,22 @@ section {
     }
 
     .hero-illustration {
-        max-width: 280px;
+        max-width: 360px;
+    }
+
+    .hero-logo h1 {
+        font-size: clamp(2.5rem, 8vw, 4rem);
     }
 
     .products-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1.5rem;
+    }
+
+    .product-card {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.92);
     }
 
     .contact-form {
@@ -1207,6 +1700,10 @@ section {
         right: 1.5rem;
         width: 55px;
         height: 55px;
+    }
+
+    .section-header-glass {
+        padding: 1.5rem 2rem;
     }
 }
 
@@ -1237,41 +1734,43 @@ section {
    ÖĞRENCİ İNDİRİM BANNER
    ============================================= */
 .promo-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 9999;
+    position: relative;
+    z-index: 10;
     background: linear-gradient(135deg, #F5E1E9 0%, #E8C4D4 50%, #D4A5B8 100%);
     box-shadow: 0 4px 20px rgba(139, 111, 92, 0.15);
-    animation: slideDown 0.5s ease-out;
+    animation: promoFadeIn 0.6s ease-out;
+    border-radius: 16px;
+    max-width: 600px;
+    margin: 2rem auto 0;
 }
 
-@keyframes slideDown {
-    from {
-        transform: translateY(-100%);
-        opacity: 0;
-    }
+.promo-banner.promo-inactive {
+    display: none;
+}
 
+@keyframes promoFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
     to {
-        transform: translateY(0);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
 .promo-banner.hidden {
-    animation: slideUp 0.3s ease-out forwards;
+    animation: promoFadeOut 0.3s ease-out forwards;
 }
 
-@keyframes slideUp {
+@keyframes promoFadeOut {
     from {
-        transform: translateY(0);
         opacity: 1;
+        transform: translateY(0);
     }
-
     to {
-        transform: translateY(-100%);
         opacity: 0;
+        transform: translateY(-10px);
     }
 }
 
@@ -1359,9 +1858,9 @@ section {
     transform: translateY(-50%) scale(1.1);
 }
 
-/* Banner açıkken body'ye padding ekle */
+/* Banner artik hero icinde, body padding gerekmez */
 body.has-promo-banner {
-    padding-top: 70px;
+    padding-top: 0;
 }
 
 /* Promo Banner Responsive */
@@ -1390,10 +1889,6 @@ body.has-promo-banner {
         width: 24px;
         height: 24px;
     }
-
-    body.has-promo-banner {
-        padding-top: 60px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1412,10 +1907,6 @@ body.has-promo-banner {
 
     .promo-message {
         font-size: 0.8rem;
-    }
-
-    body.has-promo-banner {
-        padding-top: 55px;
     }
 }
 
@@ -1439,12 +1930,6 @@ body.has-promo-banner {
     white-space: nowrap;
 }
 
-.product-footer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-}
-
 .product-footer .product-order-btn {
     width: 100%;
     justify-content: center;
@@ -1455,7 +1940,7 @@ body.has-promo-banner {
    ============================================= */
 .delivery-section {
     min-height: auto;
-    padding: 5rem 0;
+    padding: 8rem 0;
 }
 
 .delivery-content {
@@ -1653,17 +2138,21 @@ body.has-promo-banner {
 }
 
 .delivery-card {
-    background: var(--beyaz);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
     border-radius: 20px;
     padding: 2rem;
     text-align: center;
     box-shadow: var(--shadow-soft);
-    transition: var(--transition-fast);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .delivery-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-hover);
+    border-color: var(--gold-light);
 }
 
 .delivery-card-icon {
@@ -1717,7 +2206,7 @@ body.has-promo-banner {
    ============================================= */
 .faq-section {
     min-height: auto;
-    padding: 5rem 0;
+    padding: 8rem 0;
 }
 
 .faq-list {
@@ -1726,7 +2215,10 @@ body.has-promo-banner {
 }
 
 .faq-item {
-    background: var(--beyaz);
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
     border-radius: 15px;
     margin-bottom: 1rem;
     box-shadow: var(--shadow-soft);
@@ -1879,6 +2371,7 @@ body.has-promo-banner {
     bottom: 0;
     background: rgba(92, 74, 66, 0.5);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     cursor: pointer;
 }
 
@@ -2001,7 +2494,8 @@ body.has-promo-banner {
 
 .modal-pricing .price-title {
     font-size: 0.9rem;
-    color: var(--text-light);
+    /* WCAG AA: price-title 0.9rem body text → --text-secondary kullan. */
+    color: var(--text-secondary);
     margin-bottom: 0.75rem;
     font-weight: 500;
 }
@@ -2063,11 +2557,6 @@ body.has-promo-banner {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
     color: white;
-}
-
-/* Product card clickable cursor */
-.product-card {
-    cursor: pointer;
 }
 
 /* =============================================
@@ -2133,7 +2622,8 @@ body.has-promo-banner {
 
 .pagination-info {
     font-size: 0.9rem;
-    color: var(--text-light);
+    /* WCAG AA: info metin --text-secondary. */
+    color: var(--text-secondary);
     margin: 0 0.5rem;
 }
 
@@ -2207,4 +2697,332 @@ body.has-promo-banner {
         padding: 0.875rem 1.5rem;
         font-size: 0.9rem;
     }
+}
+
+/* =============================================
+   SPRINT 3 — MOBILE UX, A11Y, DARK MODE SUPPORT
+   ============================================= */
+
+/* ---------- Skip Link (WCAG 2.4.1 Bypass Blocks) ---------- */
+.skip-link {
+    position: absolute;
+    top: -48px;
+    left: 0;
+    background: var(--kahve);
+    color: var(--beyaz);
+    padding: 0.75rem 1.25rem;
+    z-index: 10000;
+    font-weight: 600;
+    border-radius: 0 0 0.5rem 0;
+    text-decoration: none;
+    transition: top 0.2s ease;
+    font-family: var(--font-secondary);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+    outline: 3px solid var(--gold-primary);
+    outline-offset: 2px;
+}
+
+/* ---------- Button Focus Visible (WCAG 2.4.7) ---------- */
+.btn:focus-visible,
+.filter-btn:focus-visible,
+.product-order-btn:focus-visible,
+.promo-close:focus-visible,
+.whatsapp-float:focus-visible {
+    outline: 3px solid var(--gold-primary);
+    outline-offset: 3px;
+}
+
+/* ---------- Theme Toggle (Public Site) ---------- */
+.theme-toggle {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--beyaz);
+    border: 1px solid var(--pembe-accent);
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--kahve);
+    box-shadow: var(--shadow-soft);
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.05);
+}
+
+.theme-toggle:focus-visible {
+    outline: 3px solid var(--gold-primary);
+    outline-offset: 2px;
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle .icon-moon { display: none; }
+.theme-toggle .icon-sun { display: block; }
+
+html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+
+/* ---------- WCAG Contrast Fix: filter-btn inactive ---------- */
+.filter-btn:not(.active) {
+    color: var(--text-primary); /* onceki text-light idi (2.76:1 FAIL) */
+}
+
+.section-header p {
+    color: var(--text-primary); /* kontrast yukseltilmis */
+    opacity: 0.85;
+}
+
+/* ---------- 320px extra small viewport ---------- */
+@media (max-width: 360px) {
+    .parallax-layer--front,
+    .parallax-layer--back,
+    .parallax-layer--mid {
+        display: none;
+    }
+
+    .hero-illustration {
+        max-width: 290px;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+
+    .promo-content {
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+
+    .promo-close {
+        top: 0.25rem;
+        right: 0.25rem;
+    }
+
+    /* Touch target min 44x44 (WCAG 2.5.5 AAA, best-effort AA) */
+    .filter-btn {
+        min-height: 44px;
+        padding: 0.625rem 1rem;
+    }
+}
+
+/* ---------- iOS Form Input Zoom Fix ---------- */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="search"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* ---------- Touch target minimum 44x44 <768 ---------- */
+@media (max-width: 768px) {
+    .btn,
+    .filter-btn,
+    .product-order-btn {
+        min-height: 44px;
+    }
+
+    /* Icon-only interaktif elementler (WCAG 2.5.5 best-effort). Desktop'ta
+       kompakt kalsin; mobilde parmak dokunusu icin 44x44 garanti. */
+    .footer-social a,
+    .modal-close,
+    .cal-nav-btn,
+    .pagination-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* .promo-close cok kucuk (24-28px) — mobilde buyut. */
+    .promo-close {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* ---------- Modal 100dvh mobile viewport fix ---------- */
+@media (max-width: 768px) {
+    .product-modal {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    .modal-content {
+        max-height: 100vh;
+        max-height: 100dvh;
+    }
+}
+
+/* ============================================
+   SPRINT 4 — PRODUCTION POLISH
+   Küçük tutarlılık iyileştirmeleri ve eksik durum stilleri.
+   ============================================ */
+
+/* 1) Butonlar için :active (tıklama) geri bildirimi — tüm .btn varyantları */
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(139, 111, 92, 0.18);
+}
+
+/* 2) .btn-secondary eksik gölge eklendi (birinciyle tutarlılık) */
+.btn-secondary {
+    box-shadow: 0 4px 15px rgba(232, 196, 212, 0.25);
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 6px 22px rgba(232, 196, 212, 0.4);
+}
+
+/* 3) WhatsApp float — :active geri bildirimi */
+.whatsapp-float:active {
+    transform: scale(0.96);
+}
+
+/* 4) Footer sosyal medya linkleri için :active ve :focus-visible tutarlılığı */
+.footer-social a:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+}
+
+.footer-social a:focus-visible {
+    outline: 2px solid var(--gold-primary, #C5A572);
+    outline-offset: 3px;
+}
+
+/* 5) Kontak formu textarea — resize sadece dikey, tutarlı görsel */
+.contact-form textarea {
+    resize: vertical;
+    min-height: 140px;
+}
+
+/* 6) Promo banner kapatma butonu — hover + focus durumları */
+.promo-close {
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.promo-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.promo-close:active {
+    transform: scale(0.9);
+}
+
+.promo-close:focus-visible {
+    outline: 2px solid var(--gold-primary, #C5A572);
+    outline-offset: 2px;
+}
+
+/* 7) FAQ sorusu — :active geri bildirimi + focus-visible */
+.faq-question:active {
+    background: rgba(197, 165, 114, 0.08);
+}
+
+.faq-question:focus-visible {
+    outline: 2px solid var(--gold-primary, #C5A572);
+    outline-offset: -2px;
+    border-radius: 8px;
+}
+
+/* 8) Ürün kartı link underline — .product-order-btn hover'da altçizgi yok (buton)
+   Sadece metin linklerine (contact-item, about-text) uygulanan pattern'e ek
+   olarak, a:focus-visible global erişilebilirlik */
+a:focus-visible {
+    outline: 2px solid var(--gold-primary, #C5A572);
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+/* Buton türündeki linkler (btn*, product-order-btn, whatsapp-float) kendi
+   outline'larını tanımladığı için global a:focus-visible'ı geçersiz kıl */
+.btn:focus-visible,
+.product-order-btn:focus-visible,
+.whatsapp-float:focus-visible,
+.modal-order-btn:focus-visible {
+    outline-offset: 4px;
+}
+
+/* ============================================
+   Dil Secici (TR/EN) — P2-15 i18n
+   ============================================ */
+.lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6B5C53);
+    user-select: none;
+}
+
+.lang-switcher .lang-link {
+    color: inherit;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lang-switcher .lang-link:hover,
+.lang-switcher .lang-link:focus-visible {
+    background-color: rgba(139, 69, 19, 0.08);
+    color: #8B4513;
+}
+
+.lang-switcher .lang-link.is-active {
+    background-color: #8B4513;
+    color: #fff;
+}
+
+.lang-switcher .lang-link:focus-visible {
+    outline: 2px solid #C5A572;
+    outline-offset: 2px;
+}
+
+.lang-switcher--floating {
+    position: fixed;
+    top: 16px;
+    right: 80px; /* tema-toggle ile cakismasin */
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    padding: 6px 10px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(61, 43, 31, 0.08);
+}
+
+@media (max-width: 480px) {
+    .lang-switcher--floating {
+        top: 12px;
+        right: 70px;
+        padding: 4px 8px;
+    }
+}
+
+html[data-theme="dark"] .lang-switcher--floating {
+    background: rgba(15, 14, 20, 0.7);
 }

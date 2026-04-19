@@ -29,6 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fiyat_8kisi = !empty($_POST['fiyat_8kisi']) ? floatval($_POST['fiyat_8kisi']) : null;
         $fiyat_10kisi = !empty($_POST['fiyat_10kisi']) ? floatval($_POST['fiyat_10kisi']) : null;
 
+        // QR menu ayarlari
+        $cafe_menusu = isset($_POST['cafe_menusu']) ? 1 : 0;
+        $hazirlanma_suresi = !empty($_POST['hazirlanma_suresi']) ? (int)$_POST['hazirlanma_suresi'] : null;
+        $stok_durumu = in_array($_POST['stok_durumu'] ?? '', ['var','tukendi','sinirli'], true)
+            ? $_POST['stok_durumu'] : 'var';
+
         // Dogrulama
         if (empty($isim)) {
             $errors[] = 'Urun adi gereklidir.';
@@ -53,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $urunService = urun_service();
             $urunService->create([
-                'ad' => $isim,
+                'isim' => $isim,
                 'aciklama' => $aciklama,
                 'fiyat' => $fiyat,
                 'fiyat_4kisi' => $fiyat_4kisi,
@@ -63,6 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'kategori_id' => $kategori_id,
                 'gorsel' => $gorsel,
                 'aktif' => $aktif,
+                'cafe_menusu' => $cafe_menusu,
+                'hazirlanma_suresi' => $hazirlanma_suresi,
+                'stok_durumu' => $stok_durumu,
                 'sira' => $sira,
             ]);
 
@@ -81,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<div class="u-page-header-row">
     <h2>Yeni Ürün Ekle</h2>
     <a href="urunler.php" class="btn btn-secondary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -115,7 +124,7 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="">Kategori Seçin</option>
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>" <?= ($_POST['kategori_id'] ?? '') == $cat['id'] ? 'selected' : '' ?>>
-                                <?= e($cat['ad']) ?>
+                                <?= e($cat['isim']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -132,7 +141,7 @@ require_once __DIR__ . '/includes/header.php';
                     <label for="fiyat">Temel Fiyat (₺)</label>
                     <input type="number" id="fiyat" name="fiyat" class="form-control" step="0.01" min="0"
                            value="<?= e($_POST['fiyat'] ?? '0') ?>">
-                    <small style="color: var(--admin-text-light);">Porsiyon seçeneği olmayan ürünler için</small>
+                    <small class="u-text-admin-light">Porsiyon seçeneği olmayan ürünler için</small>
                 </div>
 
                 <div class="form-group">
@@ -143,9 +152,9 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Porsiyon Fiyatları (Pasta için) -->
-            <div class="form-group" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                <label style="font-weight: 600; margin-bottom: 0.75rem; display: block;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align: middle; margin-right: 0.3rem;">
+            <div class="form-group u-soft-card">
+                <label class="u-font-semibold u-mb-3 u-d-block">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="u-icon-inline-sm">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M23 21v-2a4 4 0 00-3-3.87"/>
@@ -153,24 +162,24 @@ require_once __DIR__ . '/includes/header.php';
                     </svg>
                     Porsiyon Fiyatları (Pasta kategorisi için)
                 </label>
-                <small style="color: var(--admin-text-light); display: block; margin-bottom: 1rem;">Sadece pasta gibi porsiyon seçenekli ürünler için doldurun. Boş bırakılan alanlar gösterilmez.</small>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                <small class="u-form-help">Sadece pasta gibi porsiyon seçenekli ürünler için doldurun. Boş bırakılan alanlar gösterilmez.</small>
+                <div class="u-grid-4">
+                    <div class="form-group u-mb-0">
                         <label for="fiyat_4kisi">4 Kişilik (₺)</label>
                         <input type="number" id="fiyat_4kisi" name="fiyat_4kisi" class="form-control" step="0.01" min="0"
                                value="<?= e($_POST['fiyat_4kisi'] ?? '') ?>" placeholder="örn: 350">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group u-mb-0">
                         <label for="fiyat_6kisi">6 Kişilik (₺)</label>
                         <input type="number" id="fiyat_6kisi" name="fiyat_6kisi" class="form-control" step="0.01" min="0"
                                value="<?= e($_POST['fiyat_6kisi'] ?? '') ?>" placeholder="örn: 450">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group u-mb-0">
                         <label for="fiyat_8kisi">8 Kişilik (₺)</label>
                         <input type="number" id="fiyat_8kisi" name="fiyat_8kisi" class="form-control" step="0.01" min="0"
                                value="<?= e($_POST['fiyat_8kisi'] ?? '') ?>" placeholder="örn: 550">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group u-mb-0">
                         <label for="fiyat_10kisi">10+ Kişilik (₺)</label>
                         <input type="number" id="fiyat_10kisi" name="fiyat_10kisi" class="form-control" step="0.01" min="0"
                                value="<?= e($_POST['fiyat_10kisi'] ?? '') ?>" placeholder="örn: 650">
@@ -180,7 +189,7 @@ require_once __DIR__ . '/includes/header.php';
 
             <div class="form-group">
                 <label for="gorsel">Ürün Görseli</label>
-                <div class="file-upload" onclick="document.getElementById('gorsel').click()">
+                <div class="file-upload" data-action="trigger-file-upload" data-target="gorsel" role="button" tabindex="0">
                     <input type="file" id="gorsel" name="gorsel" accept="image/*">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -189,17 +198,50 @@ require_once __DIR__ . '/includes/header.php';
                     </svg>
                     <p>Görsel yüklemek için tıklayın<br><small>JPG, PNG, WebP - Max 5MB</small></p>
                 </div>
-                <img id="preview" class="file-preview" style="display: none;">
+                <img id="preview" class="file-preview u-hidden">
             </div>
 
             <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <label class="u-check-row">
                     <input type="checkbox" name="aktif" value="1" <?= ($_POST['aktif'] ?? '1') ? 'checked' : '' ?>>
                     Ürün aktif (sitede görünür)
                 </label>
             </div>
 
-            <div style="display: flex; gap: 1rem;">
+            <!-- QR Menu / Cafe Ayarlari -->
+            <div class="form-group u-info-banner">
+                <label class="u-font-semibold u-mb-3 u-d-block">
+                    QR Menü / Kafe Ayarları
+                </label>
+                <small class="u-form-help">
+                    Masa QR menüsünde gösterim, hazırlama süresi ve stok durumu.
+                </small>
+
+                <div class="u-grid-3">
+                    <div class="form-group u-mb-0">
+                        <label class="u-check-row">
+                            <input type="checkbox" name="cafe_menusu" value="1" <?= (!isset($_POST['cafe_menusu']) || $_POST['cafe_menusu']) ? 'checked' : '' ?>>
+                            QR menüde görünsün
+                        </label>
+                    </div>
+                    <div class="form-group u-mb-0">
+                        <label for="hazirlanma_suresi">Hazırlanma Süresi (dk)</label>
+                        <input type="number" id="hazirlanma_suresi" name="hazirlanma_suresi" class="form-control" min="0" max="300"
+                               value="<?= e($_POST['hazirlanma_suresi'] ?? '') ?>" placeholder="örn: 15">
+                    </div>
+                    <div class="form-group u-mb-0">
+                        <label for="stok_durumu">Stok Durumu</label>
+                        <select id="stok_durumu" name="stok_durumu" class="form-control">
+                            <?php $curStok = $_POST['stok_durumu'] ?? 'var'; ?>
+                            <option value="var" <?= $curStok === 'var' ? 'selected' : '' ?>>Var</option>
+                            <option value="sinirli" <?= $curStok === 'sinirli' ? 'selected' : '' ?>>Sınırlı</option>
+                            <option value="tukendi" <?= $curStok === 'tukendi' ? 'selected' : '' ?>>Tükendi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="u-flex-row-gap-4">
                 <button type="submit" class="btn btn-primary">Ürünü Kaydet</button>
                 <a href="urunler.php" class="btn btn-secondary">İptal</a>
             </div>
@@ -208,18 +250,47 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script nonce="<?= getCspNonce() ?>">
-document.getElementById('gorsel').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('preview');
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+(function() {
+    'use strict';
+    const gorselInput = document.getElementById('gorsel');
+    if (gorselInput) {
+        gorselInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const preview = document.getElementById('preview');
+                    if (preview) {
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
-});
+
+    // File upload alanı tıklandığında/klavyeyle tetiklendiğinde input'u aç
+    function triggerUpload(trigger) {
+        const targetId = trigger.dataset.target;
+        const input = targetId ? document.getElementById(targetId) : null;
+        if (input) input.click();
+    }
+
+    document.addEventListener('click', function(e) {
+        const trigger = e.target.closest('[data-action="trigger-file-upload"]');
+        if (trigger && !e.target.matches('input[type="file"]')) {
+            triggerUpload(trigger);
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-action="trigger-file-upload"]')) {
+            e.preventDefault();
+            triggerUpload(e.target);
+        }
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

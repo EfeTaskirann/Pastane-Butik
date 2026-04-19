@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Frequently Asked Questions - Tatli Dusler Pastane</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    color: #2c2c2c;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 24px; background: #ffffff; }
+  header.site-header { border-bottom: 3px solid #c94f7c; padding-bottom: 16px; margin-bottom: 24px; }
+  header.site-header h1 { color: #c94f7c; margin: 0 0 4px 0; font-size: 28px; }
+  header.site-header .subtitle { color: #666; font-size: 14px; }
+  nav.docnav { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; margin-bottom: 32px; font-size: 14px; }
+  nav.docnav a { color: #c94f7c; text-decoration: none; margin-right: 14px; font-weight: 600; }
+  nav.docnav a:hover { text-decoration: underline; }
+  nav.docnav a.active { color: #2c2c2c; }
+  h2 { color: #c94f7c; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  h3 { color: #7a3d55; margin-top: 24px; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; color: #c94f7c; }
+  pre { background: #f5f5f5; padding: 14px 18px; border-radius: 6px; overflow-x: auto; border-left: 3px solid #c94f7c; }
+  pre code { background: transparent; padding: 0; color: #2c2c2c; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #d0d0d0; padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: #f5f5f5; color: #7a3d55; }
+  .faq-item { background: #ffffff; border: 1px solid #e0e0e0; border-left: 4px solid #c94f7c; padding: 18px 22px; margin: 18px 0; border-radius: 4px; }
+  .faq-item .q { color: #c94f7c; font-weight: 700; font-size: 16px; margin-bottom: 10px; }
+  .faq-item .a { color: #2c2c2c; }
+  .note { background: #fff8e1; border-left: 4px solid #f5b301; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .warn { background: #ffebee; border-left: 4px solid #d32f2f; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+  .screenshot { margin: 20px 0; text-align: center; }
+  .screenshot img { max-width: 100%; border: 1px solid #d0d0d0; border-radius: 6px; }
+  .screenshot figcaption { font-size: 13px; color: #666; margin-top: 6px; font-style: italic; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e0e0e0; color: #888; font-size: 13px; text-align: center; }
+  ul li, ol li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <h1>Frequently Asked Questions</h1>
+  <div class="subtitle">Answers to the ten most common support tickets, with command-line and SQL recipes.</div>
+</header>
+
+<nav class="docnav">
+  <a href="index.html">Home</a>
+  <a href="installation.html">Installation</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="admin-guide.html">Admin Guide</a>
+  <a href="user-guide.html">User Guide</a>
+  <a href="faq.html" class="active">FAQ</a>
+</nav>
+
+<!-- SCREENSHOT: faq-error-log.png -->
+<div class="screenshot">
+  <img src="screenshots/faq-error-log.png" alt="Tail of storage/logs/app.log showing a PHP stack trace" />
+  <figcaption>Figure 1. A typical error log excerpt - the first place to look when something goes wrong.</figcaption>
+</div>
+
+<h2>Installation and server</h2>
+
+<div class="faq-item">
+  <div class="q">Q1. I get a "500 Internal Server Error" on the first page load. Where do I look?</div>
+  <div class="a">
+    <p>The web server log file is your first stop. On Apache it is typically <code>/var/log/apache2/error.log</code>; on cPanel it is under <em>Metrics &rarr; Errors</em>. Nine out of ten times the cause is one of:</p>
+    <ul>
+      <li>A missing PHP extension (<code>pdo_mysql</code> or <code>mbstring</code>). Run <code>php -m</code> and cross-check against the <a href="installation.html">Installation</a> requirements table.</li>
+      <li>An unreadable <code>.env</code> file - usually wrong ownership after SFTP upload. Run <code>chown -R www-data:www-data .</code> in the document root.</li>
+      <li><code>APP_DEBUG=true</code> in production revealing a downstream exception. Turn debug <em>off</em>, then read the stack trace from <code>storage/logs/app.log</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q2. "Permission denied" or "failed to open stream" errors when I upload images or send mail.</div>
+  <div class="a">
+    <p>The web server user (<code>www-data</code> on Debian-family, <code>apache</code> on RHEL-family, <code>nobody</code> on some shared hosts) does not have write access to <code>storage/</code> or <code>uploads/</code>. Do NOT use <code>chmod 777</code>. The correct fix is:</p>
+    <pre><code>sudo chown -R www-data:www-data storage uploads
+sudo chmod -R 775 storage uploads
+sudo find storage -type f -exec chmod 664 {} \;</code></pre>
+    <p>If you are on shared hosting, contact your host for the correct user and replace <code>www-data</code> accordingly.</p>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q3. The installation finished but visiting <code>/admin</code> returns "404 Not Found".</div>
+  <div class="a">
+    <p>Apache's <code>mod_rewrite</code> module is not loaded, or <code>AllowOverride</code> is restricted in the vhost. Enable with:</p>
+    <pre><code>sudo a2enmod rewrite
+sudo a2enmod headers
+sudo systemctl reload apache2</code></pre>
+    <p>Then make sure the vhost contains <code>&lt;Directory /var/www/pastane&gt;AllowOverride All&lt;/Directory&gt;</code>. Reload and retry. Nginx users should review the supplied <code>nginx.conf.example</code> and ensure <code>try_files $uri $uri/ /index.php?$query_string;</code> is in place.</p>
+  </div>
+</div>
+
+<h2>Authentication</h2>
+
+<div class="faq-item">
+  <div class="q">Q4. How do I log in for the first time? I do not have credentials anywhere.</div>
+  <div class="a">
+    <p>The seed script (<code>php bin/db-seed.php</code>) creates a user with username <code>admin</code> and a random password. The password is both printed to the terminal and appended to <code>storage/logs/db-seed.log</code>. If you missed it, re-run:</p>
+    <pre><code>tail -n 20 storage/logs/db-seed.log</code></pre>
+    <p>If the log is gone, reset the password with the SQL snippet below. Replace the hash by generating it with <code>php -r "echo password_hash('your-new-password', PASSWORD_BCRYPT, ['cost' =&gt; 12]);"</code> first.</p>
+    <pre><code>UPDATE admin_kullanicilar
+SET sifre = '$2y$12$PASTE_THE_GENERATED_HASH_HERE',
+    aktif = 1
+WHERE kullanici_adi = 'admin';</code></pre>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q5. How do I reset a lost administrator password?</div>
+  <div class="a">
+    <p>Two routes are supported. <strong>Preferred:</strong> another admin user opens <em>Settings &rarr; Users</em>, selects the account and clicks "Reset password". An email is sent to the account's address with a time-limited reset link.</p>
+    <p><strong>Emergency:</strong> run the SQL shown in Q4 directly. Immediately after, log in and change the password again through the UI so that it is hashed with the current cost factor and the security event is properly logged.</p>
+    <div class="warn"><strong>Never</strong> edit the <code>sifre</code> column to plain text. The application uses <code>password_verify()</code>; a plain-text value will silently fail to match.</div>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q6. "Invalid CSRF token" or "Token expired" errors when submitting a form.</div>
+  <div class="a">
+    <p>Every form in the admin panel includes a CSRF token scoped to the user's session. Common causes of the error:</p>
+    <ul>
+      <li>The session expired while the form was open. Default lifetime is two hours. Reload the page and resubmit.</li>
+      <li>The browser is blocking cookies (private mode with strict tracking prevention). Use a standard window.</li>
+      <li>The site is being served from two domains simultaneously (for example <code>www.example.com</code> and <code>example.com</code>) and the cookie was set on the other. Pick one canonical domain and redirect the other.</li>
+      <li>Load balancer sessions are not sticky. Enable session affinity on your LB or move sessions to Redis.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Role-based access</h2>
+
+<div class="faq-item">
+  <div class="q">Q7. Is there role-based access control? How do I make a read-only accountant account?</div>
+  <div class="a">
+    <p>Yes. Three roles are built in: <strong>admin</strong>, <strong>editor</strong>, <strong>viewer</strong>. For a read-only accountant, create the user from <em>Settings &rarr; Users &rarr; New user</em> and set the role to <code>viewer</code>. The accountant will see every report, order and transaction, but every "save" or "delete" button is hidden and any direct API call returns HTTP 403.</p>
+    <p>Permission mapping is defined in <code>config/permissions.php</code>; you can add a fourth role by editing that file and running no migration (the role column is a free-form ENUM that accepts any string). A richer "per-user capabilities" screen is on the road map.</p>
+  </div>
+</div>
+
+<h2>Email and SMS</h2>
+
+<div class="faq-item">
+  <div class="q">Q8. Outgoing emails are not arriving. What should I check?</div>
+  <div class="a">
+    <p>Walk through this decision tree:</p>
+    <ol>
+      <li>Open <em>Admin &rarr; Settings &rarr; Mail</em> and click <em>Send test email</em> to your own address. Does it arrive? If yes, your SMTP is fine and the issue is downstream (template filtering, recipient spam folder).</li>
+      <li>If the test fails, check <code>storage/logs/mail.log</code> for the raw SMTP conversation. Look for <code>535 Authentication failed</code> (wrong user or password), <code>550 Sender rejected</code> (the <code>SMTP_FROM</code> address is not authorised on your provider), or connection timeouts (firewall blocking outbound port 587).</li>
+      <li>Verify that your SPF, DKIM and DMARC records are aligned for the domain used in <code>SMTP_FROM</code>. Most modern providers silently discard unauthenticated mail.</li>
+      <li>On shared hosting, outbound SMTP to third parties is often blocked. Use the host's own SMTP relay or a transactional provider over port 2525.</li>
+    </ol>
+    <p>More background in the <a href="configuration.html">Configuration</a> chapter, section <em>Mail / SMTP</em>.</p>
+  </div>
+</div>
+
+<h2>Backups</h2>
+
+<!-- SCREENSHOT: faq-backup-screen.png -->
+<div class="screenshot">
+  <img src="screenshots/faq-backup-screen.png" alt="Settings Backup tab with the list of recent backups and a Backup now button" />
+  <figcaption>Figure 2. The Backup tab - one-click manual backups plus a list of the most recent automatic ones.</figcaption>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q9. How do I take a database backup, and where is it stored?</div>
+  <div class="a">
+    <p>The admin UI has a one-click "Backup now" button at <em>Settings &rarr; Backup</em>. For automated daily backups, add the cron entry below. Backups land in <code>storage/backups/</code> as gzipped SQL dumps, file-named <code>pastane-YYYY-MM-DD-HHMM.sql.gz</code>.</p>
+    <pre><code>10 3 * * * cd /var/www/pastane &amp;&amp; php bin/cron/db-backup.php</code></pre>
+    <p>A companion monitoring job will warn you if the most recent backup is older than 25 hours, and will raise a critical alert at 48 hours. Backups older than the configured retention window (default 14 days) are automatically pruned.</p>
+    <div class="note"><strong>Off-site copies.</strong> Backups on the same server are only half a backup. Synchronise <code>storage/backups/</code> to an S3 bucket, Backblaze B2 or equivalent, and encrypt at rest. A scripted example is provided in <code>bin/cron/db-backup.php</code>.</div>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q10. How do I restore a backup?</div>
+  <div class="a">
+    <p>Decompress and pipe into the MySQL client:</p>
+    <pre><code>gunzip -c storage/backups/pastane-2026-04-20-0310.sql.gz \
+  | mysql -u pastane_user -p pastane_db</code></pre>
+    <p>For point-in-time recovery, use <code>make db-restore FILE=path/to/backup.sql.gz</code>; the Makefile target includes a five-second cancellation window to avoid fat-finger accidents on production.</p>
+  </div>
+</div>
+
+<h2>Integrations</h2>
+
+<div class="faq-item">
+  <div class="q">Q11. Is there WhatsApp integration?</div>
+  <div class="a">
+    <p>Two flavours are shipped. <strong>Click-to-chat</strong> is free and zero-config: set your WhatsApp Business number under <em>Settings &rarr; Contact</em> and a floating button appears on every public page; tapping it opens the customer's WhatsApp with a pre-filled greeting. <strong>Outbound notifications</strong> via the WhatsApp Business API require a Meta-approved provider (Twilio, 360dialog, MessageBird). Enter the provider's credentials under <em>Settings &rarr; SMS</em>; the SMS driver family will be extended in a minor update to cover WhatsApp channels natively.</p>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q12. Can I integrate with a POS system or an accounting tool?</div>
+  <div class="a">
+    <p>The public JSON API documented at <code>/api/docs.php</code> (staging only) exposes every order, customer and product. Use it to push sales into QuickBooks, Xero, Logo or Netsis. A webhook system is scheduled for the 1.1 release; in the meantime you can poll the orders endpoint every minute.</p>
+  </div>
+</div>
+
+<h2>Performance</h2>
+
+<div class="faq-item">
+  <div class="q">Q13. The dashboard feels slow during peak hours. What can I tune?</div>
+  <div class="a">
+    <p>In order of impact:</p>
+    <ol>
+      <li>Switch <code>CACHE_DRIVER</code> from <code>file</code> to <code>redis</code>. Typical response-time improvement is 40-60%.</li>
+      <li>Enable OPcache in your PHP configuration (<code>opcache.enable=1</code>, <code>opcache.memory_consumption=192</code>).</li>
+      <li>Run <code>php bin/cache-warm.php</code> as a cron job every five minutes. This pre-populates the hot cache keys (featured products, active categories, daily revenue).</li>
+      <li>Confirm the database has the indexes from migration 000005. The seed of <code>EXPLAIN SELECT ... FROM siparisler</code> should show <code>type=range</code> or better, not <code>type=ALL</code>.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q14. What about horizontal scaling? Can I run more than one app server?</div>
+  <div class="a">
+    <p>Yes. Move sessions to Redis (<code>session.save_handler=redis</code>), put <code>storage/</code> on shared storage (NFS, EFS) or move logs to a central collector, and use a load balancer with sticky sessions. The blue-green deployment pattern documented under <code>docs/BLUE_GREEN_DEPLOYMENT.md</code> covers this end-to-end, including canary weighting.</p>
+  </div>
+</div>
+
+<h2>License and support</h2>
+
+<!-- SCREENSHOT: faq-support-ticket.png -->
+<div class="screenshot">
+  <img src="screenshots/faq-support-ticket.png" alt="CodeCanyon buyer dashboard showing the support ticket composer" />
+  <figcaption>Figure 3. Opening a support ticket from your CodeCanyon buyer dashboard.</figcaption>
+</div>
+
+<div class="faq-item">
+  <div class="q">Q15. Where can I reach official support?</div>
+  <div class="a">
+    <p>Open a support ticket from your CodeCanyon buyer dashboard. Attach (a) your environment summary (output of <code>php -v</code> and <code>php -m</code>), (b) the relevant log excerpt, (c) steps to reproduce. Reply time is one to two business days.</p>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 Tatli Dusler - All rights reserved. See <code>LICENSE.txt</code> for usage terms.
+</footer>
+
+</div>
+</body>
+</html>

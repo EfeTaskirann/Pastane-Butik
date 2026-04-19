@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Logger - PSR-3 Compatible Logging System
  *
