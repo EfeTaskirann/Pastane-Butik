@@ -108,12 +108,12 @@ $isTestModu = ($aktifGateway === 'test');
 $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?= e(locale()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
-    <title>Odeme - <?= e($appName) ?></title>
+    <title><?= e(t('order.payment_title')) ?> - <?= e($appName) ?></title>
 
     <!-- Ortak CSS -->
     <link rel="stylesheet" href="assets/css/menu-base.css">
@@ -461,28 +461,28 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
 
 <!-- Ust Bar -->
 <header class="top-bar">
-    <a href="sepet.php" class="top-bar__back" aria-label="Sepete don">
+    <a href="sepet.php" class="top-bar__back" aria-label="<?= e(t('a11y.cart_back')) ?>">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
-        Sepete Don
+        <?= e(t('order.payment_back_to_cart')) ?>
     </a>
-    <span class="top-bar__title">Odeme</span>
-    <span class="top-bar__masa">Masa <?= (int)$masaNo ?></span>
+    <span class="top-bar__title"><?= e(t('order.payment_title')) ?></span>
+    <span class="top-bar__masa"><?= e(t('order.your_table', ['no' => (int)$masaNo])) ?></span>
 </header>
 
 <div class="container">
 
     <!-- Siparis Ozeti Karti -->
     <div class="payment-summary">
-        <div class="payment-summary__title">Siparis Ozeti</div>
+        <div class="payment-summary__title"><?= e(t('order.payment_summary_title')) ?></div>
 
         <?php foreach ($siparis['kalemler'] as $kalem): ?>
             <div class="payment-summary__item">
                 <div class="payment-summary__item-info">
-                    <div class="payment-summary__item-name"><?= e($kalem['urun_adi'] ?? 'Urun') ?></div>
+                    <div class="payment-summary__item-name"><?= e($kalem['urun_adi'] ?? '') ?></div>
                     <div class="payment-summary__item-detail">
-                        <?= (int)($kalem['adet'] ?? 1) ?> adet
+                        <?= (int)($kalem['adet'] ?? 1) ?> <?= e(t('order.tracking_units')) ?>
                         <?php if (!empty($kalem['porsiyon'])): ?>
                             &middot; <?= e($kalem['porsiyon']) ?>
                         <?php endif; ?>
@@ -495,7 +495,7 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
         <?php endforeach; ?>
 
         <div class="payment-summary__total">
-            <span class="payment-summary__total-label">Toplam</span>
+            <span class="payment-summary__total-label"><?= e(t('common.total')) ?></span>
             <span class="payment-summary__total-value">
                 <?= number_format($toplamTutar, 2, ',', '.') ?> &#8378;
             </span>
@@ -504,7 +504,7 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
 
     <!-- Odeme Yontemi Secimi -->
     <div class="payment-form" id="paymentMethodSection">
-        <div class="payment-form__title">Odeme Yontemi Secin</div>
+        <div class="payment-form__title"><?= e(t('order.payment_method_title')) ?></div>
 
         <div class="payment-methods">
             <button type="button" class="payment-method-card" id="btnOnlineOdeme">
@@ -515,8 +515,8 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
                     </svg>
                 </div>
                 <div class="payment-method-card__text">
-                    <strong>Online Ode</strong>
-                    <span>Kredi/Banka Karti</span>
+                    <strong><?= e(t('order.payment_online_title')) ?></strong>
+                    <span><?= e(t('order.payment_online_desc')) ?></span>
                 </div>
                 <svg class="payment-method-card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -531,8 +531,8 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
                     </svg>
                 </div>
                 <div class="payment-method-card__text">
-                    <strong>Masada Ode</strong>
-                    <span>Nakit veya POS Cihazi</span>
+                    <strong><?= e(t('order.payment_at_table_title')) ?></strong>
+                    <span><?= e(t('order.payment_at_table_desc')) ?></span>
                 </div>
                 <svg class="payment-method-card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -546,40 +546,39 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
         <!-- Guvenli Odeme Bilgi Alani -->
         <div class="security-info">
             <div class="security-info__icon">&#128274;</div>
-            <div class="security-info__title">Guvenli Odeme</div>
+            <div class="security-info__title"><?= e(t('order.payment_secure_title')) ?></div>
             <div class="security-info__text">
-                Kart bilgileriniz guvenle islenir.<br>
-                Odeme bilgileriniz sitemizde saklanmaz.
+                <?= e(t('order.payment_secure_text')) ?>
             </div>
             <div class="security-badges">
                 <span class="security-badge">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
-                    SSL Korumali
+                    <?= e(t('order.payment_badge_ssl')) ?>
                 </span>
                 <span class="security-badge">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    256-bit Sifreleme
+                    <?= e(t('order.payment_badge_encryption')) ?>
                 </span>
                 <span class="security-badge">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                         <line x1="1" y1="10" x2="23" y2="10"></line>
                     </svg>
-                    3D Secure
+                    <?= e(t('order.payment_badge_3ds')) ?>
                 </span>
             </div>
         </div>
 
         <div class="payment-form">
-            <div class="payment-form__title">Online Odeme</div>
+            <div class="payment-form__title"><?= e(t('order.payment_online_section_title')) ?></div>
 
             <?php if ($isTestModu): ?>
                 <div class="test-banner">
-                    &#9888; Test Modu — Gercek odeme islemi yapilmayacaktir
+                    &#9888; <?= e(t('order.payment_test_mode_warning')) ?>
                 </div>
             <?php else: ?>
                 <div class="iyzico-container" id="iyzicoContainer"></div>
@@ -587,20 +586,20 @@ $toplamTutar = (float)($siparis['toplam_tutar'] ?? 0);
         </div>
     </div>
 
-    <a href="sepet.php" class="back-link" aria-label="Sepete geri don">
-        &#8592; Sepete Geri Don
+    <a href="sepet.php" class="back-link" aria-label="<?= e(t('a11y.cart_back')) ?>">
+        &#8592; <?= e(t('order.payment_back_to_cart_link')) ?>
     </a>
 
 </div>
 
 <!-- Online Odeme Butonu (gizli, secim sonrasi gorunur) -->
 <div class="payment-btn-wrapper u-hidden" id="paymentBtnWrapper">
-    <button type="button" class="payment-btn" id="paymentBtn" aria-label="Odeme yap — <?= number_format($toplamTutar, 2, ',', '.') ?> TL">
+    <button type="button" class="payment-btn" id="paymentBtn" aria-label="<?= e(t('order.payment_pay_button')) ?> — <?= number_format($toplamTutar, 2, ',', '.') ?> TL">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
             <line x1="1" y1="10" x2="23" y2="10"></line>
         </svg>
-        <?php if ($isTestModu): ?>Test <?php endif; ?>Odeme Yap — <?= number_format($toplamTutar, 2, ',', '.') ?> &#8378;
+        <?php if ($isTestModu): ?><?= e(t('order.payment_test_pay_prefix')) ?> <?php endif; ?><?= e(t('order.payment_pay_button')) ?> — <?= number_format($toplamTutar, 2, ',', '.') ?> &#8378;
     </button>
 </div>
 

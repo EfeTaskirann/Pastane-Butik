@@ -121,14 +121,14 @@ try {
     exit;
 }
 
-// Durum bilgileri
+// Durum bilgileri (etiketler i18n key'lerinden okunur)
 $durumlar = [
-    'beklemede'     => ['etiket' => 'Siparis Alindi',  'ikon' => '&#10003;', 'sira' => 1],
-    'onaylandi'     => ['etiket' => 'Onaylandi',       'ikon' => '&#10003;', 'sira' => 1],
-    'hazirlaniyor'  => ['etiket' => 'Hazirlaniyor',    'ikon' => '&#9203;',  'sira' => 2],
-    'hazir'         => ['etiket' => 'Hazir',           'ikon' => '&#127869;','sira' => 3],
-    'teslim_edildi' => ['etiket' => 'Servis Edildi',   'ikon' => '&#9989;',  'sira' => 4],
-    'iptal'         => ['etiket' => 'Iptal Edildi',    'ikon' => '&#10060;', 'sira' => 0],
+    'beklemede'     => ['etiket' => t('order.tracking_step_received'),    'ikon' => '&#10003;', 'sira' => 1],
+    'onaylandi'     => ['etiket' => t('order.approved'),                  'ikon' => '&#10003;', 'sira' => 1],
+    'hazirlaniyor'  => ['etiket' => t('order.tracking_step_preparing'),   'ikon' => '&#9203;',  'sira' => 2],
+    'hazir'         => ['etiket' => t('order.tracking_step_ready'),       'ikon' => '&#127869;','sira' => 3],
+    'teslim_edildi' => ['etiket' => t('order.tracking_step_served'),      'ikon' => '&#9989;',  'sira' => 4],
+    'iptal'         => ['etiket' => t('order.tracking_status_cancelled'), 'ikon' => '&#10060;', 'sira' => 0],
 ];
 
 $mevcutDurum = $siparis['durum'] ?? 'beklemede';
@@ -137,20 +137,20 @@ $iptalMi = ($mevcutDurum === 'iptal');
 
 // Odeme durumu badge
 $odemeBadge = [
-    'odenmedi' => ['etiket' => 'Odenmedi',  'sinif' => 'odeme-badge--odenmedi'],
-    'odendi'   => ['etiket' => 'Odendi',    'sinif' => 'odeme-badge--odendi'],
-    'iade'     => ['etiket' => 'Iade',      'sinif' => 'odeme-badge--iade'],
+    'odenmedi' => ['etiket' => t('order.tracking_status_unpaid'), 'sinif' => 'odeme-badge--odenmedi'],
+    'odendi'   => ['etiket' => t('order.tracking_status_paid'),   'sinif' => 'odeme-badge--odendi'],
+    'iade'     => ['etiket' => t('order.tracking_status_refund'), 'sinif' => 'odeme-badge--iade'],
 ];
 $odemeDurum = $siparis['odeme_durumu'] ?? 'odenmedi';
 
 $basePath = config('app.base_path', '/pastane');
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?= e(locale()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siparis Durumu - Masa <?= e((string)$masaNo) ?></title>
+    <title><?= e(t('order.tracking_title')) ?> - <?= e(t('order.your_table', ['no' => (int)$masaNo])) ?></title>
     <link rel="stylesheet" href="assets/css/menu-base.css">
     <style>
         /* Sayfa ozel container ayari */
@@ -556,17 +556,17 @@ $basePath = config('app.base_path', '/pastane');
 
 <!-- Ust Bar -->
 <header class="top-bar">
-    <span class="top-bar__title">Siparis Durumu</span>
-    <span class="top-bar__masa">Masa <?= e((string)$masaNo) ?></span>
+    <span class="top-bar__title"><?= e(t('order.tracking_title')) ?></span>
+    <span class="top-bar__masa"><?= e(t('order.your_table', ['no' => (int)$masaNo])) ?></span>
 </header>
 
 <div class="container">
     <!-- Siparis No ve Zaman -->
-    <div class="siparis-no">Siparis #<?= e((string)$siparisId) ?></div>
+    <div class="siparis-no"><?= e(t('order.tracking_order_no', ['id' => (int)$siparisId])) ?></div>
     <div class="siparis-zaman"><?= e(date('d.m.Y H:i', strtotime($siparis['siparis_zamani'] ?? $siparis['created_at'] ?? 'now'))) ?></div>
 
     <?php if ($iptalMi): ?>
-        <div class="iptal-banner">Bu siparis iptal edilmistir.</div>
+        <div class="iptal-banner"><?= e(t('order.tracking_cancelled_banner')) ?></div>
     <?php endif; ?>
 
     <!-- Progress Bar -->
@@ -574,10 +574,10 @@ $basePath = config('app.base_path', '/pastane');
         <div class="progress-steps">
             <?php
             $adimlar = [
-                ['durum' => 'beklemede',     'etiket' => 'Siparis Alindi',  'ikon' => '&#10003;'],
-                ['durum' => 'hazirlaniyor',  'etiket' => 'Hazirlaniyor',   'ikon' => '&#9203;'],
-                ['durum' => 'hazir',         'etiket' => 'Hazir',          'ikon' => '&#127869;'],
-                ['durum' => 'teslim_edildi', 'etiket' => 'Servis Edildi',  'ikon' => '&#9989;'],
+                ['durum' => 'beklemede',     'etiket' => t('order.tracking_step_received'),  'ikon' => '&#10003;'],
+                ['durum' => 'hazirlaniyor',  'etiket' => t('order.tracking_step_preparing'), 'ikon' => '&#9203;'],
+                ['durum' => 'hazir',         'etiket' => t('order.tracking_step_ready'),     'ikon' => '&#127869;'],
+                ['durum' => 'teslim_edildi', 'etiket' => t('order.tracking_step_served'),    'ikon' => '&#9989;'],
             ];
 
             // Her adimin sira numarasi
@@ -620,14 +620,14 @@ $basePath = config('app.base_path', '/pastane');
 
     <!-- Siparis Detaylari -->
     <div class="detay-card">
-        <h3>Sipariş Detayları</h3>
+        <h3><?= e(t('order.tracking_details')) ?></h3>
 
         <?php foreach ($siparis['kalemler'] as $kalem): ?>
             <div class="urun-satir">
                 <div class="urun-bilgi">
-                    <div class="urun-ad"><?= e($kalem['urun_adi'] ?? 'Ürün') ?></div>
+                    <div class="urun-ad"><?= e($kalem['urun_adi'] ?? '') ?></div>
                     <div class="urun-detay">
-                        <?= (int)($kalem['adet'] ?? 1) ?> adet
+                        <?= (int)($kalem['adet'] ?? 1) ?> <?= e(t('order.tracking_units')) ?>
                         <?php if (!empty($kalem['porsiyon'])): ?>
                             &middot; <?= e($kalem['porsiyon']) ?>
                         <?php endif; ?>
@@ -641,14 +641,14 @@ $basePath = config('app.base_path', '/pastane');
         <?php endforeach; ?>
 
         <div class="toplam-satir">
-            <span class="toplam-etiket">Toplam</span>
+            <span class="toplam-etiket"><?= e(t('common.total')) ?></span>
             <span class="toplam-tutar" id="toplamTutar"><?= number_format((float)($siparis['toplam_tutar'] ?? 0), 2, ',', '.') ?> &#8378;</span>
         </div>
 
         <!-- Odeme Durumu -->
         <div class="odeme-satir">
             <span class="odeme-badge <?= e($odemeBadge[$odemeDurum]['sinif'] ?? '') ?>">
-                <?= e($odemeBadge[$odemeDurum]['etiket'] ?? 'Bilinmiyor') ?>
+                <?= e($odemeBadge[$odemeDurum]['etiket'] ?? t('order.tracking_status_unknown')) ?>
             </span>
         </div>
 
@@ -658,14 +658,15 @@ $basePath = config('app.base_path', '/pastane');
                 <line x1="12" y1="1" x2="12" y2="23"></line>
                 <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"></path>
             </svg>
-            <span>Ödemenizi garson geldiğinde <strong>nakit</strong> veya <strong>POS cihazı</strong> ile yapabilirsiniz.</span>
+            <?php // <strong> markup'lı i18n metni, lang dosyası developer-controlled. ?>
+            <span><?= t('order.tracking_pay_at_table_info') ?></span>
         </div>
         <?php endif; ?>
     </div>
 
     <?php if (!empty($siparis['siparis_notu'])): ?>
         <div class="detay-card">
-            <h3>Sipariş Notu</h3>
+            <h3><?= e(t('order.tracking_note_title')) ?></h3>
             <p class="siparis-notu-metin"><?= e($siparis['siparis_notu']) ?></p>
         </div>
     <?php endif; ?>
@@ -673,23 +674,23 @@ $basePath = config('app.base_path', '/pastane');
     <!-- Butonlar -->
     <div class="btn-grup">
         <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="btn btn-primary">
-            Tekrar Sipariş Ver
+            <?= e(t('order.tracking_order_again')) ?>
         </a>
     </div>
 
     <!-- Canli guncelleme gostergesi -->
     <div class="canli-gosterge" id="canliGosterge">
         <span class="canli-nokta"></span>
-        <span>Canlı takip aktif</span>
+        <span><?= e(t('order.tracking_live_active')) ?></span>
     </div>
 </div>
 
 <!-- Hazir Bildirimi Overlay -->
 <div class="hazir-overlay" id="hazirOverlay">
     <div class="ikon">&#127881;</div>
-    <div class="mesaj">Siparişiniz Hazır!</div>
-    <div class="alt-mesaj">Garson siparişinizi getiriyor</div>
-    <button class="kapat-btn" type="button" data-action="close-hazir-overlay">Tamam</button>
+    <div class="mesaj"><?= e(t('order.tracking_ready_overlay_title')) ?></div>
+    <div class="alt-mesaj"><?= e(t('order.tracking_ready_overlay_subtitle')) ?></div>
+    <button class="kapat-btn" type="button" data-action="close-hazir-overlay"><?= e(t('common.ok')) ?></button>
 </div>
 
 <!-- Confetti Container -->

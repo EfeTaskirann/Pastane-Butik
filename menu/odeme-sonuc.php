@@ -66,12 +66,12 @@ $basePath = config('app.base_path', '/pastane');
 $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?= e(locale()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
-    <title><?= $basarili ? 'Odeme Basarili' : 'Odeme Basarisiz' ?> - <?= e($appName) ?></title>
+    <title><?= e($basarili ? t('order.payment_success_title') : t('order.payment_fail_title')) ?> - <?= e($appName) ?></title>
 
     <!-- Ortak CSS -->
     <link rel="stylesheet" href="assets/css/menu-base.css">
@@ -341,7 +341,7 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 
             /* Fis basligi */
             .result-card::before {
-                content: "<?= e($appName) ?> — Odeme Fisi";
+                content: "<?= e(t('order.payment_receipt_title', ['name' => $appName])) ?>";
                 display: block;
                 font-size: 14pt;
                 font-weight: 700;
@@ -370,7 +370,7 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 
             /* Alt bilgi */
             .result-card::after {
-                content: "Tarih: <?= date('d.m.Y H:i') ?>";
+                content: "<?= e(t('order.payment_receipt_date', ['date' => date('d.m.Y H:i')])) ?>";
                 display: block;
                 font-size: 9pt;
                 text-align: center;
@@ -387,16 +387,16 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 <!-- Ust Bar -->
 <header class="top-bar">
     <?php if (!$basarili && !empty($qrToken)): ?>
-        <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="top-bar__back" aria-label="Menuye don">
+        <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="top-bar__back" aria-label="<?= e(t('a11y.menu_back')) ?>">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            Menuye Don
+            <?= e(t('order.payment_back_to_menu')) ?>
         </a>
     <?php endif; ?>
-    <span class="top-bar__title"><?= $basarili ? 'Odeme Basarili' : 'Odeme Basarisiz' ?></span>
+    <span class="top-bar__title"><?= e($basarili ? t('order.payment_success_title') : t('order.payment_fail_title')) ?></span>
     <?php if ($masaNo > 0): ?>
-        <span class="top-bar__masa">Masa <?= (int)$masaNo ?></span>
+        <span class="top-bar__masa"><?= e(t('order.your_table', ['no' => (int)$masaNo])) ?></span>
     <?php endif; ?>
 </header>
 
@@ -412,20 +412,20 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
                 </svg>
             </div>
 
-            <h1 class="result-title result-title--success">Odemeniz Basariyla Tamamlandi!</h1>
-            <p class="result-message">Siparissiniz hazirlaniyor. Masaniza servis edilecektir.</p>
+            <h1 class="result-title result-title--success"><?= e(t('order.payment_success_heading')) ?></h1>
+            <p class="result-message"><?= e(t('order.payment_success_msg')) ?></p>
 
             <?php if ($siparisId > 0 || !empty($referans)): ?>
                 <div class="result-details">
                     <?php if ($siparisId > 0): ?>
                         <div class="result-detail-row">
-                            <span class="result-detail-label">Siparis No</span>
+                            <span class="result-detail-label"><?= e(t('order.payment_detail_order_no')) ?></span>
                             <span class="result-detail-value">#<?= (int)$siparisId ?></span>
                         </div>
                     <?php endif; ?>
                     <?php if ($toplamTutar > 0): ?>
                         <div class="result-detail-row">
-                            <span class="result-detail-label">Odenen Tutar</span>
+                            <span class="result-detail-label"><?= e(t('order.payment_detail_amount')) ?></span>
                             <span class="result-detail-value result-detail-value--highlight">
                                 <?= number_format($toplamTutar, 2, ',', '.') ?> &#8378;
                             </span>
@@ -433,7 +433,7 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
                     <?php endif; ?>
                     <?php if (!empty($referans)): ?>
                         <div class="result-detail-row">
-                            <span class="result-detail-label">Islem Referansi</span>
+                            <span class="result-detail-label"><?= e(t('order.payment_detail_ref')) ?></span>
                             <span class="result-detail-value u-text-tiny"><?= e($referans) ?></span>
                         </div>
                     <?php endif; ?>
@@ -442,22 +442,22 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 
             <div class="result-actions">
                 <?php if (!empty($takipToken)): ?>
-                    <a href="siparis-takip.php?token=<?= e($takipToken) ?>" class="result-btn result-btn--primary" aria-label="Siparisimi takip et">
+                    <a href="siparis-takip.php?token=<?= e($takipToken) ?>" class="result-btn result-btn--primary" aria-label="<?= e(t('order.payment_track_btn')) ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        Siparisimi Takip Et
+                        <?= e(t('order.payment_track_btn')) ?>
                     </a>
                 <?php endif; ?>
 
                 <?php if (!empty($qrToken)): ?>
-                    <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="result-btn result-btn--outline" aria-label="Menuye don">
+                    <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="result-btn result-btn--outline" aria-label="<?= e(t('a11y.menu_back')) ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
-                        Menuye Don
+                        <?= e(t('order.payment_back_to_menu')) ?>
                     </a>
                 <?php endif; ?>
             </div>
@@ -472,8 +472,8 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
                 </svg>
             </div>
 
-            <h1 class="result-title result-title--fail">Odeme Basarisiz</h1>
-            <p class="result-message">Odeme islemi tamamlanamadi. Lutfen tekrar deneyin veya farkli bir yontem kullanin.</p>
+            <h1 class="result-title result-title--fail"><?= e(t('order.payment_fail_title')) ?></h1>
+            <p class="result-message"><?= e(t('order.payment_fail_msg')) ?></p>
 
             <?php if (!empty($hataMesaji)): ?>
                 <div class="error-detail" role="alert">
@@ -483,22 +483,22 @@ $appName = defined('SITE_NAME') ? SITE_NAME : 'Pastane';
 
             <div class="result-actions">
                 <?php if ($siparisId > 0): ?>
-                    <a href="odeme.php?siparis=<?= (int)$siparisId ?>" class="result-btn result-btn--warning" aria-label="Odemeyi tekrar dene">
+                    <a href="odeme.php?siparis=<?= (int)$siparisId ?>" class="result-btn result-btn--warning" aria-label="<?= e(t('order.payment_try_again')) ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="23 4 23 10 17 10"></polyline>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                         </svg>
-                        Tekrar Dene
+                        <?= e(t('order.payment_try_again')) ?>
                     </a>
                 <?php endif; ?>
 
                 <?php if (!empty($qrToken)): ?>
-                    <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="result-btn result-btn--outline" aria-label="Menuye don">
+                    <a href="<?= e($basePath) ?>/menu/?t=<?= e($qrToken) ?>" class="result-btn result-btn--outline" aria-label="<?= e(t('a11y.menu_back')) ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
-                        Menuye Don
+                        <?= e(t('order.payment_back_to_menu')) ?>
                     </a>
                 <?php endif; ?>
             </div>

@@ -13,7 +13,7 @@ $products = getProducts();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="El yapımı pastalar, cupcake'ler ve tatlılar. Özel günleriniz için butik lezzetler.">
+    <meta name="description" content="<?= e(t('home.meta_description')) ?>">
 
     <title><?= e(SITE_NAME) ?> - <?= e(t('home.hero_subtitle')) ?></title>
 
@@ -465,7 +465,7 @@ $products = getProducts();
                         </div>
                     </div>
                 </div>
-                <h2>Teslimat Bilgisi</h2>
+                <h2><?= e(t('home.delivery_title')) ?></h2>
                 <div class="gold-divider u-mb-6" aria-hidden="true"></div>
                 <div class="delivery-cards">
                     <div class="delivery-card free">
@@ -475,9 +475,9 @@ $products = getProducts();
                                 <polyline points="22 4 12 14.01 9 11.01"/>
                             </svg>
                         </div>
-                        <h3>Gazimağusa</h3>
-                        <p class="delivery-price">Ücretsiz Teslimat</p>
-                        <p class="delivery-desc">Gazimağusa içindeki tüm adreslerinize ücretsiz teslimat yapıyoruz.</p>
+                        <h3><?= e(t('home.delivery_city_main')) ?></h3>
+                        <p class="delivery-price"><?= e(t('home.delivery_free')) ?></p>
+                        <p class="delivery-desc"><?= e(t('home.delivery_city_main_desc')) ?></p>
                     </div>
                     <div class="delivery-card contact">
                         <div class="delivery-card-icon">
@@ -485,9 +485,9 @@ $products = getProducts();
                                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
                             </svg>
                         </div>
-                        <h3>Diğer Şehirler</h3>
-                        <p class="delivery-price">İletişime Geçin</p>
-                        <p class="delivery-desc">Diğer şehirlere teslimat için lütfen bizimle iletişime geçin.</p>
+                        <h3><?= e(t('home.delivery_city_other')) ?></h3>
+                        <p class="delivery-price"><?= e(t('home.delivery_city_other_price')) ?></p>
+                        <p class="delivery-desc"><?= e(t('home.delivery_city_other_desc')) ?></p>
                     </div>
                 </div>
             </div>
@@ -524,8 +524,8 @@ $products = getProducts();
                     $categorySlug = $product['kategori_slug'] ?? '';
                     $categoryName = $product['kategori_ad'] ?? '';
 
-                    // WhatsApp mesajı için URL encode
-                    $waMessage = urlencode("Merhaba, " . $product['isim'] . " hakkında bilgi almak istiyorum.");
+                    // WhatsApp mesajı için URL encode (i18n)
+                    $waMessage = urlencode(t('home.whatsapp_msg_template', ['product' => $product['isim']]));
 
                     // Modal için JSON data
                     $productData = [
@@ -593,7 +593,7 @@ $products = getProducts();
                             <?php endif; ?>
                             <a href="https://wa.me/905551234567?text=<?= $waMessage ?>" class="product-order-btn" target="_blank">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.75.75 0 00.917.918l4.458-1.495A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.487 0-4.807-.798-6.694-2.151l-.48-.353-3.127 1.048 1.048-3.127-.353-.48A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
-                                Sipariş
+                                <?= e(t('home.product_order_short')) ?>
                             </a>
                         </div>
                     </div>
@@ -602,7 +602,7 @@ $products = getProducts();
 
                 <?php if (empty($products)): ?>
                     <div class="no-products u-grid-empty-center">
-                        <p>Henüz ürün bulunmamaktadır.</p>
+                        <p><?= e(t('home.empty_products')) ?></p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -627,19 +627,19 @@ $products = getProducts();
                 <div class="calendar-legend">
                     <div class="legend-item">
                         <span class="legend-dot bos"></span>
-                        <span>Boş</span>
+                        <span><?= e(t('home.calendar_free')) ?></span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-dot uygun"></span>
-                        <span>Uygun</span>
+                        <span><?= e(t('home.calendar_suitable')) ?></span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-dot yogun"></span>
-                        <span>Yoğun</span>
+                        <span><?= e(t('home.calendar_busy')) ?></span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-dot dolu"></span>
-                        <span>Dolu</span>
+                        <span><?= e(t('home.calendar_full')) ?></span>
                     </div>
                 </div>
 
@@ -647,12 +647,12 @@ $products = getProducts();
                     <!-- JavaScript ile doldurulacak -->
                     <div class="calendar-loading">
                         <div class="loading-spinner"></div>
-                        <span>Takvim yükleniyor...</span>
+                        <span><?= e(t('home.calendar_loading')) ?></span>
                     </div>
                 </div>
 
                 <div class="calendar-info">
-                    <p><strong>Not:</strong> "Dolu" günlerde sipariş kabul edemeyebiliriz. Lütfen önceden iletişime geçin.</p>
+                    <p><strong><?= e(t('common.note')) ?>:</strong> <?= e(t('home.calendar_full_warning')) ?></p>
                 </div>
             </div>
         </div>
@@ -666,8 +666,7 @@ $products = getProducts();
                 <div class="contact-info reveal reveal-left">
                     <h2><?= e(t('home.contact_title')) ?></h2>
                     <p>
-                        Özel günleriniz için sipariş vermek veya sorularınız için
-                        bizimle iletişime geçebilirsiniz.
+                        <?= e(t('home.contact_intro')) ?>
                     </p>
 
                     <!-- Sadakat Programı Bilgisi -->
@@ -679,8 +678,8 @@ $products = getProducts();
                                 </svg>
                             </div>
                             <div class="loyalty-text">
-                                <strong>%5 Sadakat İndirimi</strong>
-                                <span>İlk siparişinizden memnun kalıp tekrar sipariş verirseniz, kayıtlı adreslerinize %5 indirim!</span>
+                                <strong><?= e(t('home.gift_loyalty_title')) ?></strong>
+                                <span><?= e(t('home.gift_loyalty_desc')) ?></span>
                             </div>
                         </div>
                         <div class="loyalty-item">
@@ -690,8 +689,8 @@ $products = getProducts();
                                 </svg>
                             </div>
                             <div class="loyalty-text">
-                                <strong>5. Siparişe Hediye!</strong>
-                                <span>Her 5. siparişinizde 6'lı damla çikolatalı cookie hediye!</span>
+                                <strong><?= e(t('home.gift_fifth_title')) ?></strong>
+                                <span><?= e(t('home.gift_fifth_desc')) ?></span>
                             </div>
                         </div>
                     </div>
@@ -701,21 +700,21 @@ $products = getProducts();
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
                             </svg>
-                            <span>0555 123 45 67</span>
+                            <span><?= e(t('home.contact_phone')) ?></span>
                         </div>
                         <div class="contact-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                 <polyline points="22,6 12,13 2,6"/>
                             </svg>
-                            <span>info@tatlidusler.com</span>
+                            <span><?= e(t('home.contact_email')) ?></span>
                         </div>
                         <div class="contact-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
-                            <span>İstanbul, Türkiye</span>
+                            <span><?= e(t('home.contact_address')) ?></span>
                         </div>
                     </div>
 
@@ -790,22 +789,22 @@ $products = getProducts();
                     <!-- Honeypot - spam koruması -->
                     <input type="text" name="website" class="u-hidden" tabindex="-1" autocomplete="off">
                     <div class="form-group">
-                        <label for="name">Adınız</label>
-                        <input type="text" id="name" name="name" required placeholder="Adınız Soyadınız">
+                        <label for="name"><?= e(t('form.name_label')) ?></label>
+                        <input type="text" id="name" name="name" required placeholder="<?= e(t('form.placeholder_name')) ?>">
                     </div>
                     <div class="form-group">
-                        <label for="email">E-posta</label>
-                        <input type="email" id="email" name="email" placeholder="ornek@email.com">
+                        <label for="email"><?= e(t('form.email')) ?></label>
+                        <input type="email" id="email" name="email" placeholder="<?= e(t('form.placeholder_email')) ?>">
                     </div>
                     <div class="form-group">
-                        <label for="phone">Telefon</label>
-                        <input type="tel" id="phone" name="phone" placeholder="05XX XXX XX XX">
+                        <label for="phone"><?= e(t('form.phone')) ?></label>
+                        <input type="tel" id="phone" name="phone" placeholder="<?= e(t('form.phone_placeholder_tr')) ?>">
                     </div>
                     <div class="form-group">
-                        <label for="message">Mesajınız</label>
-                        <textarea id="message" name="message" required placeholder="Mesajınızı buraya yazın..."></textarea>
+                        <label for="message"><?= e(t('form.your_message')) ?></label>
+                        <textarea id="message" name="message" required placeholder="<?= e(t('form.message_placeholder')) ?>"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary u-w-100">Gönder</button>
+                    <button type="submit" class="btn btn-primary u-w-100"><?= e(t('form.send')) ?></button>
                 </form>
             </div>
         </div>
@@ -824,58 +823,59 @@ $products = getProducts();
                 <!-- Porsiyon Seçenekleri -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Pasta boyutları ve kişi sayıları nasıl belirleniyor?</span>
+                        <span><?= e(t('home.faq_q1_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Pastalarımız 4 farklı boyutta sunulmaktadır:</p>
+                        <p><?= e(t('home.faq_q1_intro')) ?></p>
                         <ul>
-                            <li><strong>4 Kişilik:</strong> Küçük kutlamalar ve özel günler için ideal</li>
-                            <li><strong>6 Kişilik:</strong> Aile içi kutlamalar için uygun</li>
-                            <li><strong>8 Kişilik:</strong> Orta ölçekli partiler için</li>
-                            <li><strong>10+ Kişilik:</strong> Büyük organizasyonlar ve etkinlikler için</li>
+                            <li><strong><?= e(t('home.faq_q1_size_4_label')) ?></strong> <?= e(t('home.faq_q1_size_4_desc')) ?></li>
+                            <li><strong><?= e(t('home.faq_q1_size_6_label')) ?></strong> <?= e(t('home.faq_q1_size_6_desc')) ?></li>
+                            <li><strong><?= e(t('home.faq_q1_size_8_label')) ?></strong> <?= e(t('home.faq_q1_size_8_desc')) ?></li>
+                            <li><strong><?= e(t('home.faq_q1_size_10_label')) ?></strong> <?= e(t('home.faq_q1_size_10_desc')) ?></li>
                         </ul>
-                        <p>Her boyutun fiyatı ürün kartında ayrı ayrı belirtilmiştir.</p>
+                        <p><?= e(t('home.faq_q1_outro')) ?></p>
                     </div>
                 </div>
 
                 <!-- Öğrenci İndirimi -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Üniversite öğrenci indiriminden nasıl yararlanabilirim?</span>
+                        <span><?= e(t('home.faq_q2_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Üniversite öğrencilerine özel <strong>%10 indirim</strong> sunuyoruz!</p>
+                        <?php // FAQ paragraf/madde içeriğinde <strong> markup'ı saklı; lang dosyası developer-controlled, XSS güvenli. ?>
+                        <p><?= t('home.faq_q2_intro') ?></p>
                         <ul>
-                            <li>İndirimden yararlanmak için <strong>geçerli üniversite öğrenci kartınızı</strong> göstermeniz zorunludur.</li>
-                            <li>İndirim, teslimat sırasında veya mağazadan teslim alırken uygulanır.</li>
-                            <li>Öğrenci kartı ibraz edilmediği takdirde indirim uygulanamamaktadır.</li>
-                            <li>Bu indirim diğer kampanyalarla birleştirilemez.</li>
+                            <li><?= t('home.faq_q2_li_1') ?></li>
+                            <li><?= t('home.faq_q2_li_2') ?></li>
+                            <li><?= t('home.faq_q2_li_3') ?></li>
+                            <li><?= t('home.faq_q2_li_4') ?></li>
                         </ul>
-                        <p>Öğrenci kartınızı yanınızda bulundurmayı unutmayın!</p>
+                        <p><?= e(t('home.faq_q2_outro')) ?></p>
                     </div>
                 </div>
 
                 <!-- Sipariş Zamanı -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Sipariş ne zaman verilmeli?</span>
+                        <span><?= e(t('home.faq_q3_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Sipariş zamanlamanız takvimimizdeki müsaitlik durumuna göre belirlenir:</p>
+                        <p><?= e(t('home.faq_q3_intro')) ?></p>
                         <ul>
-                            <li>Takvimde <strong>"Boş"</strong> veya <strong>"Uygun"</strong> olan günler için 1 gün öncesinden veya aynı gün sipariş verebilirsiniz.</li>
-                            <li><strong>"Yoğun"</strong> günler için en az 2-3 gün önceden sipariş vermenizi öneririz.</li>
-                            <li><strong>"Dolu"</strong> günlerde ne yazık ki sipariş alamıyoruz.</li>
-                            <li><strong>Acil siparişler</strong> için lütfen WhatsApp veya telefon ile iletişime geçin.</li>
+                            <li><?= t('home.faq_q3_li_1') ?></li>
+                            <li><?= t('home.faq_q3_li_2') ?></li>
+                            <li><?= t('home.faq_q3_li_3') ?></li>
+                            <li><?= t('home.faq_q3_li_4') ?></li>
                         </ul>
                     </div>
                 </div>
@@ -883,18 +883,18 @@ $products = getProducts();
                 <!-- Özel Tasarım -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Özel tasarım pasta yaptırabilir miyim?</span>
+                        <span><?= e(t('home.faq_q4_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Evet! Özel tasarım pastalar yapıyoruz. Ancak şu hususları bilmeniz önemli:</p>
+                        <p><?= e(t('home.faq_q4_intro')) ?></p>
                         <ul>
-                            <li>Özel tasarım pastaların fiyatı <strong>içeriği, boyutu ve harcanan vakite göre</strong> belirlenir.</li>
-                            <li>Bu nedenle özel tasarımlar için <strong>önceden planlama ve görüşme</strong> gerekmektedir.</li>
-                            <li>Tasarımınızı konuşmak için lütfen iletişim formu veya WhatsApp üzerinden bize ulaşın.</li>
-                            <li>Özel tasarımlar için en az <strong>3-5 gün önceden</strong> sipariş vermenizi öneririz.</li>
+                            <li><?= t('home.faq_q4_li_1') ?></li>
+                            <li><?= t('home.faq_q4_li_2') ?></li>
+                            <li><?= e(t('home.faq_q4_li_3')) ?></li>
+                            <li><?= t('home.faq_q4_li_4') ?></li>
                         </ul>
                     </div>
                 </div>
@@ -902,18 +902,18 @@ $products = getProducts();
                 <!-- Teslimat -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Teslimat nasıl yapılıyor?</span>
+                        <span><?= e(t('home.faq_q5_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Teslimat politikamız şehre göre değişmektedir:</p>
+                        <p><?= e(t('home.faq_q5_intro')) ?></p>
                         <ul>
-                            <li><strong>Gazimağusa:</strong> Tüm adreslerinize <strong>ücretsiz teslimat</strong> yapıyoruz.</li>
-                            <li><strong>Diğer şehirler:</strong> Teslimat imkanı ve ücretlendirme için lütfen iletişime geçin.</li>
-                            <li>Teslimat saati siparişi verirken belirlenir.</li>
-                            <li>Özel gün ve bayramlarda teslimat yoğunluğu olabilir, erken sipariş vermenizi öneririz.</li>
+                            <li><?= t('home.faq_q5_li_1') ?></li>
+                            <li><?= t('home.faq_q5_li_2') ?></li>
+                            <li><?= e(t('home.faq_q5_li_3')) ?></li>
+                            <li><?= e(t('home.faq_q5_li_4')) ?></li>
                         </ul>
                     </div>
                 </div>
@@ -921,17 +921,17 @@ $products = getProducts();
                 <!-- Ödeme -->
                 <div class="faq-item">
                     <button class="faq-question">
-                        <span>Ödeme nasıl yapılıyor?</span>
+                        <span><?= e(t('home.faq_q6_question')) ?></span>
                         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-answer">
-                        <p>Ödeme seçeneklerimiz:</p>
+                        <p><?= e(t('home.faq_q6_intro')) ?></p>
                         <ul>
-                            <li><strong>Nakit:</strong> Teslimat sırasında ödeme yapabilirsiniz.</li>
-                            <li><strong>Havale/EFT:</strong> Sipariş onayından sonra banka bilgileri iletilir.</li>
-                            <li>Özel tasarım siparişlerde <strong>%50 ön ödeme</strong> alınabilir.</li>
+                            <li><?= t('home.faq_q6_li_1') ?></li>
+                            <li><?= t('home.faq_q6_li_2') ?></li>
+                            <li><?= t('home.faq_q6_li_3') ?></li>
                         </ul>
                     </div>
                 </div>
@@ -962,7 +962,7 @@ $products = getProducts();
     </footer>
 
     <!-- WhatsApp Float Button -->
-    <a href="https://wa.me/905551234567" class="whatsapp-float" target="_blank" aria-label="WhatsApp ile iletişime geç">
+    <a href="https://wa.me/905551234567" class="whatsapp-float" target="_blank" aria-label="<?= e(t('a11y.whatsapp_contact')) ?>">
         <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
 
@@ -970,7 +970,7 @@ $products = getProducts();
     <div class="product-modal" id="productModal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
-            <button class="modal-close" aria-label="Kapat">
+            <button class="modal-close" aria-label="<?= e(t('a11y.close')) ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -992,7 +992,7 @@ $products = getProducts();
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                             <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.75.75 0 00.917.918l4.458-1.495A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.487 0-4.807-.798-6.694-2.151l-.48-.353-3.127 1.048 1.048-3.127-.353-.48A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
                         </svg>
-                        WhatsApp ile Sipariş Ver
+                        <?= e(t('home.whatsapp_order_btn')) ?>
                     </a>
                 </div>
             </div>

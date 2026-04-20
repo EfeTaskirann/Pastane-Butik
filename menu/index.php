@@ -647,7 +647,7 @@ $siteUrl = rtrim(config('app.url', ''), '/');
     </style>
 </head>
 <body>
-    <a href="#productsGrid" class="skip-link">Menüye atla</a>
+    <a href="#productsGrid" class="skip-link"><?= e(t('a11y.skip_to_menu')) ?></a>
 
     <!-- UST BAR -->
     <header class="top-bar">
