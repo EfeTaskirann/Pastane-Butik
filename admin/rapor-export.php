@@ -19,15 +19,13 @@ declare(strict_types=1);
  *   - Dosya adı PHP validation ile sanitize
  */
 
-require_once __DIR__ . '/includes/header.php';
-// header.php zaten auth.php include ediyor; require_login orada çağrılmış.
+// Download endpoint — HTML çıktı yapma (header.php INCLUDE ETME!).
+// Bootstrap + auth doğrudan yükle, ardından binary/text response.
+require_once dirname(__DIR__) . '/includes/bootstrap.php';
+require_once __DIR__ . '/includes/auth.php';
+requireLogin();
 
 use Pastane\Services\ExportService;
-
-// Bootstrap yok ise service locator devreye girer
-if (!class_exists('\\Pastane\\Services\\ExportService')) {
-    require_once dirname(__DIR__) . '/src/Services/ExportService.php';
-}
 
 $format = strtolower($_GET['format'] ?? 'csv');
 if (!in_array($format, ['csv', 'xlsx', 'json'], true)) {

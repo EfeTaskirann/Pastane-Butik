@@ -136,6 +136,15 @@ $ilkGunHaftaGunu = (int)date('N', strtotime($ayinIlkGunu));
 // O güne ait siparişler (service kullanarak)
 $gunSiparisleri = $siparisService->getByDate($seciliTarih);
 
+// `siparisler` tablosunda `durum` ENUM kolonu yok — sadece `tamamlandi` BOOL var.
+// Modal JS `siparis.durum` field bekledigi icin server-side virtual field uret.
+foreach ($gunSiparisleri as &$_s) {
+    if (!isset($_s['durum'])) {
+        $_s['durum'] = ((int)($_s['tamamlandi'] ?? 0) === 1) ? 'teslim_edildi' : 'beklemede';
+    }
+}
+unset($_s);
+
 // Günün toplam iş yükü (sadece bekleyen siparişler)
 $gunToplamPuan = $siparisService->getDayWorkload($seciliTarih, true);
 

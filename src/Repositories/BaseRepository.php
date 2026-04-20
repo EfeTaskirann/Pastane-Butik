@@ -329,9 +329,15 @@ abstract class BaseRepository
         $data = $this->filterFillable($data);
 
         if ($this->timestamps) {
+            // Defansif: kolon DB'de yoksa atla. masa_siparisleri, masalar, kategoriler
+            // gibi tablolarda updated_at kolonu yok — sessizce skip.
             $now = date('Y-m-d H:i:s');
-            $data[$this->createdAtColumn] = $now;
-            $data[$this->updatedAtColumn] = $now;
+            if ($this->tableHasColumn($this->createdAtColumn)) {
+                $data[$this->createdAtColumn] = $now;
+            }
+            if ($this->tableHasColumn($this->updatedAtColumn)) {
+                $data[$this->updatedAtColumn] = $now;
+            }
         }
 
         $this->injectAuditColumns($data, true);
@@ -357,7 +363,7 @@ abstract class BaseRepository
     {
         $data = $this->filterFillable($data);
 
-        if ($this->timestamps) {
+        if ($this->timestamps && $this->tableHasColumn($this->updatedAtColumn)) {
             $data[$this->updatedAtColumn] = date('Y-m-d H:i:s');
         }
 
@@ -388,7 +394,7 @@ abstract class BaseRepository
     {
         $data = $this->filterFillable($data);
 
-        if ($this->timestamps) {
+        if ($this->timestamps && $this->tableHasColumn($this->updatedAtColumn)) {
             $data[$this->updatedAtColumn] = date('Y-m-d H:i:s');
         }
 

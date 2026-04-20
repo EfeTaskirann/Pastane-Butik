@@ -207,7 +207,7 @@ $cspNonce = function_exists('getCspNonce') ? getCspNonce() : '';
         <form method="post" action="mail-templates.php">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="name" value="<?= e($selected) ?>">
-            <input type="hidden" name="csrf_token" value="<?= e(generateCSRFToken()) ?>">
+            <?= csrfTokenField() ?>
 
             <label for="body"><strong>HTML Şablon</strong></label>
             <textarea id="body" name="body" rows="22" class="u-w-100 u-font-mono"><?= e($currentContent) ?></textarea>
@@ -227,7 +227,7 @@ $cspNonce = function_exists('getCspNonce') ? getCspNonce() : '';
         <form id="test-send-form" method="post" action="mail-templates.php" class="u-hidden u-mt-4">
             <input type="hidden" name="action" value="send-test">
             <input type="hidden" name="name" value="<?= e($selected) ?>">
-            <input type="hidden" name="csrf_token" value="<?= e(generateCSRFToken()) ?>">
+            <?= csrfTokenField() ?>
             <label for="to"><strong>Test alıcı:</strong></label>
             <input type="email" id="to" name="to" required placeholder="test@example.com">
             <button type="submit" class="btn btn-primary btn-sm">Gönder</button>

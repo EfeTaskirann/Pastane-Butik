@@ -57,8 +57,17 @@ if (!function_exists('e')) {
  * @see helpers.php format_price() fonksiyonu (eşdeğer)
  */
 if (!function_exists('formatPrice')) {
+    /**
+     * PHP 8.1+ ile birlikte number_format() implicit string→float conversion'i
+     * deprecated, strict_types altinda fatal. PDO DECIMAL kolonlari string olarak
+     * dondugu icin (PDO::ATTR_STRINGIFY_FETCHES = false olsa bile) explicit cast
+     * sart.
+     */
     function formatPrice($price) {
-        return number_format($price, 2, ',', '.') . ' ₺';
+        if ($price === null || $price === '') {
+            return '0,00 ₺';
+        }
+        return number_format((float) $price, 2, ',', '.') . ' ₺';
     }
 }
 
