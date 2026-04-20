@@ -15,6 +15,11 @@ get_pip.py
 *.bat.tmp
 /tmp-*
 
+# i18n runtime artefakts
+/storage/i18n-missing.json
+/lang/*.backup-*
+/lang/*.tmp
+
 # ===========================================
 # Dependencies
 # ===========================================

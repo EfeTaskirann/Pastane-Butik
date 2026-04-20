@@ -186,6 +186,14 @@ optimize-images-apply: ## uploads/products/ için WebP conversion (apply)
 regen-database-sql: ## database.sql'ı migration state'ten yeniden üret (temp DB)
 	$(PHP) bin/regen-database-sql.php --confirm
 
+.PHONY: i18n-check
+i18n-check: ## i18n keys eksik mi tara (dry-run, CI gate)
+	$(PHP) bin/i18n-extract.php
+
+.PHONY: i18n-sync
+i18n-sync: ## eksik key'leri lang dosyalarına auto-stub'la ekle
+	$(PHP) bin/i18n-extract.php --apply
+
 .PHONY: uninstall
 uninstall: ## Tüm kurulumu kaldır — DESTRUCTIVE
 	@echo "DESTRUCTIVE — CTRL+C to cancel"

@@ -265,7 +265,11 @@ final class I18n
     }
 
     /**
-     * Bulunamayan key'leri logger'a yaz (throttle: aynisini her isteyiste yazmaz).
+     * Bulunamayan key'leri logger'a yaz + storage/i18n-missing.json'a topla
+     * (throttle: ayni request icinde tekrarlamaz).
+     *
+     * Toplanan dosya `bin/i18n-extract.php` ve admin/ayarlar/dil.php tarafindan
+     * okunup batch olarak doldurulur.
      *
      * @param string $key
      * @param string $locale
@@ -280,7 +284,6 @@ final class I18n
         }
         $seen[$cacheKey] = true;
 
-        // Logger sinifi ve func_exists guard (bootstrap tamamlanmamis olabilir)
         if (class_exists('Logger', false)) {
             try {
                 Logger::getInstance()->warning('i18n: missing translation key', [
@@ -288,8 +291,55 @@ final class I18n
                     'locale' => $locale,
                 ]);
             } catch (\Throwable) {
-                // sessiz — eksik cevirinin kendi logu hata olmamali
+                // sessiz
             }
+        }
+
+        // Storage'a topla — opt-out via APP_ENV=production guard
+        // Dev/staging'de aktif, prod'da gereksiz IO yapmaz
+        $env = defined('APP_ENV') ? APP_ENV : 'development';
+        if ($env === 'production') {
+            return;
+        }
+
+        try {
+            $base = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__);
+            $file = $base . '/storage/i18n-missing.json';
+            $dir = dirname($file);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+
+            $data = [];
+            if (is_file($file)) {
+                $raw = @file_get_contents($file);
+                if ($raw !== false) {
+                    $decoded = json_decode($raw, true);
+                    if (is_array($decoded)) {
+                        $data = $decoded;
+                    }
+                }
+            }
+
+            $entry = $data[$locale][$key] ?? null;
+            if ($entry === null) {
+                $data[$locale][$key] = [
+                    'first_seen' => date('c'),
+                    'count'      => 1,
+                    'url'        => $_SERVER['REQUEST_URI'] ?? 'cli',
+                ];
+            } else {
+                $data[$locale][$key]['count'] = (int)($entry['count'] ?? 0) + 1;
+                $data[$locale][$key]['last_seen'] = date('c');
+            }
+
+            // Atomic write
+            $tmp = $file . '.tmp';
+            if (@file_put_contents($tmp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false) {
+                @rename($tmp, $file);
+            }
+        } catch (\Throwable) {
+            // sessiz
         }
     }
 

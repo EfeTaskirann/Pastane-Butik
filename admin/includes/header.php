@@ -202,7 +202,7 @@ $assetsBase = str_repeat('../', $adminDepth + 1) . 'assets';
 
                 <?php
                 // Ayarlar alt-menusu — hangi sayfa aktifse genisletilmis baslar
-                $ayarlarPages = ['ayarlar-index', '2fa', 'mail', 'sms', 'backup', 'genel'];
+                $ayarlarPages = ['ayarlar-index', '2fa', 'mail', 'mail-templates', 'sms', 'backup', 'dil', 'genel'];
                 $ayarlarPath  = basename(dirname($_SERVER['PHP_SELF']));
                 $ayarlarAcik  = ($ayarlarPath === 'ayarlar') || in_array($currentPage, $ayarlarPages, true);
                 ?>
@@ -229,6 +229,8 @@ $assetsBase = str_repeat('../', $adminDepth + 1) . 'assets';
                         <a href="ayarlar/2fa.php" class="nav-item nav-sub <?= $currentPage === '2fa' ? 'active' : '' ?>"><?= e(t('admin.two_factor')) ?></a>
                         <a href="ayarlar/mail.php" class="nav-item nav-sub <?= $currentPage === 'mail' ? 'active' : '' ?>"><?= e(t('admin.email_settings')) ?></a>
                         <a href="ayarlar/sms.php" class="nav-item nav-sub <?= $currentPage === 'sms' ? 'active' : '' ?>"><?= e(t('admin.sms_settings')) ?></a>
+                        <a href="ayarlar/mail-templates.php" class="nav-item nav-sub <?= $currentPage === 'mail-templates' ? 'active' : '' ?>">E-posta Sablonlari</a>
+                        <a href="ayarlar/dil.php" class="nav-item nav-sub <?= $currentPage === 'dil' ? 'active' : '' ?>">Dil / Ceviri</a>
                         <a href="ayarlar/backup.php" class="nav-item nav-sub <?= $currentPage === 'backup' ? 'active' : '' ?>"><?= e(t('admin.backup')) ?></a>
                     </div>
                 </div>
