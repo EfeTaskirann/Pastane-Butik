@@ -1,75 +1,38 @@
 Tatlı Düşler — Butik Pasta & Dessert Ordering System
-Copyright (c) 2026 Tatlı Düşler. All rights reserved.
+Copyright (c) 2026 Efe Taşkıran. All rights reserved.
 
 ================================================================================
-LICENSING — DISTRIBUTED VIA CODECANYON (ENVATO MARKET)
+LICENSE
 ================================================================================
 
-This software is sold exclusively through CodeCanyon (envato.com). By purchasing
-this product you agree to the applicable Envato license below. Envato offers two
-end-user licenses for CodeCanyon items — you must select ONE at time of purchase:
+This project is not currently distributed, licensed, or sold through any
+marketplace (including CodeCanyon/Envato). It is an independent,
+in-development project.
 
-    (A) REGULAR LICENSE
-    (B) EXTENDED LICENSE
+This repository is made publicly available on GitHub for portfolio and
+evaluation purposes only (e.g. job applications, code review, technical
+assessment).
 
-Full, up-to-date, authoritative license texts:
-    https://codecanyon.net/licenses/standard          (Regular)
-    https://codecanyon.net/licenses/standard_extended (Extended)
+No permission is granted to copy, reproduce, modify, merge, publish,
+distribute, sublicense, and/or use this software, in whole or in part, for
+any purpose, without the prior written consent of the copyright holder.
 
---------------------------------------------------------------------------------
-(A) REGULAR LICENSE — SUMMARY (non-binding, see Envato for authoritative terms)
---------------------------------------------------------------------------------
-
-You CAN:
-  * Use this item in ONE end product for yourself or a single client
-  * Use in a product distributed free of charge (e.g. your company website,
-    a blog, a single paying client's project)
-  * Modify the code to suit your needs
-  * Use the item in an end product that is sold where the buyer is not charged
-    for the item itself (the item is incidental to the project)
-
-You CANNOT:
-  * Redistribute, sub-license, resell, rent, lease, or lend the item (modified
-    or not) as stock, in a tool or template, or with source files
-  * Use the item in more than one end product (a "per-site" or "per-deployment"
-    license)
-  * Charge end-users a fee explicitly for access to the item
-  * Use the item in an "on-demand" platform (e.g. website-as-a-service)
-    without the Extended License
-
-Number of end products: ONE.
-Number of end users: UNLIMITED, but the item cannot be charged separately.
-
---------------------------------------------------------------------------------
-(B) EXTENDED LICENSE — SUMMARY (non-binding, see Envato for authoritative terms)
---------------------------------------------------------------------------------
-
-Identical to Regular PLUS:
-
-You CAN additionally:
-  * Use this item in an end product where end-users are charged a fee
-    (SaaS, paid SaaS subscription, paid mobile app)
-  * Use the item as part of a single end product and charge end users for it
-
-Still, you CANNOT:
-  * Redistribute the item "as-is" or as part of a tool, template pack, or
-    stock file collection
-
-Number of end products: ONE.
-Number of end users: UNLIMITED, may be charged.
+Viewing and forking this repository through GitHub's standard functionality
+is permitted. Any other use requires explicit written permission from the
+author.
 
 ================================================================================
 THIRD-PARTY CODE NOTICE
 ================================================================================
 
-This product bundles third-party libraries that are distributed under their own
-open-source licenses. See `CREDITS.txt` for the complete list with version,
-license type, and upstream URL of each dependency.
+This product bundles third-party libraries that are distributed under their
+own open-source licenses. See `CREDITS.txt` for the complete list with
+version, license type, and upstream URL of each dependency.
 
 You must keep the attribution notices (LICENSE / COPYRIGHT headers) of those
 third-party libraries intact. The terms of those licenses apply to the
-corresponding files only — they do NOT grant redistribution rights for the
-Tatlı Düşler item itself.
+corresponding files only — they do NOT grant redistribution rights for this
+project itself.
 
 ================================================================================
 NO WARRANTY
@@ -82,35 +45,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-================================================================================
-SUPPORT
-================================================================================
-
-Item support is provided according to Envato's Support Policy
-(https://codecanyon.net/page/item_support_policy). By default items include
-6 months of support from the date of purchase, extendable to 12 months at
-purchase time.
-
-Support covers:
-  * Answering questions about item features
-  * Fixing bugs and reported issues
-  * Assistance with item defects
-  * Help with included 3rd-party assets (within reason)
-
-Support does NOT cover:
-  * Customization work
-  * Installation on your server
-  * Help with 3rd-party plugins or modifications
-
-Support contact: (set via CodeCanyon comments / support tab on item page)
-
-================================================================================
-AUTHOR
-================================================================================
-
-Tatlı Düşler — CodeCanyon / Envato Author
-Portfolio: (your Envato author profile URL)
-Item page: (your CodeCanyon item URL)
-
-Copyright (c) 2026 Tatlı Düşler. All rights reserved.
